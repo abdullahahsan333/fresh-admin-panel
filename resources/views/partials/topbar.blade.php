@@ -20,6 +20,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 21h-2"/></svg>
             <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">2</span>
         </button>
-        <img class="h-10 w-10 rounded-lg" src="https://i.pravatar.cc/80?img=5" alt="">
+        <button id="topbarProfileBtn" class="h-10 w-10 rounded-full overflow-hidden hover:ring-2 ring-gray-200">
+            <img class="h-full w-full rounded-full object-cover" src="https://i.pravatar.cc/80?img=5" alt="">
+        </button>
     </div>
 </header>

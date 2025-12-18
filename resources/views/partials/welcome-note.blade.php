@@ -5,9 +5,6 @@
         </div>
         <p class="mt-2 text-sm text-gray-600">You have done 72% more sales today.</p>
         <p class="text-sm text-gray-600">Check your new badge in your profile.</p>
-        <a href="#" class="inline-flex items-center mt-4 text-indigo-600 border border-indigo-200 hover:border-indigo-300 px-3 py-1.5 rounded">
-            View Badges
-        </a>
     </div>
     <div class="hidden md:block">
         <svg width="180" height="120" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg">

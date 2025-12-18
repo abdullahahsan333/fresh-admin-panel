@@ -3,20 +3,25 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin</title>
+    <title>Admin Panel | Apprise Tech Group</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
     <style>
         #adminSidebar {
             transition: width 200ms ease, padding 200ms ease;
             will-change: width;
         }
+        [data-menu], [data-submenu] { will-change: height, opacity; }
         #adminBrandText { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
         #adminSidebar nav a { transition: gap 200ms ease, padding 200ms ease, color 150ms ease; }
         .sidebar-text { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
         .sidebar-collapsed #adminSidebar { width: 4rem; overflow: visible; }
         .sidebar-collapsed #adminSidebar nav a { justify-content: center; gap: 0; padding-left: .75rem; padding-right: .75rem; }
-        .sidebar-collapsed .sidebar-text { opacity: 0; transform: translateX(-4px); pointer-events: none; max-width: 0; }
+        .sidebar-collapsed .sidebar-text { opacity: 0; transform: translateX(-4px); pointer-events: none; max-width: 0; display: none; }
         .sidebar-collapsed #adminBrandText { opacity: 0; transform: translateX(-4px); max-width: 0; display: none; }
+        .sidebar-collapsed #sidebarProfileBtn { justify-content: center; gap: 0; }
+        .sidebar-collapsed #sidebarProfileBtn .sidebar-meta { display: none; }
+        .sidebar-collapsed #sidebarProfileBtn .sidebar-extra { display: none; }
+        .sidebar-collapsed .submenu-caret { display: none; }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
