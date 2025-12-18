@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin</title>
+    @vite(['resources/css/app.css','resources/js/app.js'])
+    <style>
+        #adminSidebar {
+            transition: width 200ms ease, padding 200ms ease;
+            will-change: width;
+        }
+        #adminBrandText { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
+        #adminSidebar nav a { transition: gap 200ms ease, padding 200ms ease, color 150ms ease; }
+        .sidebar-text { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
+        .sidebar-collapsed #adminSidebar { width: 4rem; overflow: visible; }
+        .sidebar-collapsed #adminSidebar nav a { justify-content: center; gap: 0; padding-left: .75rem; padding-right: .75rem; }
+        .sidebar-collapsed .sidebar-text { opacity: 0; transform: translateX(-4px); pointer-events: none; max-width: 0; }
+        .sidebar-collapsed #adminBrandText { opacity: 0; transform: translateX(-4px); max-width: 0; display: none; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-900">
+
+    <div id="adminShell" class="flex min-h-screen">
+
+        @include('partials.sidebar')
+
+        <div class="flex-1 flex flex-col">
+
+            @include('partials.topbar')
+
+            <main class="flex-1 p-6">
+
+                @yield('content')
+                
+            </main>
+
+            @include('partials.footer')
+
+        </div>
+
+    </div>
+
+</body>
+</html>

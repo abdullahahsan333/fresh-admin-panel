@@ -1,15 +1,38 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Dashboard</title>
-    @vite(['resources/css/app.css','resources/js/app.js'])
-    </head>
-<body class="min-h-screen bg-gray-50">
-    <div class="max-w-3xl mx-auto p-6">
-        <h1 class="text-2xl font-semibold mb-2">Admin Dashboard</h1>
-        <a href="{{ route('admin.logout') }}" class="text-sm underline">Logout</a>
+@extends('layouts.admin')
+
+@section('content')
+
+@include('partials.welcome-note')
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="text-sm text-gray-500">Total Projects</div>
+        <div class="mt-2 flex items-end justify-between">
+            <div class="text-3xl font-semibold">6</div>
+            <div class="text-xs text-gray-500">2 Completed</div>
+        </div>
     </div>
-</body>
-</html>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="text-sm text-gray-500">Task</div>
+        <div class="mt-2 flex items-end justify-between">
+            <div class="text-3xl font-semibold">132</div>
+            <div class="text-xs text-gray-500">28 Completed</div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="text-sm text-gray-500">Members</div>
+        <div class="mt-2 flex items-end justify-between">
+            <div class="text-3xl font-semibold">8</div>
+            <div class="text-xs text-gray-500">2 Completed</div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="text-sm text-gray-500">Productivity</div>
+        <div class="mt-2 flex items-end justify-between">
+            <div class="text-3xl font-semibold">76%</div>
+            <div class="text-xs text-gray-500">26% Increased</div>
+        </div>
+    </div>
+</div>
+
+@endsection
