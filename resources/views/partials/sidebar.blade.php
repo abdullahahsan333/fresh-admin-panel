@@ -1,52 +1,121 @@
-<aside id="adminSidebar" class="relative overflow-hidden w-64 bg-white border-r border-gray-200 hidden lg:block">
+<aside id="adminSidebar" class="relative overflow-hidden w-64 bg-white border-r border-gray-200 hidden lg:block min-h-screen flex flex-col">
     <div class="px-3 py-3 flex items-center">
         <div class="h-9 w-9 rounded-lg bg-emerald-500 grid place-items-center text-white">A</div>
         <span id="adminBrandText" class="font-semibold sidebar-text">Apprise Tech Group</span>
     </div>
     <nav class="px-2 space-y-1">
-        <a href="#" class="flex items-center gap-2 px-3 h-10 my-1 rounded-md bg-emerald-50 text-emerald-700" title="Overview" aria-label="Overview">
-            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-width="2" d="M18.5,21 C20.9852814,21 23,18.9852814 23,16.5 C23,14.0147186 20.9852814,12 18.5,12 C16.0147186,12 14,14.0147186 14,16.5 C14,18.9852814 16.0147186,21 18.5,21 L18.5,21 Z M10,7 L14,7 M1.5,14.5 C1.5,14.5 5.5,5 6,4 C6.5,3 7.5,3 8,3 C8.5,3 10,3 10,5 L10,16 M5.5,21 C3.01471863,21 1,18.9852814 1,16.5 C1,14.0147186 3.01471863,12 5.5,12 C7.98528137,12 10,14.0147186 10,16.5 C10,18.9852814 7.98528137,21 5.5,21 L5.5,21 L5.5,21 Z M22.5,14.5 C22.5,14.5 18.5,5 18,4 C17.5,3 16.5,3 16,3 C15.5,3 14,3 14,5 L14,16 M10,16 L14,16"></path></svg>
-            <span class="sidebar-text">Overview</span>
-        </a>
-        <a href="#" data-menu-toggle class="flex items-center gap-2 px-3 h-10 my-1 rounded-md text-gray-700 hover:bg-gray-50" title="Management" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5v14"/></svg>
-            <span class="sidebar-text">Management</span>
+        <a href="javascript:void(0);" data-menu-toggle class="flex items-center gap-2 px-3 h-10 my-1 rounded-md text-gray-700 hover:bg-gray-50" title="Projects &amp; Assets" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M6 3h12M4 11h16M5 15h14M7 19h10"/></svg>
+            <span class="sidebar-text">Projects &amp; Assets</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
         </a>
         <div class="hidden pl-4" data-menu>
-            <a href="#" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-8 4 8 4 8-4-8-4zM4 14l8 4 8-4"/></svg>
+            @php
+                $admin = auth('admin')->user();
+                $project = $admin ? \App\Models\Project::where('admin_id', $admin->id)->first() : null;
+            @endphp
+            @if($project)
+                <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-8 4 8 4 8-4-8-4zM4 14l8 4 8-4"/></svg>
+                    <span class="sidebar-text">{{ $project->name }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                </a>
+                <div class="hidden pl-4" data-submenu>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                        <span class="sidebar-text">Overview</span>
+                    </a>
+                    @php
+                        $servers = $project->servers()->orderBy('ip')->get();
+                    @endphp
+                    @foreach($servers as $server)
+                        <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12"/></svg>
+                            <span class="sidebar-text">{{ $server->ip }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                        </a>
+                        <div class="hidden pl-4" data-submenu>
+                            @foreach($server->assets as $asset)
+                                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
+                                    <span class="sidebar-text">{{ ucfirst($asset->service_name) }} — {{ $asset->hostname }}</span>
+                                </a>
+                            @endforeach
+                            @if($server->assets->isEmpty())
+                                <div class="px-3 h-9 my-1 rounded-md text-gray-500">No services configured</div>
+                            @endif
+                        </div>
+                    @endforeach
+                    @if($servers->isEmpty())
+                        <div class="px-3 h-9 my-1 rounded-md text-gray-500">Add IPs in Assets</div>
+                    @endif
+                    <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12H3M12 3v18"/></svg>
+                        <span class="sidebar-text">Utills</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    @php
+                        $sslHosts = \App\Models\Asset::whereIn('server_id', $servers->pluck('id'))->where('service_name', 'ssl')->orderBy('hostname')->get();
+                    @endphp
+                    <div class="hidden pl-4" data-submenu>
+                        <div class="px-3 h-9 my-1 rounded-md text-gray-700">SSL</div>
+                        @forelse($sslHosts as $ssl)
+                            <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
+                                <span class="sidebar-text">{{ $ssl->hostname }}</span>
+                            </a>
+                        @empty
+                            <div class="px-3 h-9 my-1 rounded-md text-gray-500">No SSL hostnames</div>
+                        @endforelse
+                    </div>
+                </div>
+            @else
+                <div class="pl-4">
+                    <a href="{{ route('admin.projects.create') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16M4 12h16"/></svg>
+                        <span class="sidebar-text">Create Project</span>
+                    </a>
+                    <a href="{{ route('admin.assets.index') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                        <span class="sidebar-text">Assets</span>
+                    </a>
+                </div>
+            @endif
+        </div>
+        <div class="hidden pl-4" data-menu>
+            <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-8 4 8 4 8-4-8-4zM4 14l8 4 8-4"/></svg>
                 <span class="sidebar-text">Users</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
             </a>
             <div class="hidden pl-4" data-submenu>
                 <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
                     <span class="sidebar-text">All Users</span>
                 </a>
                 <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16M4 12h16"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16M4 12h16"/></svg>
                     <span class="sidebar-text">Create User</span>
                 </a>
             </div>
-            <a href="#" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4v8a8 8 0 11-16 0V6l8-4z"/></svg>
+            <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4v8a8 8 0 11-16 0V6l8-4z"/></svg>
                 <span class="sidebar-text">Settings</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
             </a>
             <div class="hidden pl-4" data-submenu>
                 <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
                     <span class="sidebar-text">General</span>
                 </a>
                 <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
                     <span class="sidebar-text">Security</span>
                 </a>
             </div>
         </div>
     </nav>
-    <div class="absolute bottom-0 left-0 right-0 w-full">
+    <div class="fixed bottom-0 left-0 right-0 w-64">
         <button id="sidebarProfileBtn" class="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-gray-50">
             <img class="h-9 w-9 rounded-full" src="https://i.pravatar.cc/80?img=5" alt="">
             <div class="sidebar-meta flex justify-between items-center w-full">

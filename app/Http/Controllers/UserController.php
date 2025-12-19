@@ -28,12 +28,11 @@ class UserController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::guard('web')->attempt($credentials)) {
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully');
         }
-
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ]);
+        ])->with('error', 'Invalid credentials');
     }
     public function register()
     {
@@ -62,7 +61,7 @@ class UserController extends Controller
 
         Auth::guard('web')->login($user);
 
-        return redirect()->intended('/dashboard');
+        return redirect()->intended('/dashboard')->with('success', 'Account created successfully');
     }
 
     public function dashboard()
@@ -78,6 +77,6 @@ class UserController extends Controller
     {
         Auth::guard('web')->logout();
 
-        return redirect()->intended('/');
+        return redirect()->intended('/')->with('success', 'Logged out successfully');
     }
 }

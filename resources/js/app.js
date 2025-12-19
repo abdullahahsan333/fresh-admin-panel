@@ -1,6 +1,34 @@
 import './bootstrap';
 
 document.addEventListener('DOMContentLoaded', () => {
+    const toastRoot = document.getElementById('toastRoot');
+    const showToast = (type, text, timeout = 3200) => {
+        if (!toastRoot || !text) return;
+        const el = document.createElement('div');
+        el.className = 'pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg text-sm';
+        let base = 'bg-gray-900 text-white';
+        if (type === 'success') base = 'bg-emerald-600 text-white';
+        else if (type === 'error') base = 'bg-red-600 text-white';
+        else if (type === 'warning') base = 'bg-amber-500 text-black';
+        else if (type === 'info') base = 'bg-blue-600 text-white';
+        el.className += ' ' + base;
+        const span = document.createElement('span');
+        span.textContent = text;
+        el.appendChild(span);
+        toastRoot.appendChild(el);
+        setTimeout(() => {
+            el.style.opacity = '1';
+        }, 10);
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-4px)';
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 300);
+        }, timeout);
+    };
+    const flashMessages = Array.isArray(window.__flash) ? window.__flash : [];
+    flashMessages.forEach(m => showToast(m.type, m.text));
     const shell = document.getElementById('adminShell');
     const toggleBtn = document.getElementById('sidebarToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
@@ -9,6 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const topbarProfileBtn = document.getElementById('topbarProfileBtn');
     const topbarDropdownId = 'topbarProfileDropdown';
     let topbarDropdown = document.getElementById(topbarDropdownId);
+    let menuFlyout = null;
+    let subFlyout = null;
+    const flyouts = {};
+    function hideAllFlyouts() {
+        Object.values(flyouts).forEach((f) => {
+            if (f && !f.classList.contains('hidden')) f.classList.add('hidden');
+        });
+        if (menuFlyout && !menuFlyout.classList.contains('hidden')) menuFlyout.classList.add('hidden');
+        if (subFlyout && !subFlyout.classList.contains('hidden')) subFlyout.classList.add('hidden');
+    }
 
     function ensureProfileDropdown() {
         if (!profileDropdown) {
@@ -28,8 +66,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.28 0 4-1.72 4-4s-1.72-4-4-4-4 1.72-4 4 1.72 4 4 4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20c0-2.21 2.69-4 6-4s6 1.79 6 4"/></svg>
                         <span>My Profile</span>
                     </a>
+                    <a href="/admin/assets" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                        <span>Asset Management</span>
+                    </a>
                     <a href="/admin/settings" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11-1.71l-44.89 18.07a10.81 10.81 0 0 1-13.14-4.58l-42.77-74a10.8 10.8 0 0 1 2.45-13.75l38.21-30a16.05 16.05 0 0 0 6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0-6.05 14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11-1.71l-44.89 18.07a10.81 10.81 0 0 1-13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0 6.05 14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
                         <span>Settings</span>
                     </a>
                     <a href="/admin/logout" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
@@ -56,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const collapsed = shell.classList.toggle('sidebar-collapsed');
             toggleBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
             positionProfileDropdown();
+            hideAllFlyouts();
         });
     }
 
@@ -104,6 +147,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.style.removeProperty('opacity');
             }, duration);
         };
+
+        const ensureFlyoutLevel = (level) => {
+            const id = `sidebarFlyout${level}`;
+            const existing = document.getElementById(id);
+            if (existing) {
+                flyouts[level] = existing;
+                return existing;
+            }
+            const el = document.createElement('div');
+            el.id = id;
+            el.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
+            document.body.appendChild(el);
+            flyouts[level] = el;
+            return el;
+        };
+
+        const positionFlyoutNextTo = (flyout, rect, offsetX = 8, offsetY = 0) => {
+            const left = rect.right + offsetX;
+            const top = rect.top + offsetY;
+            flyout.style.left = `${left}px`;
+            flyout.style.top = `${top}px`;
+        };
+
+        const renderPanelToFlyout = (panel, flyout, level = 1) => {
+            const items = Array.from(panel.querySelectorAll(':scope > a'));
+            flyout.innerHTML = `<div class="p-2"></div>`;
+            const container = flyout.firstElementChild;
+            items.forEach((a) => {
+                const icon = a.querySelector('svg')?.outerHTML ?? '';
+                const label = a.querySelector('.sidebar-text')?.textContent ?? a.textContent.trim();
+                const hasSub = a.hasAttribute('data-submenu-toggle');
+                const entry = document.createElement('button');
+                entry.type = 'button';
+                entry.className = 'w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 text-left';
+                entry.innerHTML = `${icon}<span class="text-sm">${label}</span>${hasSub ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>' : ''}`;
+                container.appendChild(entry);
+                if (hasSub) {
+                    const subPanel = a.nextElementSibling;
+                    entry.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const er = entry.getBoundingClientRect();
+                        openFlyoutForPanel(subPanel, er, level + 1);
+                    });
+                } else {
+                    // Navigate if entry anchor has href
+                    const href = a.getAttribute('href');
+                    if (href && href !== '#') {
+                        entry.addEventListener('click', () => {
+                            window.location.href = href;
+                        });
+                    }
+                }
+            });
+        };
+        const openFlyoutForPanel = (panel, rect, level) => {
+            const fly = ensureFlyoutLevel(level);
+            renderPanelToFlyout(panel, fly, level);
+            positionFlyoutNextTo(fly, rect, 8, 0);
+            fly.classList.remove('hidden');
+            Object.keys(flyouts).forEach((l) => {
+                const li = Number(l);
+                if (li > level && flyouts[li]) flyouts[li].classList.add('hidden');
+            });
+        };
+        const hideFlyoutsFrom = (level) => {
+            Object.keys(flyouts).forEach((l) => {
+                const li = Number(l);
+                if (li >= level && flyouts[li] && !flyouts[li].classList.contains('hidden')) {
+                    flyouts[li].classList.add('hidden');
+                }
+            });
+        };
+        
+
         document.querySelectorAll('[data-menu-toggle]').forEach(trigger => {
             trigger.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -112,36 +229,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 const caret = trigger.querySelector('.submenu-caret');
                 const expanded = trigger.getAttribute('aria-expanded') === 'true';
                 const willExpand = !expanded;
+                const collapsed = shell && shell.classList.contains('sidebar-collapsed');
 
                 // Close all other top-level menus (accordion)
                 menuTriggers.forEach(t => {
                     if (t !== trigger) {
                         t.setAttribute('aria-expanded', 'false');
                         const p = t.nextElementSibling;
-                        if (p) slideUp(p);
+                        if (p && !collapsed) slideUp(p);
                         const c = t.querySelector('.submenu-caret');
                         if (c) c.classList.remove('rotate-180');
                     }
                 });
 
-                // Toggle current
-                trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                if (willExpand) {
-                    slideDown(panel);
+                if (collapsed) {
+                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+                    const rect = trigger.getBoundingClientRect();
+                    if (willExpand) {
+                        openFlyoutForPanel(panel, rect, 1);
+                    } else {
+                        hideFlyoutsFrom(1);
+                    }
                 } else {
-                    slideUp(panel);
-                }
-                if (caret) caret.classList.toggle('rotate-180', willExpand);
+                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+                    if (willExpand) {
+                        slideDown(panel);
+                    } else {
+                        slideUp(panel);
+                    }
+                    if (caret) caret.classList.toggle('rotate-180', willExpand);
 
-                // When expanding, also collapse any open submenus inside this panel
-                if (willExpand) {
-                    panel.querySelectorAll('[data-submenu-toggle]').forEach(st => {
-                        st.setAttribute('aria-expanded', 'false');
-                        const sp = st.nextElementSibling;
-                        if (sp) slideUp(sp);
-                        const sc = st.querySelector('.submenu-caret');
-                        if (sc) sc.classList.remove('rotate-180');
-                    });
+                    if (willExpand) {
+                        panel.querySelectorAll('[data-submenu-toggle]').forEach(st => {
+                            st.setAttribute('aria-expanded', 'false');
+                            const sp = st.nextElementSibling;
+                            if (sp) slideUp(sp);
+                            const sc = st.querySelector('.submenu-caret');
+                            if (sc) sc.classList.remove('rotate-180');
+                        });
+                    }
                 }
             });
         });
@@ -153,27 +279,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 const caret = trigger.querySelector('.submenu-caret');
                 const expanded = trigger.getAttribute('aria-expanded') === 'true';
                 const willExpand = !expanded;
+                const collapsed = shell && shell.classList.contains('sidebar-collapsed');
 
-                // Close sibling submenus within the same parent menu
-                const parentMenu = trigger.closest('[data-menu]');
-                if (parentMenu) {
-                    parentMenu.querySelectorAll('[data-submenu-toggle]').forEach(st => {
+                const parentGroup = trigger.parentElement.closest('[data-menu], [data-submenu]');
+                if (parentGroup) {
+                    Array.from(parentGroup.querySelectorAll(':scope > a[data-submenu-toggle]')).forEach(st => {
                         if (st !== trigger) {
                             st.setAttribute('aria-expanded', 'false');
                             const sp = st.nextElementSibling;
-                            if (sp) slideUp(sp);
+                            if (sp && !collapsed) slideUp(sp);
                             const sc = st.querySelector('.submenu-caret');
                             if (sc) sc.classList.remove('rotate-180');
                         }
                     });
                 }
 
-                // Toggle current
-                trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                if (willExpand) {
-                    slideDown(panel);
+                if (collapsed) {
+                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+                    if (willExpand) {
+                        const rect = trigger.getBoundingClientRect();
+                        openFlyoutForPanel(panel, rect, 2);
+                    } else {
+                        hideFlyoutsFrom(2);
+                    }
                 } else {
-                    slideUp(panel);
+                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+                    if (willExpand) {
+                        slideDown(panel);
+                    } else {
+                        slideUp(panel);
+                    }
                 }
                 if (caret) caret.classList.toggle('rotate-180', willExpand);
             });
@@ -189,14 +324,22 @@ document.addEventListener('DOMContentLoaded', () => {
             ensureProfileDropdown();
             positionProfileDropdown();
             profileDropdown.classList.toggle('hidden');
+            hideAllFlyouts();
         });
         document.addEventListener('click', (e) => {
+            const t = e.target;
+            const inSidebar = t.closest('#adminSidebar');
+            const inFlyout = t.closest('[id^="sidebarFlyout"]');
+            const isMenuTrigger = t.closest('[data-menu-toggle]') || t.closest('[data-submenu-toggle]');
+            const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#topbarProfileBtn');
+            if (inSidebar || inFlyout || isMenuTrigger || isProfileTrigger) return;
             if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
                 profileDropdown.classList.add('hidden');
             }
             if (topbarDropdown && !topbarDropdown.classList.contains('hidden')) {
                 topbarDropdown.classList.add('hidden');
             }
+            hideAllFlyouts();
         });
         window.addEventListener('resize', positionProfileDropdown);
     }
@@ -219,8 +362,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.28 0 4-1.72 4-4s-1.72-4-4-4-4 1.72-4 4 1.72 4 4 4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20c0-2.21 2.69-4 6-4s6 1.79 6 4"/></svg>
                         <span>My Profile</span>
                     </a>
+                    <a href="/admin/assets" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
+                        <span>Asset Management</span>
+                    </a>
                     <a href="#" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11-1.71l-44.89 18.07a10.81 10.81 0 0 1-13.14-4.58l-42.77-74a10.8 10.8 0 0 1 2.45-13.75l38.21-30a16.05 16.05 0 0 0 6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0-6.05 14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11 1.71l-44.89 18.07a10.81 10.81 0 0 1 13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l-44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
                         <span>Settings</span>
                     </a>
                     <a href="/admin/logout" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
@@ -252,4 +399,329 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         window.addEventListener('resize', positionTopbarDropdown);
     }
+
+    document.querySelectorAll('[data-copy-target]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-copy-target');
+            const el = target ? document.querySelector(target) : null;
+            if (!el) return;
+            const text = (el.textContent || '').trim();
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('success', 'Copied to clipboard');
+            });
+        });
+    });
+    
+    const hnInput = document.getElementById('hostnameInput');
+    const hnBtn = document.getElementById('addHostnameBtn');
+    const hnList = document.getElementById('hostnamesList');
+    const hnHidden = document.getElementById('hostnamesHidden');
+    let hostnames = [];
+    const renderHostnames = () => {
+        if (!hnList) return;
+        if (!hostnames.length) {
+            hnList.textContent = 'No hostnames yet. Add one to start.';
+            return;
+        }
+        const container = document.createElement('div');
+        container.className = 'space-y-2';
+        hostnames.forEach((name, i) => {
+            const row = document.createElement('div');
+            row.className = 'group flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 ring-1 ring-transparent hover:ring-[rgb(var(--color-primary)/.5)] hover:shadow-sm transition-all';
+            const left = document.createElement('div');
+            left.className = 'flex items-center gap-3';
+            const dot = document.createElement('span');
+            dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+            const textWrap = document.createElement('div');
+            const titleEl = document.createElement(/^https?:\/\//.test(name) ? 'a' : 'span');
+            if (titleEl.tagName.toLowerCase() === 'a') {
+                titleEl.href = name;
+                titleEl.target = '_blank';
+                titleEl.rel = 'noreferrer';
+            }
+            titleEl.className = 'text-sm font-medium hover:underline';
+            titleEl.textContent = name;
+            const sub = document.createElement('div');
+            sub.className = 'text-xs text-gray-500';
+            sub.textContent = 'Hostname';
+            textWrap.appendChild(titleEl);
+            textWrap.appendChild(sub);
+            left.appendChild(dot);
+            left.appendChild(textWrap);
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-2';
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'btn btn-secondary h-8 px-3 text-xs';
+            remove.textContent = 'Remove';
+            remove.addEventListener('click', () => {
+                hostnames.splice(i, 1);
+                renderHostnames();
+            });
+            actions.appendChild(remove);
+            row.appendChild(left);
+            row.appendChild(actions);
+            container.appendChild(row);
+        });
+        hnList.innerHTML = '';
+        hnList.appendChild(container);
+        if (hnHidden) {
+            hnHidden.innerHTML = '';
+            hostnames.forEach((h) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'hostnames[]';
+                input.value = h;
+                hnHidden.appendChild(input);
+            });
+        }
+    };
+    const addHostname = () => {
+        if (!hnInput) return;
+        const val = (hnInput.value || '').trim();
+        if (!val) return;
+        if (!hostnames.includes(val)) {
+            hostnames.push(val);
+            renderHostnames();
+        }
+        hnInput.value = '';
+        hnInput.focus();
+    };
+    if (hnBtn) hnBtn.addEventListener('click', addHostname);
+    if (hnInput) hnInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addHostname();
+    });
+    
+    const ipHidden = document.getElementById('ipHidden');
+    const assetInput = document.getElementById('assetInput');
+    const assetAddBtn = document.getElementById('assetAddBtn');
+    const assetsList = document.getElementById('assetsList');
+    const selectedAssetIp = document.getElementById('selectedAssetIp');
+    let servers = [];
+    const initialServers = Array.isArray(window.__servers) ? window.__servers : [];
+    if (initialServers.length) {
+        servers = initialServers.slice();
+    }
+    let currentIp = '';
+    const isIp = (val) => /^\d{1,3}(\.\d{1,3}){3}$/.test(val);
+    const setCurrentIp = (ip) => {
+        currentIp = ip;
+        if (selectedAssetIp) selectedAssetIp.textContent = ip || 'No IP';
+        if (ipHidden) ipHidden.value = ip || '';
+        buildYaml();
+    };
+    const renderServers = () => {
+        if (!assetsList) return;
+        assetsList.innerHTML = '';
+        if (!servers.length) {
+            const empty = document.createElement('div');
+            empty.className = 'text-sm text-gray-500 bg-gray-50 rounded-lg p-4';
+            empty.textContent = 'Add an IP to start monitoring.';
+            assetsList.appendChild(empty);
+            return;
+        }
+        servers.forEach((ip) => {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'w-full rounded-lg border border-gray-200 p-3 flex items-center gap-3 text-left hover:border-[rgb(var(--color-primary))]';
+            const dot = document.createElement('span');
+            dot.className = 'h-2.5 w-2.5 rounded-full bg-[rgb(var(--color-primary))]';
+            const meta = document.createElement('div');
+            meta.className = 'text-sm';
+            const title = document.createElement('div');
+            title.className = 'font-medium';
+            title.textContent = ip;
+            const sub = document.createElement('div');
+            sub.className = 'text-gray-500';
+            sub.textContent = 'Server · 0 services';
+            meta.appendChild(title);
+            meta.appendChild(sub);
+            row.appendChild(dot);
+            row.appendChild(meta);
+            row.addEventListener('click', () => setCurrentIp(ip));
+            assetsList.appendChild(row);
+        });
+    };
+    const addServerIp = () => {
+        if (!assetInput) return;
+        const val = (assetInput.value || '').trim();
+        if (!val || !isIp(val)) {
+            showToast('warning', 'Enter a valid IP like 128.199.73.128');
+            return;
+        }
+        const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
+        window.axios.post('/admin/assets/server', { ip: val }, {
+            headers: { 'X-CSRF-TOKEN': token }
+        }).then((res) => {
+            const ip = res?.data?.server?.ip || val;
+            if (!servers.includes(ip)) servers.push(ip);
+            renderServers();
+            setCurrentIp(ip);
+            assetInput.value = '';
+            assetInput.focus();
+            showToast('success', 'Server saved');
+        }).catch(() => {
+            showToast('error', 'Failed to save server');
+        });
+    };
+    if (assetAddBtn) assetAddBtn.addEventListener('click', addServerIp);
+    if (assetInput) assetInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addServerIp();
+    });
+    renderServers();
+    if (servers.length) {
+        setCurrentIp(servers[0]);
+    }
+    
+    const assetsForm = document.getElementById('assetsForm');
+    if (assetsForm) {
+        assetsForm.addEventListener('submit', (e) => {
+            if (!ipHidden || !(ipHidden.value || '').trim()) {
+                if (servers.length) {
+                    setCurrentIp(servers[0]);
+                } else {
+                    e.preventDefault();
+                    showToast('warning', 'Add IP first, then Save Configuration');
+                }
+            }
+        });
+    }
+    
+    const serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
+    const servicesCountEl = document.getElementById('servicesCount');
+    const servicesChipsEl = document.getElementById('selectedServicesChips');
+    const yamlEl = document.getElementById('yamlConfigCode');
+    const getSelectedServices = () => serviceInputs.filter(i => i.checked).map(i => i.value);
+    const renderSelectedServices = () => {
+        if (servicesCountEl) servicesCountEl.textContent = String(getSelectedServices().length);
+        if (!servicesChipsEl) return;
+        servicesChipsEl.innerHTML = '';
+        getSelectedServices().forEach(s => {
+            const chip = document.createElement('span');
+            chip.className = 'px-3 h-8 inline-flex items-center rounded-full border border-[rgb(var(--color-primary)/.6)] text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.08)] text-xs shadow-sm';
+            chip.textContent = s;
+            servicesChipsEl.appendChild(chip);
+        });
+    };
+    const exporterMap = {
+        linux: 'linux_exporter',
+        mysql: 'mysql_exporter',
+        mongodb: 'mongodb_exporter',
+        redis: 'redis_exporter',
+        api_log: 'api_log_exporter',
+        scheduler: 'scheduler_exporter',
+    };
+    const getGlobalBlock = () => [
+        'global:',
+        '  app_name: "Live Shopping"',
+        '  purpose: "A E-commerce Project for API Logs."',
+        `  ip: "${currentIp || '128.199.73.128'}"`
+    ].join('\n');
+    const blocks = {
+        linux_exporter: [
+            'linux_exporter:',
+            '  enabled: true',
+            '  interval: 30',
+            '  receiver_url: "https://api.example.com/collect"'
+        ].join('\n'),
+        scheduler_exporter: [
+            'scheduler_exporter:',
+            '  enabled: true',
+            '  export_interval: 60',
+            '  receiver_url: "http://157.245.207.91:4000/metrics/scheduler"',
+            '  sources:',
+            '    - type: cron',
+            '      enabled: true',
+            '      name: system_cron',
+            '      syslog_path: /var/log/syslog',
+            '      log_window_minutes: 1',
+            '      max_logs: 50',
+            '    - type: systemd',
+            '      enabled: true',
+            '      name: systemd_timers',
+            '      syslog_path: undefined',
+            '      log_window_minutes: 1',
+            '      max_logs: 50'
+        ].join('\n'),
+        mysql_exporter: [
+            'mysql_exporter:',
+            '  enabled: true',
+            '  mysql_host: "127.0.0.1"',
+            '  mysql_port: 3306',
+            '  mysql_user: "monitor_user"',
+            '  mysql_password: "secure_password"',
+            '  receiver_url: "https://api.example.com/collect"',
+            '  export_interval: 30',
+            '  receiver_url_logs: "https://api.example.com/collect"',
+            '  mysql_log_file: "/var/log/mysql/error.log"',
+            '  log_check_interval: 30',
+            '  max_logs_per_batch: 100'
+        ].join('\n'),
+        mongodb_exporter: [
+            'mongodb_exporter:',
+            '  enabled: true',
+            '  mongo_uri: "mongodb://localhost:27017"',
+            '  export_interval: 30',
+            '  receiver_url: "https://api.example.com/collect"',
+            '  receiver_url_logs: "https://api.example.com/collect"',
+            '  mongo_log_file: "/var/log/mongodb/mongod.log"',
+            '  log_check_interval: 30',
+            '  max_logs_per_batch: 100'
+        ].join('\n'),
+        redis_exporter: [
+            'redis_exporter:',
+            '  enabled: true',
+            '  redis_host: "127.0.0.1"',
+            '  redis_port: 6379',
+            '  redis_password: ""',
+            '  receiver_url: "https://api.example.com/collect"',
+            '  export_interval: 30',
+            '  receiver_url_logs: "https://api.example.com/collect"',
+            '  redis_log_file: "/var/log/redis/redis-server.log"',
+            '  log_check_interval: 30',
+            '  max_logs_per_batch: 100'
+        ].join('\n'),
+        api_log_exporter: [
+            'api_log_exporter:',
+            '  enabled: true',
+            '  export_interval: 60',
+            '  receiver_url: "https://api.example.com/collect"',
+            '  sources:',
+            '    - type: nginx',
+            '      enabled: false',
+            '      name: nginx_prod',
+            '      access_log_path: /var/log/nginx/access.log',
+            '      log_window_minutes: 1',
+            '      max_logs: 100',
+            '    - type: mongoose',
+            '      enabled: true',
+            '      name: mongoose_logs',
+            '      mongo_uri: "mongodb://localhost:27017"',
+            '      collection: logs',
+            '      log_window_minutes: 1',
+            '      max_logs: 200'
+        ].join('\n'),
+    };
+    const buildYaml = () => {
+        if (!yamlEl) return;
+        const parts = [getGlobalBlock()];
+        getSelectedServices().forEach(s => {
+            const exporter = exporterMap[s];
+            const block = exporter ? blocks[exporter] : '';
+            if (block) {
+                parts.push('');
+                parts.push(block);
+            }
+        });
+        yamlEl.textContent = parts.join('\n');
+    };
+    serviceInputs.forEach(i => {
+        i.addEventListener('change', () => {
+            renderSelectedServices();
+            buildYaml();
+        });
+    });
+    renderSelectedServices();
+    buildYaml();
 });

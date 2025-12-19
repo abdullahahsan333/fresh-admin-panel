@@ -33,11 +33,27 @@
                         <label class="block text-sm mb-1">Confirm Password</label>
                         <input type="password" name="password_confirmation" class="w-full border rounded px-3 py-2 mb-4" required>
                         
-                        <button class="w-full bg-gray-800 text-white rounded py-2">Register</button>
-                        <p class="text-xs text-gray-500 mt-4">Have an account? <a href="{{ url('/') }}" class="underline">Login</a></p>
+                        <button class="w-full btn btn-primary">Register</button>
+                        <p class="text-xs text-gray-500 mt-4">Have an account? <a href="{{ url('/') }}" class="underline text-[rgb(var(--color-primary))]">Login</a></p>
                     </form>
                 </div>
             </div>
         </div>
+        <div id="toastRoot" class="fixed z-[100] top-4 right-4 space-y-2 pointer-events-none"></div>
+        @php
+            $flash = [];
+            if (session('success')) $flash[] = ['type' => 'success', 'text' => session('success')];
+            if (session('error')) $flash[] = ['type' => 'error', 'text' => session('error')];
+            if (session('warning')) $flash[] = ['type' => 'warning', 'text' => session('warning')];
+            if (session('info')) $flash[] = ['type' => 'info', 'text' => session('info')];
+            if ($errors && $errors->any()) {
+                foreach ($errors->all() as $e) {
+                    $flash[] = ['type' => 'error', 'text' => $e];
+                }
+            }
+        @endphp
+        <script>
+            window.__flash = {!! json_encode($flash) !!};
+        </script>
     </body>
 </html>

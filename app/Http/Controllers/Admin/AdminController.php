@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Admin;
@@ -25,9 +26,9 @@ class AdminController extends Controller
         ]);
         $credentials = $request->only('email', 'password');
         if (Auth::guard('admin')->attempt($credentials)) {
-            return redirect()->intended('/admin/dashboard');
+            return redirect()->intended('/admin/dashboard')->with('success', 'Logged in successfully');
         }
-        return back()->withErrors(['email' => 'Invalid credentials']);
+        return back()->withErrors(['email' => 'Invalid credentials'])->with('error', 'Invalid credentials');
     }
 
     public function registerForm()
@@ -51,7 +52,11 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
         ]);
         Auth::guard('admin')->login($admin);
-        return redirect()->intended('/admin/dashboard');
+        $project = \App\Models\Project::firstOrCreate(
+            ['admin_id' => $admin->id],
+            ['name' => $admin->name . '\'s Project', 'description' => 'Default project']
+        );
+        return redirect()->intended(route('admin.dashboard'))->with('success', 'Welcome! Your project is ready.');
     }
 
     public function dashboard()
@@ -65,6 +70,6 @@ class AdminController extends Controller
     public function logout()
     {
         Auth::guard('admin')->logout();
-        return redirect()->intended('/admin/login');
+        return redirect()->intended('/admin/login')->with('success', 'Logged out successfully');
     }
 }

@@ -18,16 +18,38 @@
             <div class="w-full">
                 <form method="POST" action="{{ route('admin.login') }}" class="bg-white shadow rounded p-6 w-full max-w-sm">
                     @csrf
-                    <h1 class="text-xl font-semibold mb-4">Admin Login</h1>
+                    <h1 class="text-2xl font-semibold mb-2">Welcome to Server Monitoring! 👋🏻</h1>
+                    <p class="text-sm text-gray-500 mb-4">Please sign-in to your account and start the adventure</p>
+
                     <label class="block text-sm mb-1">Email</label>
                     <input type="email" name="email" class="w-full border rounded px-3 py-2 mb-3" required>
+
                     <label class="block text-sm mb-1">Password</label>
                     <input type="password" name="password" class="w-full border rounded px-3 py-2 mb-4" required>
-                    <button class="w-full bg-gray-800 text-white rounded py-2">Login</button>
-                    <p class="text-xs text-gray-500 mt-4">No account? <a href="{{ route('admin.register') }}" class="underline">Register</a></p>
+
+                    <button class="w-full btn btn-primary">Login</button>
+                    <p class="text-xs text-gray-500 mt-4">
+                        New on our platform? <a href="{{ route('admin.register') }}" class="underline text-[rgb(var(--color-primary))]">Create an account</a>
+                    </p>
                 </form>
             </div>
         </div>
     </div>
+    <div id="toastRoot" class="fixed z-[100] top-4 right-4 space-y-2 pointer-events-none"></div>
+    @php
+        $flash = [];
+        if (session('success')) $flash[] = ['type' => 'success', 'text' => session('success')];
+        if (session('error')) $flash[] = ['type' => 'error', 'text' => session('error')];
+        if (session('warning')) $flash[] = ['type' => 'warning', 'text' => session('warning')];
+        if (session('info')) $flash[] = ['type' => 'info', 'text' => session('info')];
+        if ($errors && $errors->any()) {
+            foreach ($errors->all() as $e) {
+                $flash[] = ['type' => 'error', 'text' => $e];
+            }
+        }
+    @endphp
+    <script>
+        window.__flash = {!! json_encode($flash) !!};
+    </script>
 </body>
 </html>
