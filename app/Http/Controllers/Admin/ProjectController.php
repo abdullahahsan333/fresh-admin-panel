@@ -9,12 +9,20 @@ use App\Models\Project;
 
 class ProjectController extends Controller
 {
+    protected array $baseViewData = [];
+
+    public function __construct()
+    {
+        $this->baseViewData = menuActive('projects_assets', '', '');
+    }
+
     public function create()
     {
+        $data = $this->baseViewData;
         if (!Auth::guard('admin')->check()) {
             return redirect()->intended('/admin/login');
         }
-        return view('admin.projects.create');
+        return view('admin.projects.create', $data);
     }
 
     public function store(Request $request)

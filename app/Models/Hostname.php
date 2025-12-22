@@ -5,14 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Asset extends Model
+class Hostname extends Model
 {
     use HasFactory;
 
-    protected $table = 'server_monitoring';
-
-    protected $fillable = ['project_id', 'server_id', 'service_name', 'status'];
-    protected $primaryKey = 'id';
+    protected $table = 'hostname';
+    protected $fillable = ['project_id', 'server_id', 'hostname'];
 
     public function server()
     {
@@ -23,4 +21,5 @@ class Asset extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
 }

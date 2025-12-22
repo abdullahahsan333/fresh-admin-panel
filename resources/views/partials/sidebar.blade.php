@@ -4,24 +4,30 @@
         <span id="adminBrandText" class="font-semibold sidebar-text">Apprise Tech Group</span>
     </div>
     <nav class="px-2 space-y-1">
-        <a href="javascript:void(0);" data-menu-toggle class="flex items-center gap-2 px-3 h-10 my-1 rounded-md text-gray-700 hover:bg-gray-50" title="Projects &amp; Assets" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M6 3h12M4 11h16M5 15h14M7 19h10"/></svg>
-            <span class="sidebar-text">Projects &amp; Assets</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($activeMenu) && $activeMenu === 'dashboard') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
+            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"></path></svg>
+            <span class="sidebar-text">Dashboard</span>
         </a>
-        <div class="hidden pl-4" data-menu>
+
+        <div class="flex items-center gap-2 px-3 h-10 my-1 rounded-md {{ (isset($activeMenu) && $activeMenu === 'projects_assets') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}" title="Projects &amp; Assets">
+            <span class="sidebar-text">Projects &amp; Assets</span>
+        </div>
+        <div class="">
             @php
                 $admin = auth('admin')->user();
                 $project = $admin ? \App\Models\Project::where('admin_id', $admin->id)->first() : null;
             @endphp
             @if($project)
-                <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                @php
+                    $projExpanded = (isset($activeMenu) && $activeMenu === 'projects_assets') || (isset($activeProjectId) && $activeProjectId === $project->id);
+                @endphp
+                <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $projExpanded ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}" aria-expanded="{{ $projExpanded ? 'true' : 'false' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-8 4 8 4 8-4-8-4zM4 14l8 4 8-4"/></svg>
                     <span class="sidebar-text">{{ $project->name }}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform {{ $projExpanded ? 'rotate-180' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
                 </a>
-                <div class="hidden pl-4" data-submenu>
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                <div class="{{ $projExpanded ? 'pl-4 open' : 'hidden pl-4 close' }}" data-submenu>
+                    <a href="{{ route('admin.overview') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($subMenu) && $subMenu === 'overview') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
                         <span class="sidebar-text">Overview</span>
                     </a>
@@ -29,45 +35,48 @@
                         $servers = $project->servers()->orderBy('ip')->get();
                     @endphp
                     @foreach($servers as $server)
-                        <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                        @php
+                            $assets = $server->assets()->orderBy('service_name')->get();
+                            $srvExpanded = isset($activeServerId) && $activeServerId === $server->id;
+                        @endphp
+                        <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $srvExpanded ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}" aria-expanded="{{ $srvExpanded ? 'true' : 'false' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12"/></svg>
                             <span class="sidebar-text">{{ $server->ip }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform {{ $srvExpanded ? 'rotate-180' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
                         </a>
-                        <div class="hidden pl-4" data-submenu>
-                            @foreach($server->assets as $asset)
-                                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                        @php
+                            $activeServiceLabel = isset($activeService) ? strtolower($activeService) : null;
+                        @endphp
+                        <div class="{{ $srvExpanded ? 'pl-4' : 'hidden pl-4' }}" data-submenu>
+                            
+                            @foreach ($assets as $service )
+                                <a href="{{ route('admin.server.'. strtolower($service->service_name), $server->id) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $activeServiceLabel === strtolower($service->service_name) ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
-                                    <span class="sidebar-text">{{ ucfirst($asset->service_name) }} — {{ $asset->hostname }}</span>
+                                    <span class="sidebar-text">{{ strFilter($service->service_name) }}</span>
                                 </a>
                             @endforeach
-                            @if($server->assets->isEmpty())
-                                <div class="px-3 h-9 my-1 rounded-md text-gray-500">No services configured</div>
-                            @endif
                         </div>
                     @endforeach
-                    @if($servers->isEmpty())
-                        <div class="px-3 h-9 my-1 rounded-md text-gray-500">Add IPs in Assets</div>
+                @if($servers->isEmpty())
+                    <div class="px-3 h-9 my-1 rounded-md text-gray-500">Add IPs in Assets</div>
+                @endif
+                <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12H3M12 3v18"/></svg>
+                    <span class="sidebar-text">Utils</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                </a>
+                <div class="hidden pl-4" data-submenu>
+                    <div class="px-3 h-9 my-1 rounded-md text-gray-700"></div>
+                    @if($servers->isNotEmpty())
+                        @php
+                            $sslActive = isset($activeService) && $activeService === 'ssl';
+                            $targetServerId = isset($activeServerId) ? $activeServerId : $servers[0]->id;
+                        @endphp
+                        <a href="{{ route('admin.server.ssl', $targetServerId) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $sslActive ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
+                            <span class="sidebar-text">SSL</span>
+                        </a>
                     @endif
-                    <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12H3M12 3v18"/></svg>
-                        <span class="sidebar-text">Utills</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
-                    </a>
-                    @php
-                        $sslHosts = \App\Models\Asset::whereIn('server_id', $servers->pluck('id'))->where('service_name', 'ssl')->orderBy('hostname')->get();
-                    @endphp
-                    <div class="hidden pl-4" data-submenu>
-                        <div class="px-3 h-9 my-1 rounded-md text-gray-700">SSL</div>
-                        @forelse($sslHosts as $ssl)
-                            <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
-                                <span class="sidebar-text">{{ $ssl->hostname }}</span>
-                            </a>
-                        @empty
-                            <div class="px-3 h-9 my-1 rounded-md text-gray-500">No SSL hostnames</div>
-                        @endforelse
-                    </div>
                 </div>
             @else
                 <div class="pl-4">

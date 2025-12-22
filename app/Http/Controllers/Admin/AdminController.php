@@ -5,17 +5,27 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Route;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
+    protected array $baseViewData = [];
+
+    public function __construct()
+    {
+        $this->baseViewData = menuActive('projects_assets', '', '');
+    }
+
     public function loginForm()
     {
+        $data = $this->baseViewData;
         if (Auth::guard('admin')->check()) {
             return redirect()->intended('/admin/dashboard');
         }
-        return view('admin.login');
+        return view('admin.login', $data);
     }
 
     public function login(Request $request)
@@ -33,10 +43,11 @@ class AdminController extends Controller
 
     public function registerForm()
     {
+        $data = $this->baseViewData;
         if (Auth::guard('admin')->check()) {
             return redirect()->intended('/admin/dashboard');
         }
-        return view('admin.register');
+        return view('admin.register', $data);
     }
 
     public function store(Request $request)
@@ -61,10 +72,11 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        $data = $this->baseViewData;
         if (!Auth::guard('admin')->check()) {
             return redirect()->intended('/admin/login');
         }
-        return view('admin.dashboard');
+        return view('admin.dashboard', $data);
     }
 
     public function logout()

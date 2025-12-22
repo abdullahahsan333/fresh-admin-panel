@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('server_monitoring', function (Blueprint $table) {
+        Schema::create('hostname', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->foreignId('server_id')->constrained('servers')->cascadeOnDelete();
-            $table->string('service_name');
             $table->string('hostname');
-            $table->string('status')->default(1)->comment('0: inactive, 1: active');
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('server_monitoring');
+        Schema::dropIfExists('hostname');
     }
 };

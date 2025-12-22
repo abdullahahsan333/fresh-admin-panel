@@ -2,10 +2,12 @@
     "$schema": "https://www.schemastore.org/package.json",
     "private": true,
     "type": "module",
-    "scripts": {
-        "build": "vite build",
-        "dev": "vite"
-    },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "watch": "vite",
+    "build:watch": "vite build --watch"
+  },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.11.0",

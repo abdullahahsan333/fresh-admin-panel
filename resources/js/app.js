@@ -99,11 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
             positionProfileDropdown();
             hideAllFlyouts();
+            const sidebar = document.getElementById('adminSidebar');
+            if (collapsed && sidebar) {
+                Array.from(sidebar.querySelectorAll('[data-menu-toggle], [data-submenu-toggle]')).forEach((t) => {
+                    t.setAttribute('aria-expanded', 'false');
+                    const p = t.nextElementSibling;
+                    if (p) {
+                        p.classList.add('hidden');
+                        p.style.removeProperty('height');
+                        p.style.removeProperty('overflow');
+                        p.style.removeProperty('transition-property');
+                        p.style.removeProperty('transition-duration');
+                        p.style.removeProperty('opacity');
+                    }
+                    const c = t.querySelector('.submenu-caret');
+                    if (c) c.classList.remove('rotate-180');
+                });
+            }
         });
     }
 
     function setupSidebarMenus() {
+        const sidebar = document.getElementById('adminSidebar');
         const menuTriggers = Array.from(document.querySelectorAll('[data-menu-toggle]'));
+        const ACTIVE_CLASSES = ['text-[rgb(var(--color-primary))]', 'bg-[rgb(var(--color-primary)/.06)]'];
+        const INACTIVE_CLASSES = ['text-gray-700'];
+        const applyActive = (el, active) => {
+            if (!el) return;
+            const cls = el.classList;
+            ACTIVE_CLASSES.forEach(c => active ? cls.add(c) : cls.remove(c));
+            INACTIVE_CLASSES.forEach(c => active ? cls.remove(c) : cls.add(c));
+        };
 
         const slideUp = (el, duration = 200) => {
             if (!el || el.classList.contains('hidden')) return;
@@ -221,66 +247,32 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
 
-        document.querySelectorAll('[data-menu-toggle]').forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                const panel = trigger.nextElementSibling;
-                if (!panel) return;
-                const caret = trigger.querySelector('.submenu-caret');
-                const expanded = trigger.getAttribute('aria-expanded') === 'true';
-                const willExpand = !expanded;
-                const collapsed = shell && shell.classList.contains('sidebar-collapsed');
+        if (!sidebar) return;
+        sidebar.addEventListener('click', (e) => {
+            const trigger = e.target.closest('[data-menu-toggle], [data-submenu-toggle]');
+            if (!trigger) return;
+            e.preventDefault();
+            const isTop = trigger.hasAttribute('data-menu-toggle');
+            const panel = trigger.nextElementSibling;
+            if (!panel) return;
+            const caret = trigger.querySelector('.submenu-caret');
+            const expanded = trigger.getAttribute('aria-expanded') === 'true';
+            const willExpand = !expanded;
+            const collapsed = shell && shell.classList.contains('sidebar-collapsed');
 
-                // Close all other top-level menus (accordion)
-                menuTriggers.forEach(t => {
+            if (isTop) {
+                const topTriggers = Array.from(sidebar.querySelectorAll('[data-menu-toggle]'));
+                topTriggers.forEach(t => {
                     if (t !== trigger) {
                         t.setAttribute('aria-expanded', 'false');
                         const p = t.nextElementSibling;
                         if (p && !collapsed) slideUp(p);
                         const c = t.querySelector('.submenu-caret');
                         if (c) c.classList.remove('rotate-180');
+                        applyActive(t, false);
                     }
                 });
-
-                if (collapsed) {
-                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                    const rect = trigger.getBoundingClientRect();
-                    if (willExpand) {
-                        openFlyoutForPanel(panel, rect, 1);
-                    } else {
-                        hideFlyoutsFrom(1);
-                    }
-                } else {
-                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                    if (willExpand) {
-                        slideDown(panel);
-                    } else {
-                        slideUp(panel);
-                    }
-                    if (caret) caret.classList.toggle('rotate-180', willExpand);
-
-                    if (willExpand) {
-                        panel.querySelectorAll('[data-submenu-toggle]').forEach(st => {
-                            st.setAttribute('aria-expanded', 'false');
-                            const sp = st.nextElementSibling;
-                            if (sp) slideUp(sp);
-                            const sc = st.querySelector('.submenu-caret');
-                            if (sc) sc.classList.remove('rotate-180');
-                        });
-                    }
-                }
-            });
-        });
-        document.querySelectorAll('[data-submenu-toggle]').forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                const panel = trigger.nextElementSibling;
-                if (!panel) return;
-                const caret = trigger.querySelector('.submenu-caret');
-                const expanded = trigger.getAttribute('aria-expanded') === 'true';
-                const willExpand = !expanded;
-                const collapsed = shell && shell.classList.contains('sidebar-collapsed');
-
+            } else {
                 const parentGroup = trigger.parentElement.closest('[data-menu], [data-submenu]');
                 if (parentGroup) {
                     Array.from(parentGroup.querySelectorAll(':scope > a[data-submenu-toggle]')).forEach(st => {
@@ -290,28 +282,40 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (sp && !collapsed) slideUp(sp);
                             const sc = st.querySelector('.submenu-caret');
                             if (sc) sc.classList.remove('rotate-180');
+                            applyActive(st, false);
                         }
                     });
                 }
+            }
 
-                if (collapsed) {
-                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                    if (willExpand) {
-                        const rect = trigger.getBoundingClientRect();
-                        openFlyoutForPanel(panel, rect, 2);
-                    } else {
-                        hideFlyoutsFrom(2);
-                    }
+            trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+            applyActive(trigger, willExpand);
+
+            if (collapsed) {
+                const rect = trigger.getBoundingClientRect();
+                const level = isTop ? 1 : (Number(trigger.getAttribute('data-level')) || 2);
+                if (willExpand) {
+                    openFlyoutForPanel(panel, rect, level);
                 } else {
-                    trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
-                    if (willExpand) {
-                        slideDown(panel);
-                    } else {
-                        slideUp(panel);
-                    }
+                    hideFlyoutsFrom(level);
+                }
+            } else {
+                if (willExpand) {
+                    slideDown(panel);
+                } else {
+                    slideUp(panel);
                 }
                 if (caret) caret.classList.toggle('rotate-180', willExpand);
-            });
+                if (willExpand && isTop) {
+                    panel.querySelectorAll('[data-submenu-toggle]').forEach(st => {
+                        st.setAttribute('aria-expanded', 'false');
+                        const sp = st.nextElementSibling;
+                        if (sp) slideUp(sp);
+                        const sc = st.querySelector('.submenu-caret');
+                        if (sc) sc.classList.remove('rotate-180');
+                    });
+                }
+            }
         });
     }
 
@@ -493,23 +497,52 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') addHostname();
     });
     
+    let currentIp = '';
+    
     const ipHidden = document.getElementById('ipHidden');
+    const serverIdHidden = document.getElementById('serverIdHidden');
     const assetInput = document.getElementById('assetInput');
     const assetAddBtn = document.getElementById('assetAddBtn');
     const assetsList = document.getElementById('assetsList');
     const selectedAssetIp = document.getElementById('selectedAssetIp');
     let servers = [];
+    const serverServicesCount = {};
     const initialServers = Array.isArray(window.__servers) ? window.__servers : [];
     if (initialServers.length) {
         servers = initialServers.slice();
     }
-    let currentIp = '';
     const isIp = (val) => /^\d{1,3}(\.\d{1,3}){3}$/.test(val);
     const setCurrentIp = (ip) => {
         currentIp = ip;
         if (selectedAssetIp) selectedAssetIp.textContent = ip || 'No IP';
         if (ipHidden) ipHidden.value = ip || '';
+        if (serverIdHidden) serverIdHidden.value = '';
         buildYaml();
+        if (!ip) return;
+        const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
+        window.axios.get('/admin/assets/server-details', {
+            params: { ip },
+            headers: { 'X-CSRF-TOKEN': token }
+        }).then((res) => {
+            const data = res?.data || {};
+            const services = Array.isArray(data.services) ? data.services : [];
+            const hns = Array.isArray(data.hostnames) ? data.hostnames : [];
+            if (serverIdHidden) serverIdHidden.value = String(data.server_id || '');
+            const inputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
+            inputs.forEach(i => { i.checked = false; });
+            services.forEach(svc => {
+                const match = inputs.find(i => i.value === String(svc));
+                if (match) match.checked = true;
+            });
+            serverServicesCount[ip] = services.length;
+            renderSelectedServices();
+            buildYaml();
+            hostnames = hns.slice();
+            renderHostnames();
+            renderServers();
+        }).catch(() => {
+            // ignore
+        });
     };
     const renderServers = () => {
         if (!assetsList) return;
@@ -524,9 +557,11 @@ document.addEventListener('DOMContentLoaded', () => {
         servers.forEach((ip) => {
             const row = document.createElement('button');
             row.type = 'button';
-            row.className = 'w-full rounded-lg border border-gray-200 p-3 flex items-center gap-3 text-left hover:border-[rgb(var(--color-primary))]';
+            const selected = ip === currentIp;
+            row.className = 'w-full rounded-lg border p-3 flex items-center gap-3 text-left hover:border-[rgb(var(--color-primary))]';
+            row.className += selected ? ' border-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.08)]' : ' border-gray-200';
             const dot = document.createElement('span');
-            dot.className = 'h-2.5 w-2.5 rounded-full bg-[rgb(var(--color-primary))]';
+            dot.className = 'h-2.5 w-2.5 rounded-full ' + (selected ? 'bg-emerald-600' : 'bg-[rgb(var(--color-primary))]');
             const meta = document.createElement('div');
             meta.className = 'text-sm';
             const title = document.createElement('div');
@@ -534,7 +569,8 @@ document.addEventListener('DOMContentLoaded', () => {
             title.textContent = ip;
             const sub = document.createElement('div');
             sub.className = 'text-gray-500';
-            sub.textContent = 'Server · 0 services';
+            const count = serverServicesCount[ip] ?? 0;
+            sub.textContent = `Server · ${count} services`;
             meta.appendChild(title);
             meta.appendChild(sub);
             row.appendChild(dot);
@@ -569,15 +605,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (assetInput) assetInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') addServerIp();
     });
-    renderServers();
-    if (servers.length) {
-        setCurrentIp(servers[0]);
-    }
+    
     
     const assetsForm = document.getElementById('assetsForm');
     if (assetsForm) {
         assetsForm.addEventListener('submit', (e) => {
-            if (!ipHidden || !(ipHidden.value || '').trim()) {
+            const sid = serverIdHidden ? (serverIdHidden.value || '').trim() : '';
+            if (!sid) {
                 if (servers.length) {
                     setCurrentIp(servers[0]);
                 } else {
@@ -588,7 +622,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    const serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
+    let serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
     const servicesCountEl = document.getElementById('servicesCount');
     const servicesChipsEl = document.getElementById('selectedServicesChips');
     const yamlEl = document.getElementById('yamlConfigCode');
@@ -612,6 +646,54 @@ document.addEventListener('DOMContentLoaded', () => {
         api_log: 'api_log_exporter',
         scheduler: 'scheduler_exporter',
     };
+    const servicesContainer = document.getElementById('servicesSelectContainer');
+    const serviceLabelMap = {
+        linux: 'Linux',
+        mysql: 'MySQL',
+        mongodb: 'MongoDB',
+        redis: 'Redis',
+        api_log: 'API Log',
+        scheduler: 'Scheduler',
+    };
+    const wireServiceInputs = () => {
+        serviceInputs.forEach(i => {
+            i.addEventListener('change', () => {
+                renderSelectedServices();
+                buildYaml();
+                if (currentIp) {
+                    serverServicesCount[currentIp] = getSelectedServices().length;
+                    renderServers();
+                }
+            });
+        });
+    };
+    const renderServiceSelect = () => {
+        if (!servicesContainer) return;
+        const keys = Object.keys(exporterMap);
+        const frag = document.createDocumentFragment();
+        keys.forEach(k => {
+            const label = document.createElement('label');
+            label.className = 'inline-flex items-center';
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = 'services[]';
+            input.value = k;
+            input.className = 'peer sr-only';
+            const chip = document.createElement('span');
+            chip.className = 'px-3 h-9 inline-flex items-center rounded-full border border-gray-300 text-gray-700 peer-checked:bg-[rgb(var(--color-primary))] peer-checked:text-white peer-checked:border-transparent';
+            chip.textContent = serviceLabelMap[k] || k;
+            label.appendChild(input);
+            label.appendChild(chip);
+            frag.appendChild(label);
+        });
+        servicesContainer.innerHTML = '';
+        servicesContainer.appendChild(frag);
+        serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
+        wireServiceInputs();
+        renderSelectedServices();
+        buildYaml();
+    };
+    // postpone initial render until YAML builder is defined
     const getGlobalBlock = () => [
         'global:',
         '  app_name: "Live Shopping"',
@@ -716,12 +798,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         yamlEl.textContent = parts.join('\n');
     };
+    renderServiceSelect();
     serviceInputs.forEach(i => {
         i.addEventListener('change', () => {
             renderSelectedServices();
             buildYaml();
+            if (currentIp) {
+                serverServicesCount[currentIp] = getSelectedServices().length;
+                renderServers();
+            }
         });
     });
     renderSelectedServices();
     buildYaml();
+    renderServers();
+    if (servers.length) {
+        setCurrentIp(servers[0]);
+    }
 });

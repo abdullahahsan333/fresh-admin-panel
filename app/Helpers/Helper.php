@@ -171,3 +171,18 @@ function uploadImage($sourcePath = null, $uploadPath = '', $maxWidth = 0, $maxHe
     }
     return false;
 }
+
+/* global menu active state helpers */
+function menuActive(string $menu = '', string $submenu = '', string $subsubmenu = ''): array
+{
+    return [
+        'activeMenu' => $menu,
+        'subMenu' => $submenu,
+        'subSubMenu' => $subsubmenu,
+    ];
+}
+
+function withMenu(array $data = [], string $menu = '', string $submenu = '', string $subsubmenu = ''): array
+{
+    return array_merge(menuActive($menu, $submenu, $subsubmenu), $data);
+}

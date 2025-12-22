@@ -37,3 +37,7 @@
 .btn-active:hover {
     background-color: rgb(var(--color-active) / 0.9);
 }
+
+.sidebar-text {
+    padding-left: 0 !important;
+}

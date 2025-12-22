@@ -32,4 +32,14 @@ Route::prefix('admin')->group(function () {
     Route::get('/assets', [AdminAssetController::class, 'index'])->middleware('admin')->name('admin.assets.index');
     Route::post('/assets', [AdminAssetController::class, 'store'])->middleware('admin')->name('admin.assets.store');
     Route::post('/assets/server', [AdminAssetController::class, 'server_store'])->middleware('admin')->name('admin.assets.server.store');
+    Route::get('/assets/server-details', [AdminAssetController::class, 'server_details'])->middleware('admin')->name('admin.assets.server.details');
+    
+    Route::get('/overview', [AdminAssetController::class, 'overview'])->middleware('admin')->name('admin.overview');
+    Route::get('/server/{id}/linux', [AdminAssetController::class, 'linux'])->middleware('admin')->name('admin.server.linux');
+    Route::get('/server/{id}/mysql', [AdminAssetController::class, 'mysql'])->middleware('admin')->name('admin.server.mysql');
+    Route::get('/server/{id}/mongodb', [AdminAssetController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
+    Route::get('/server/{id}/redis', [AdminAssetController::class, 'redis'])->middleware('admin')->name('admin.server.redis');
+    Route::get('/server/{id}/api_log', [AdminAssetController::class, 'api_log'])->middleware('admin')->name('admin.server.api_log');
+    Route::get('/server/{id}/scheduler', [AdminAssetController::class, 'scheduler'])->middleware('admin')->name('admin.server.scheduler');
+    Route::get('/server/{id}/ssl', [AdminAssetController::class, 'ssl'])->middleware('admin')->name('admin.server.ssl');
 });
