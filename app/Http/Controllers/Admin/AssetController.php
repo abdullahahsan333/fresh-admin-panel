@@ -189,7 +189,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'linux', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -214,7 +214,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'mysql', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -239,7 +239,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'mongodb', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -264,7 +264,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'redis', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -289,7 +289,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'api_log', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -314,7 +314,7 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'scheduler', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
@@ -339,12 +339,13 @@ class AssetController extends Controller
             abort(403);
         }
 
-        $this->baseViewData = menuActive('projects_assets', '', '');
+        $this->baseViewData = menuActive('projects_assets', 'ssl', '');
         $data = $this->baseViewData;
         
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'ssl';
+        $data['subMenu'] = 'ssl';
         $data['server'] = $server;
 
         return view('admin.server.ssl', $data);

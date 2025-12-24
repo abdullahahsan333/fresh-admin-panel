@@ -3,7 +3,7 @@
 @section('content')
 
 @include('partials.welcome-note')
-
+{{-- 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div class="text-sm text-gray-500">Total Projects</div>
@@ -33,6 +33,6 @@
             <div class="text-xs text-gray-500">26% Increased</div>
         </div>
     </div>
-</div>
+</div> --}}
 
 @endsection

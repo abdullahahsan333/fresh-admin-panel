@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Panel | Apprise Tech Group</title>
+    <title>{{ ($site->meta_title ?? null) ? $site->meta_title : (($site->site_name ?? null) ? $site->site_name : 'Admin Panel') }}</title>
+    @if (!empty($site->favicon))
+        <link rel="icon" href="{{ asset($site->favicon) }}" type="image/x-icon">
+    @endif
     @vite(['resources/css/app.css','resources/js/app.js'])
     <style>
         #adminSidebar {
@@ -25,25 +28,15 @@
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
-
     <div id="adminShell" class="flex min-h-screen">
-
         @include('partials.sidebar')
-
         <div class="flex-1 flex flex-col">
-
             @include('partials.topbar')
-
             <main class="flex-1 p-6">
-
                 @yield('content')
-                
             </main>
-
             @include('partials.footer')
-
         </div>
-
     </div>
 
     <div id="toastRoot" class="fixed z-[100] top-4 right-4 space-y-2 pointer-events-none"></div>
@@ -62,5 +55,7 @@
     <script>
         window.__flash = {!! json_encode($flash) !!};
     </script>
+
+    @stack('footer_scripts')
 </body>
 </html>

@@ -25,6 +25,13 @@ Route::prefix('admin')->group(function () {
 
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->middleware('admin')->name('admin.dashboard');
     Route::get('/logout', [AdminController::class, 'logout'])->middleware('admin')->name('admin.logout');
+    
+    Route::get('/notifications', [AdminController::class, 'notifications'])->middleware('admin')->name('admin.notifications');
+    
+    Route::get('/profile', [AdminController::class, 'profile'])->middleware('admin')->name('admin.profile');
+    Route::post('/profile', [AdminController::class, 'profileUpdate'])->middleware('admin')->name('admin.profile.update');
+    Route::get('/settings', [AdminController::class, 'settings'])->middleware('admin')->name('admin.settings');
+    Route::post('/settings', [AdminController::class, 'settingsUpdate'])->middleware('admin')->name('admin.settings.update');
 
     Route::get('/projects/create', [AdminProjectController::class, 'create'])->middleware('admin')->name('admin.projects.create');
     Route::post('/projects', [AdminProjectController::class, 'store'])->middleware('admin')->name('admin.projects.store');

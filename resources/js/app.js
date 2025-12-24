@@ -32,11 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const shell = document.getElementById('adminShell');
     const toggleBtn = document.getElementById('sidebarToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
+    const mobileOverlay = document.getElementById('mobileSidebarOverlay');
+    const sidebarEl = document.getElementById('adminSidebar');
     const profileDropdownId = 'sidebarProfileDropdown';
     let profileDropdown = document.getElementById(profileDropdownId);
     const topbarProfileBtn = document.getElementById('topbarProfileBtn');
     const topbarDropdownId = 'topbarProfileDropdown';
     let topbarDropdown = document.getElementById(topbarDropdownId);
+    const topbarNotifBtn = document.getElementById('topbarNotifBtn');
+    const topbarNotifDropdownId = 'topbarNotificationsDropdown';
+    let topbarNotifDropdown = document.getElementById(topbarNotifDropdownId);
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileSidebarCloseBtn = document.getElementById('mobileSidebarCloseBtn');
     let menuFlyout = null;
     let subFlyout = null;
     const flyouts = {};
@@ -53,11 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
             profileDropdown = document.createElement('div');
             profileDropdown.id = profileDropdownId;
             profileDropdown.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
+            const name = document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe';
+            const avatarSrc = document.querySelector('#topbarProfileBtn img')?.src || document.querySelector('#sidebarProfileBtn img')?.src || 'https://i.pravatar.cc/80?img=5';
             profileDropdown.innerHTML = `
                 <div class="p-3 flex items-center gap-3 border-b border-gray-100">
-                    <img class="h-9 w-9 rounded-full" src="https://i.pravatar.cc/80?img=5" alt="">
+                    <img class="h-9 w-9 rounded-full" src="${avatarSrc}" alt="${name}">
                     <div>
-                        <div class="text-sm font-semibold">${document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe'}</div>
+                        <div class="text-sm font-semibold">${name}</div>
                         <div class="text-xs text-gray-500">Admin</div>
                     </div>
                 </div>
@@ -84,6 +93,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function openMobileSidebar() {
+        if (!sidebarEl) return;
+        sidebarEl.classList.remove('hidden');
+        sidebarEl.classList.add('fixed','inset-y-0','left-0','z-50','transform','transition-transform','-translate-x-full');
+        setTimeout(() => {
+            sidebarEl.classList.remove('-translate-x-full');
+        }, 10);
+        if (mobileOverlay) mobileOverlay.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    function closeMobileSidebar() {
+        if (!sidebarEl) return;
+        sidebarEl.classList.add('-translate-x-full');
+        setTimeout(() => {
+            sidebarEl.classList.add('hidden');
+            sidebarEl.classList.remove('fixed','inset-y-0','left-0','z-50','transform','transition-transform');
+        }, 200);
+        if (mobileOverlay) mobileOverlay.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
     function positionProfileDropdown() {
         if (!profileDropdown || !profileBtn) return;
         const btnRect = profileBtn.getBoundingClientRect();
@@ -95,6 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (shell && toggleBtn) {
         toggleBtn.addEventListener('click', () => {
+            if (window.innerWidth < 1024) {
+                if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+                return;
+            }
             const collapsed = shell.classList.toggle('sidebar-collapsed');
             toggleBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
             positionProfileDropdown();
@@ -116,6 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (c) c.classList.remove('rotate-180');
                 });
             }
+        });
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', closeMobileSidebar);
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileSidebar();
         });
     }
 
@@ -335,10 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const inSidebar = t.closest('#adminSidebar');
             const inFlyout = t.closest('[id^="sidebarFlyout"]');
             const isMenuTrigger = t.closest('[data-menu-toggle]') || t.closest('[data-submenu-toggle]');
-            const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#topbarProfileBtn');
+            const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#topbarProfileBtn') || t.closest('#topbarNotifBtn');
             if (inSidebar || inFlyout || isMenuTrigger || isProfileTrigger) return;
             if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
                 profileDropdown.classList.add('hidden');
+            }
+            if (topbarNotifDropdown && !topbarNotifDropdown.classList.contains('hidden')) {
+                topbarNotifDropdown.classList.add('hidden');
             }
             if (topbarDropdown && !topbarDropdown.classList.contains('hidden')) {
                 topbarDropdown.classList.add('hidden');
@@ -353,24 +400,22 @@ document.addEventListener('DOMContentLoaded', () => {
             topbarDropdown = document.createElement('div');
             topbarDropdown.id = topbarDropdownId;
             topbarDropdown.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
+            const name = document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe';
+            const avatarSrc = document.querySelector('#topbarProfileBtn img')?.src || document.querySelector('#sidebarProfileBtn img')?.src || 'https://i.pravatar.cc/80?img=5';
             topbarDropdown.innerHTML = `
                 <div class="p-3 flex items-center gap-3 border-b border-gray-100">
-                    <img class="h-9 w-9 rounded-full" src="https://i.pravatar.cc/80?img=5" alt="">
+                    <img class="h-9 w-9 rounded-full" src="${avatarSrc}" alt="${name}">
                     <div>
-                        <div class="text-sm font-semibold">${document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe'}</div>
+                        <div class="text-sm font-semibold">${name}</div>
                         <div class="text-xs text-gray-500">Admin</div>
                     </div>
                 </div>
                 <nav class="p-2 text-sm">
-                    <a href="#" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
+                    <a href="/admin/profile" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12c2.28 0 4-1.72 4-4s-1.72-4-4-4-4 1.72-4 4 1.72 4 4 4z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20c0-2.21 2.69-4 6-4s6 1.79 6 4"/></svg>
                         <span>My Profile</span>
                     </a>
-                    <a href="/admin/assets" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"/></svg>
-                        <span>Asset Management</span>
-                    </a>
-                    <a href="#" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
+                    <a href="/admin/settings" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11 1.71l-44.89 18.07a10.81 10.81 0 0 1 13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l-44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
                         <span>Settings</span>
                     </a>
@@ -402,6 +447,97 @@ document.addEventListener('DOMContentLoaded', () => {
             topbarDropdown.classList.toggle('hidden');
         });
         window.addEventListener('resize', positionTopbarDropdown);
+    }
+    function ensureTopbarNotificationsDropdown() {
+        if (!topbarNotifDropdown) {
+            topbarNotifDropdown = document.createElement('div');
+            topbarNotifDropdown.id = topbarNotifDropdownId;
+            topbarNotifDropdown.className = 'hidden fixed z-50 w-80 bg-white border border-gray-200 rounded-xl shadow-xl';
+            topbarNotifDropdown.innerHTML = `
+                <div class="p-3 border-b border-gray-100 flex items-center justify-between">
+                    <div class="text-sm font-semibold">Notifications</div>
+                    <span class="text-xs px-2 py-0.5 rounded bg-[rgb(var(--color-primary)/.12)] text-[rgb(var(--color-primary))]">5 new</span>
+                </div>
+                <div class="max-h-80 overflow-auto">
+                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
+                        <span class="h-6 w-6 rounded bg-blue-100 text-blue-600 grid place-items-center">ℹ️</span>
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-800">Server 128.199.73.128 CPU spike</div>
+                            <div class="text-xs text-gray-500">2 min ago</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
+                        <span class="h-6 w-6 rounded bg-yellow-100 text-yellow-600 grid place-items-center">⚠️</span>
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-800">SSL expires in 65 days</div>
+                            <div class="text-xs text-gray-500">10 min ago</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
+                        <span class="h-6 w-6 rounded bg-emerald-100 text-emerald-600 grid place-items-center">✅</span>
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-800">Deployment completed</div>
+                            <div class="text-xs text-gray-500">30 min ago</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
+                        <span class="h-6 w-6 rounded bg-red-100 text-red-600 grid place-items-center">⛔</span>
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-800">Redis memory high</div>
+                            <div class="text-xs text-gray-500">1 hr ago</div>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
+                        <span class="h-6 w-6 rounded bg-purple-100 text-purple-600 grid place-items-center">🔒</span>
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-800">New admin login</div>
+                            <div class="text-xs text-gray-500">2 hr ago</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="p-3 border-t border-gray-100">
+                    <a href="/admin/notifications" class="inline-flex items-center justify-center w-full h-9 rounded-lg bg-[rgb(var(--color-primary))] text-white text-sm">Show all</a>
+                </div>
+            `;
+            document.body.appendChild(topbarNotifDropdown);
+        }
+        return topbarNotifDropdown;
+    }
+    function positionTopbarNotificationsDropdown() {
+        if (!topbarNotifDropdown || !topbarNotifBtn) return;
+        const btnRect = topbarNotifBtn.getBoundingClientRect();
+        const left = btnRect.right - 320;
+        const top = btnRect.bottom + 8;
+        topbarNotifDropdown.style.left = `${left}px`;
+        topbarNotifDropdown.style.top = `${top}px`;
+    }
+    if (topbarNotifBtn) {
+        ensureTopbarNotificationsDropdown();
+        topbarNotifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            ensureTopbarNotificationsDropdown();
+            positionTopbarNotificationsDropdown();
+            topbarNotifDropdown.classList.toggle('hidden');
+        });
+        window.addEventListener('resize', positionTopbarNotificationsDropdown);
+    }
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.innerWidth < 1024) {
+                if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            }
+        });
+    }
+    if (mobileSidebarCloseBtn) {
+        mobileSidebarCloseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMobileSidebar();
+        });
     }
 
     document.querySelectorAll('[data-copy-target]').forEach((btn) => {

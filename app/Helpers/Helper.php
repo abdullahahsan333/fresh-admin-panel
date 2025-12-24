@@ -132,6 +132,7 @@ function uploadImage($sourcePath = null, $uploadPath = '', $maxWidth = 0, $maxHe
             return false;
         }
         imagepalettetotruecolor($sourceImage);
+        imagesavealpha($sourceImage, true);
         if (!empty($maxWidth) && !empty($maxHeight)) {
             if ($imgWidth > $imgHeight) {
                 if ($imgWidth > $maxWidth) {
@@ -151,9 +152,17 @@ function uploadImage($sourcePath = null, $uploadPath = '', $maxWidth = 0, $maxHe
                 }
             }
             $newImage = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 0, 0, 0, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
             imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $imgWidth, $imgHeight);
             $sourceImage = $newImage;
             $newImage = imagecreatetruecolor($maxWidth, $maxHeight);
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 0, 0, 0, 127);
+            imagefilledrectangle($newImage, 0, 0, $maxWidth, $maxHeight, $transparent);
             $x = ($newWidth - $maxWidth) / 2;
             $y = ($newHeight - $maxHeight) / 2;
             imagecopyresampled($newImage, $sourceImage, 0, 0, $x, $y, $maxWidth, $maxHeight, $maxWidth, $maxHeight);
@@ -161,7 +170,7 @@ function uploadImage($sourcePath = null, $uploadPath = '', $maxWidth = 0, $maxHe
         }
         $imageTo = public_path($uploadPath) . '/' . $fileName;
         $quality = (!empty($quality) ? $quality : 100);
-        // Convert the image to WebP format
+        imagesavealpha($sourceImage, true);
         if ($sourceImage !== false && imagewebp($sourceImage, $imageTo, $quality)) {
             if (is_resource($sourceImage) || $sourceImage instanceof \GdImage) {
                 imagedestroy($sourceImage);
