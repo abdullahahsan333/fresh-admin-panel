@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.user')
 
 @section('content')
 
@@ -220,7 +220,7 @@
 
     <!-- InnoDB Buffer Pool -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative flex flex-col items-center justify-center text-center">
-            <div class="w-full flex justify-between items-start absolute top-6 px-6">
+        <div class="w-full flex justify-between items-start absolute top-6 px-6">
             <h3 class="text-gray-700 font-medium">InnoDB Buffer Pool</h3>
             <button class="text-gray-400 hover:text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -268,13 +268,15 @@
             </button>
         </div>
         
-        <div class="flex justify-start items-center border-b border-gray-200 mb-4" id="adminMysqlConcernsTabs">
-            <button data-tab="slow" class="w-full py-2 text-purple-600 border-b-2 border-purple-600 font-medium text-sm">Slow Queries</button>
-            <button data-tab="warns" class="w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Warns</button>
-            <button data-tab="errors" class="w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Errors</button>
+        <div class="border-b border-gray-200 mb-4">
+            <nav id="mysqlConcernsTabs" class="flex space-x-6">
+                <button data-tab="slow" class="px-4 py-2 text-purple-600 border-b-2 border-purple-600 font-medium text-sm">Slow Queries</button>
+                <button data-tab="warns" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Warns</button>
+                <button data-tab="errors" class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Errors</button>
+            </nav>
         </div>
 
-        <div id="adminMysqlConcernsContent" class="w-full min-h-[8rem] flex items-center justify-center text-gray-400"></div>
+        <div id="mysqlConcernsContent" class="w-full min-h-[8rem]"></div>
     </div>
 
     <!-- Traffic -->
@@ -395,132 +397,33 @@
             height: 150,
             type: 'radialBar',
             offsetY: -10
-        },
-        colors: [themeColor],
-        plotOptions: {
-            radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            dataLabels: {
-                name: {
-                    fontSize: '16px',
-                    color: undefined,
-                    offsetY: 120
-                },
-                value: {
-                    offsetY: 76,
-                    fontSize: '22px',
-                    color: undefined,
-                    formatter: function (val) {
-                        return val + "%";
-                    }
-                }
-            }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                shadeIntensity: 0.15,
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 50, 65, 91]
-            },
-        },
-        stroke: {
-            dashArray: 4
-        },
-        labels: ['Cache Usage'],
-    };
-
-    var bytesSent = {
-        series: [{
-            name: "Desktops",
-            data: [60, 70, 160, 90, 100, 110]
-        }],
-        chart: {
-            height: 150,
-            type: 'line',
-            zoom: {
-                enabled: false
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            curve: 'smooth'
-        },
-        title: {
-            text: 'Output Traffic',
-            align: 'left'
-        },
-        grid: {
-            row: {
-                colors: ['#f3f3f3', 'transparent'],
-                opacity: 0.5
-            },
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
         }
     };
-
-    var bytesReceived = {
-        series: [{
-            name: "Desktops",
-            data: [60, 70, 160, 90, 100, 110]
-        }],
-        chart: {
-            height: 150,
-            type: 'line',
-            zoom: {
-                enabled: false
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            curve: 'smooth'
-        },
-        title: {
-            text: 'Input Traffic',
-            align: 'left'
-        },
-        grid: {
-            row: {
-                colors: ['#f3f3f3', 'transparent'],
-                opacity: 0.5
-            },
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        }
-    };
-
-    var bytesSentChart = new ApexCharts(document.querySelector("#bytesSent"), bytesSent);
-    bytesSentChart.render();
-
-    var bytesReceivedChart = new ApexCharts(document.querySelector("#bytesReceived"), bytesReceived);
-    bytesReceivedChart.render();
-
-    var chart = new ApexCharts(document.querySelector("#connectionUsage"), options);
-    chart.render();
-
-    var openCacheChart = new ApexCharts(document.querySelector("#tableOpenCache"), TableOpenCacheOptions);
-    openCacheChart.render();
-
-    var InnodbBufferPoolChart = new ApexCharts(document.querySelector("#innodbBufferPool"), InnodbBufferPoolOptions);
-    InnodbBufferPoolChart.render();
+    var connectionUsage = new ApexCharts(document.querySelector("#connectionUsage"), options);
+    connectionUsage.render();
+    var tableOpenCache = new ApexCharts(document.querySelector("#tableOpenCache"), TableOpenCacheOptions);
+    tableOpenCache.render();
+    var innodbBufferPool = new ApexCharts(document.querySelector("#innodbBufferPool"), InnodbBufferPoolOptions);
+    innodbBufferPool.render();
+    var bytesSent = new ApexCharts(document.querySelector("#bytesSent"), {
+        series: [{ name: "Sent", data: [10, 20, 30, 25, 35, 40] }],
+        chart: { height: 100, type: 'line' },
+        stroke: { curve: 'smooth' },
+        dataLabels: { enabled: false }
+    });
+    bytesSent.render();
+    var bytesReceived = new ApexCharts(document.querySelector("#bytesReceived"), {
+        series: [{ name: "Received", data: [5, 15, 25, 20, 30, 35] }],
+        chart: { height: 100, type: 'line' },
+        stroke: { curve: 'smooth' },
+        dataLabels: { enabled: false }
+    });
+    bytesReceived.render();
     (function(){
-        var tabsEl = document.getElementById('adminMysqlConcernsTabs');
-        var contentEl = document.getElementById('adminMysqlConcernsContent');
-        if (!tabsEl || !contentEl) return;
         var activeTab = 'slow';
-        function renderContent(){
+        var tabsEl = document.getElementById('mysqlConcernsTabs');
+        var contentEl = document.getElementById('mysqlConcernsContent');
+        function renderContent() {
             if (activeTab === 'slow') {
                 contentEl.innerHTML = '<div class="text-sm text-gray-500">No slow queries</div>';
             } else if (activeTab === 'warns') {
@@ -529,13 +432,13 @@
                 contentEl.innerHTML = '<div class="text-sm text-gray-500">No errors</div>';
             }
         }
-        function setActiveTab(tab){
+        function setActiveTab(tab) {
             activeTab = tab;
             tabsEl.querySelectorAll('button').forEach(function(btn){
                 if (btn.dataset.tab === tab) {
-                    btn.className = 'w-full py-2 text-purple-600 border-b-2 border-purple-600 font-medium text-sm';
+                    btn.className = 'px-4 py-2 text-purple-600 border-b-2 border-purple-600 font-medium text-sm';
                 } else {
-                    btn.className = 'w-full py-2 text-gray-500 hover:text-gray-700 font-medium text-sm';
+                    btn.className = 'px-4 py-2 text-gray-500 hover:text-gray-700 font-medium text-sm';
                 }
             });
             renderContent();
@@ -549,5 +452,4 @@
         setActiveTab('slow');
     })();
 </script>
-    
 @endpush

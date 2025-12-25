@@ -1,12 +1,12 @@
-<aside id="adminSidebar" class="relative overflow-hidden bg-white border-r border-gray-200 hidden lg:block min-h-screen flex flex-col">
+<aside id="mobileAdminSidebar" class="fixed inset-y-0 left-0 z-[250] hidden w-64 flex flex-col bg-white border-r border-gray-200 lg:hidden">
     <div class="px-3 py-3 flex items-center">
         @if(!empty($site->logo))
             <img class="h-9 w-9 rounded-lg object-cover border border-gray-200" src="{{ asset($site->logo) }}" alt="">
         @else
             <div class="h-9 w-9 rounded-lg bg-emerald-500 grid place-items-center text-white">{{ strtoupper(substr($site->site_name ?? 'A', 0, 1)) }}</div>
         @endif
-        <span id="adminBrandText" class="font-semibold sidebar-text">{{ $site->site_name ?? 'Admin' }}</span>
-        <button id="mobileSidebarCloseBtn" class="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-gray-100 lg:hidden" title="Close">
+        <span id="mobileAdminBrandText" class="font-semibold sidebar-text">{{ $site->site_name ?? 'Admin' }}</span>
+        <button id="mobileAdminSidebarCloseBtn" class="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-gray-100 lg:hidden" title="Close">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
     </div>
@@ -140,7 +140,7 @@
         </div>
     </nav>
     <div class="fixed bottom-0 left-0 right-0 w-60">
-        <button id="sidebarProfileBtn" 
+        <button id="mobileSidebarProfileBtn" 
             data-name="{{ auth('admin')->user()->name ?? 'John Doe' }}"
             data-avatar="{{ ($adminUser && !empty($adminUser->avatar)) ? asset($adminUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}"
             class="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-gray-50">

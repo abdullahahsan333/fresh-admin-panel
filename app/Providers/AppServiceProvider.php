@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $view->with('site', getSiteInfo());
             $view->with('adminUser', Auth::guard('admin')->user());
+            $view->with('webUser', Auth::guard('web')->user());
         });
     }
 }

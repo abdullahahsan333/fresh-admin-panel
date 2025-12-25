@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.user')
 
 @section('content')
 
@@ -190,14 +190,14 @@
         </div>
         
         <div class="border-b border-gray-200 mb-6">
-            <nav id="adminMongoConcernsTabs" class="-mb-px flex space-x-8">
+            <nav id="mongoConcernsTabs" class="-mb-px flex space-x-8">
                 <button data-tab="slow" class="border-purple-500 text-purple-600 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">Slow Queries</button>
                 <button data-tab="warns" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">Warns</button>
                 <button data-tab="errors" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm">Errors</button>
             </nav>
         </div>
         
-        <div id="adminMongoConcernsContent" class="w-full min-h-[8rem]"></div>
+        <div id="mongoConcernsContent" class="w-full min-h-[8rem]"></div>
     </div>
 </div>
 
@@ -214,211 +214,78 @@
                 </svg>
             </button>
         </div>
-        
-        <div class="flex-1 flex items-center justify-center text-gray-400 text-sm mb-4">
-            0 Requests
-        </div>
-
-        <div class="flex justify-between items-end mt-auto">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-8 h-8 rounded bg-purple-100"></span>
-                    <div>
-                        <div class="text-xs text-gray-500">Bytes In</div>
-                        <div class="text-lg font-medium text-gray-800">0 MB</div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-8 h-8 rounded bg-blue-100"></span>
-                    <div>
-                        <div class="text-xs text-gray-500">Bytes Out</div>
-                        <div class="text-lg font-medium text-gray-800">0 MB</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="mongoNetworkTraffic" class="h-32"></div>
     </div>
-
-    <!-- Global Lock Status -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col">
+    
+    <!-- Center Column: Operations vs Memory -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <div class="flex justify-between items-start mb-4">
-            <h3 class="text-gray-700 font-medium">Global Lock Status</h3>
-            <button class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-            </button>
+            <h3 class="text-gray-700 font-medium">Operations vs Memory</h3>
         </div>
-        
-        <div class="flex-1 flex items-center justify-center text-gray-400 text-sm mb-4">
-            Lock Status
-        </div>
-
-        <div class="flex justify-between items-end mt-auto">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-8 h-8 rounded bg-purple-100"></span>
-                    <div>
-                        <div class="text-xs text-gray-500">Active Readers</div>
-                        <div class="text-lg font-medium text-gray-800">0</div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-8 h-8 rounded bg-blue-100"></span>
-                    <div>
-                        <div class="text-xs text-gray-500">Active Writers</div>
-                        <div class="text-lg font-medium text-gray-800">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="mongoOpsVsMemory" class="h-32"></div>
     </div>
-
-    <div class="grid grid-cols-1 grid-rows-2 gap-6">
-        <!-- Bytes Sent / Sec -->
-        <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="mongoBytesSentSmall" class="h-24"></div>
+    
+    <!-- Right Column: Disk I/O -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-4">
+            <h3 class="text-gray-700 font-medium">Disk I/O</h3>
         </div>
-        
-        <!-- Bytes Received / Sec -->
-        <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="mongoBytesReceivedSmall" class="h-24"></div>
-        </div>
+        <div id="mongoDiskIO" class="h-32"></div>
     </div>
 </div>
 @endsection
+
 @push('footer_scripts')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     const cp = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-    const themeColor = 'rgb(' + cp.replace(/\s+/g, ',') + ')';
-    const mountChart = (sel, opts) => {
-        const el = document.querySelector(sel);
-        if (el) new ApexCharts(el, opts).render();
-    };
-
-    const mongoOpsPerSecondOptions = {
-        series: [{ name: 'Ops/Sec', data: [45, 58, 75, 70, 85, 95] }],
-        chart: { height: 300, type: 'line', zoom: { enabled: false } },
-        colors: [themeColor],
+    const cpCsv = cp.replace(/\s+/g, ',');
+    const themeColor = `rgb(${cpCsv})`;
+    const sparkBase = {
+        chart: { type: 'line', height: 128, sparkline: { enabled: true } },
+        stroke: { curve: 'smooth', width: 2 },
         dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Operations Per Second', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
-    };
-    const mongoMemoryUsageOptions = {
-        series: [{ name: 'Memory', data: [120, 128, 135, 130, 132, 136] }],
-        chart: { height: 300, type: 'line', zoom: { enabled: false } },
         colors: [themeColor],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Memory Usage', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
+        series: [{ data: [0, 0, 0, 0, 0, 0] }]
     };
-    const mongoBytesSentOptions = {
-        series: [{ name: 'Bytes In', data: [50, 60, 70, 65, 80, 90] }],
-        chart: { height: 120, type: 'line', zoom: { enabled: false } },
-        colors: [themeColor],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Bytes In', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
-    };
-    const mongoBytesReceivedOptions = {
-        series: [{ name: 'Bytes Out', data: [45, 58, 75, 70, 85, 95] }],
-        chart: { height: 120, type: 'line', zoom: { enabled: false } },
-        colors: [themeColor],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Bytes Out', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
-    };
-    const mongoBytesSentSmallOptions = {
-        series: [{ name: 'Bytes Sent', data: [20, 22, 25, 24, 28, 30] }],
-        chart: { height: 150, type: 'line', zoom: { enabled: false } },
-        colors: [themeColor],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Bytes Sent / Sec', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
-    };
-    const mongoBytesReceivedSmallOptions = {
-        series: [{ name: 'Bytes Received', data: [18, 21, 26, 25, 27, 29] }],
-        chart: { height: 150, type: 'line', zoom: { enabled: false } },
-        colors: [themeColor],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth' },
-        title: { text: 'Bytes Received / Sec', align: 'left' },
-        grid: { row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-        xaxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] }
-    };
+    new ApexCharts(document.querySelector('#mongoOpsPerSecond'), sparkBase).render();
+    new ApexCharts(document.querySelector('#mongoMemoryUsage'), { ...sparkBase, chart: { type: 'area', height: 128, sparkline: { enabled: true } } }).render();
+    new ApexCharts(document.querySelector('#mongoNetworkTraffic'), sparkBase).render();
+    new ApexCharts(document.querySelector('#mongoOpsVsMemory'), { 
+        ...sparkBase, 
+        chart: { type: 'area', height: 128, sparkline: { enabled: true } }, 
+        series: [
+            { name: 'Ops', data: [0, 0, 0, 0, 0, 0] },
+            { name: 'Memory', data: [0, 0, 0, 0, 0, 0] }
+        ] 
+    }).render();
+    new ApexCharts(document.querySelector('#mongoDiskIO'), sparkBase).render();
     var mongoConnectionUsageOptions = {
-            series: [67],
-            chart: {
-            height: 150,
-            type: 'radialBar',
-            offsetY: -10
-        },
+        series: [67],
+        chart: { height: 150, type: 'radialBar', offsetY: -10 },
         colors: [themeColor],
         plotOptions: {
             radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            dataLabels: {
-                name: {
-                    fontSize: '16px',
-                    color: undefined,
-                    offsetY: 120
-                },
-                value: {
-                    offsetY: 76,
-                    fontSize: '22px',
-                    color: undefined,
-                    formatter: function (val) {
-                        return val + "%";
-                    }
+                startAngle: -135,
+                endAngle: 135,
+                dataLabels: {
+                    name: { fontSize: '16px', color: undefined, offsetY: 120 },
+                    value: { offsetY: 76, fontSize: '22px', color: undefined, formatter: function (val) { return val + "%"; } }
                 }
-            }
             }
         },
         fill: {
             type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                shadeIntensity: 0.15,
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 50, 65, 91]
-            },
+            gradient: { shade: 'dark', shadeIntensity: 0.15, inverseColors: false, opacityFrom: 1, opacityTo: 1, stops: [0, 50, 65, 91] }
         },
-        stroke: {
-            dashArray: 4
-        },
-        labels: ['Connection Usage'],
+        stroke: { dashArray: 4 },
+        labels: ['Connection Usage']
     };
-
     new ApexCharts(document.querySelector('#mongoConnectionUsage'), mongoConnectionUsageOptions).render();
-
-    mountChart('#mongoOpsPerSecond', mongoOpsPerSecondOptions);
-    mountChart('#mongoMemoryUsage', mongoMemoryUsageOptions);
-    mountChart('#mongoBytesSent', mongoBytesSentOptions);
-    mountChart('#mongoBytesReceived', mongoBytesReceivedOptions);
-    mountChart('#mongoBytesSentSmall', mongoBytesSentSmallOptions);
-    mountChart('#mongoBytesReceivedSmall', mongoBytesReceivedSmallOptions);
     (function(){
         var activeTab = 'slow';
-        var tabsEl = document.getElementById('adminMongoConcernsTabs');
-        var contentEl = document.getElementById('adminMongoConcernsContent');
+        var tabsEl = document.getElementById('mongoConcernsTabs');
+        var contentEl = document.getElementById('mongoConcernsContent');
         function renderContent() {
             if (activeTab === 'slow') {
                 contentEl.innerHTML = '<div class="text-sm text-gray-500">No slow queries</div>';

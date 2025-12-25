@@ -3,24 +3,24 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ ($site->meta_title ?? null) ? $site->meta_title : (($site->site_name ?? null) ? $site->site_name : 'Admin Panel') }}</title>
+    <title>{{ ($site->meta_title ?? null) ? $site->meta_title : (($site->site_name ?? null) ? $site->site_name : 'User Panel') }}</title>
     @if (!empty($site->favicon))
         <link rel="icon" href="{{ asset($site->favicon) }}" type="image/x-icon">
     @endif
     @vite(['resources/css/app.css','resources/js/app.js'])
     <style>
-        #adminSidebar {
+        #userSidebar {
             transition: width 200ms ease, padding 200ms ease;
             will-change: width;
         }
         [data-menu], [data-submenu] { will-change: height, opacity; }
-        #adminBrandText { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
-        #adminSidebar nav a { transition: padding 200ms ease, color 150ms ease; }
+        #userBrandText { padding-left: 1rem; transition: opacity 150ms ease, transform 150ms ease, max-width 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; }
+        #userSidebar nav a { transition: padding 200ms ease, color 150ms ease; }
         .sidebar-text { padding-left: 1rem; transition: opacity 200ms ease, transform 200ms ease, max-width 200ms ease, padding 200ms ease; max-width: 200px; overflow: hidden; display: inline-block; white-space: nowrap; }
-        .sidebar-collapsed #adminSidebar { width: 4rem; overflow: visible; }
-        .sidebar-collapsed #adminSidebar nav a { justify-content: flex-start; padding-left: .75rem; padding-right: .75rem; }
+        .sidebar-collapsed #userSidebar { width: 4rem; overflow: visible; }
+        .sidebar-collapsed #userSidebar nav a { justify-content: flex-start; padding-left: .75rem; padding-right: .75rem; }
         .sidebar-collapsed .sidebar-text { opacity: 0; transform: translateX(-4px); pointer-events: none; max-width: 0; padding-left: 0; }
-        .sidebar-collapsed #adminBrandText { opacity: 0; transform: translateX(-4px); max-width: 0; }
+        .sidebar-collapsed #userBrandText { opacity: 0; transform: translateX(-4px); max-width: 0; }
         .sidebar-collapsed #sidebarProfileBtn { justify-content: center; gap: 0; width: 4rem; }
         .sidebar-collapsed #sidebarProfileBtn .sidebar-meta { opacity: 0; transform: translateX(-4px); max-width: 0; transition: opacity 200ms ease, transform 200ms ease, max-width 200ms ease; overflow: hidden; }
         .sidebar-collapsed #sidebarProfileBtn .sidebar-extra { opacity: 0; transform: translateX(-4px); transition: opacity 200ms ease, transform 200ms ease; }
@@ -28,10 +28,10 @@
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
-    <div id="adminShell" class="flex min-h-screen">
-        @include('partials.sidebar')
+    <div id="userShell" class="flex min-h-screen">
+        @include('partials.user.sidebar')
         <div class="flex-1 flex flex-col">
-            @include('partials.topbar')
+            @include('partials.user.topbar')
             <main class="flex-1 p-6">
                 @yield('content')
             </main>
@@ -58,8 +58,8 @@
     <div id="mobileSidebarOverlay" class="fixed inset-0 z-[200] hidden">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
     </div>
-    @include('partials.mobile-sidebar')
-    
+    @include('partials.user.mobile-sidebar')
+
 
     @stack('footer_scripts')
 </body>

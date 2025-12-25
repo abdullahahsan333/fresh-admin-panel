@@ -116,7 +116,7 @@ class AssetController extends Controller
             ]);
             $project = Project::firstOrCreate(
                 ['admin_id' => Auth::guard('admin')->id()],
-                ['name' => Auth::guard('admin')->user()->name . '\'s Project', 'description' => 'Default project']
+                ['name' => Auth::guard('admin')->user()->name, 'description' => 'Default project']
             );
             $server = Server::firstOrCreate(
                 ['ip' => $validated['ip']],

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.user')
 
 @section('content')
 <!-- Top bar -->
@@ -194,6 +194,8 @@
 
 @push('footer_scripts')
 <script>
+    const cp = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+    const themeColor = `rgb(${cp.replace(/\s+/g, ',')})`;
     const endpointData = {
         ep1: {
             method: 'GET',

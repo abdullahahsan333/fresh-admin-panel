@@ -7,14 +7,37 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\Admin\AssetController as AdminAssetController;
+use App\Http\Controllers\User\PanelController as UserPanelController;
+use App\Http\Controllers\User\AssetController as UserAssetController;
 
 Route::get('/', [UserController::class, 'index']);
 Route::post('/login', [UserController::class, 'login'])->name('login');
 Route::get('/register', [UserController::class, 'register'])->name('register');
 Route::post('/store', [UserController::class, 'store'])->name('store');
 
-Route::get('/dashboard', [UserController::class, 'dashboard'])->middleware('user')->name('dashboard');
-Route::get('/logout', [UserController::class, 'logout'])->middleware('user')->name('logout');
+// user panel routes
+Route::prefix('user')->group(function () {
+    Route::get('/dashboard', [UserPanelController::class, 'dashboard'])->middleware('user')->name('user.dashboard');
+    Route::get('/logout', [UserPanelController::class, 'logout'])->middleware('user')->name('user.logout');
+    Route::get('/profile', [UserPanelController::class, 'profile'])->middleware('user')->name('user.profile');
+    Route::post('/profile', [UserPanelController::class, 'profileUpdate'])->middleware('user')->name('user.profile.update');
+    
+    Route::get('/assets', [UserAssetController::class, 'index'])->middleware('user')->name('user.assets.index');
+    Route::post('/assets', [UserAssetController::class, 'store'])->middleware('user')->name('user.assets.store');
+    Route::get('/assets/server-details', [UserAssetController::class, 'server_details'])->middleware('user')->name('user.assets.server.details');
+    Route::post('/assets/server', [UserAssetController::class, 'server_store'])->middleware('user')->name('user.assets.server.store');
+    Route::post('/server_store', [UserAssetController::class, 'server_store'])->middleware('user')->name('user.server_store');
+    Route::get('/assets/overview', [UserAssetController::class, 'overview'])->middleware('user')->name('user.assets.overview');
+    
+    Route::get('/server/{id}/linux', [UserAssetController::class, 'linux'])->middleware('user')->name('user.server.linux');
+    Route::get('/server/{id}/mysql', [UserAssetController::class, 'mysql'])->middleware('user')->name('user.server.mysql');
+    Route::get('/server/{id}/mongodb', [UserAssetController::class, 'mongodb'])->middleware('user')->name('user.server.mongodb');
+    Route::get('/server/{id}/redis', [UserAssetController::class, 'redis'])->middleware('user')->name('user.server.redis');
+    Route::get('/server/{id}/api_log', [UserAssetController::class, 'api_log'])->middleware('user')->name('user.server.api_log');
+    Route::get('/server/{id}/scheduler', [UserAssetController::class, 'scheduler'])->middleware('user')->name('user.server.scheduler');
+    Route::get('/server/{id}/ssl', [UserAssetController::class, 'ssl'])->middleware('user')->name('user.server.ssl');
+    Route::post('/import', [UserAssetController::class, 'import'])->middleware('user')->name('user.import');
+});
 
 // all admin routes
 Route::prefix('admin')->group(function () {

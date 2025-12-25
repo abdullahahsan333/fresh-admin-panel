@@ -29,21 +29,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const flashMessages = Array.isArray(window.__flash) ? window.__flash : [];
     flashMessages.forEach(m => showToast(m.type, m.text));
-    const shell = document.getElementById('adminShell');
-    const toggleBtn = document.getElementById('sidebarToggle');
+    const shell = document.getElementById('adminShell') || document.getElementById('userShell');
+    const toggleBtn = document.getElementById('sidebarToggle') || document.getElementById('menuToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
+    const mobileProfileBtn = document.getElementById('mobileSidebarProfileBtn');
+    let activeProfileBtn = null;
     const mobileOverlay = document.getElementById('mobileSidebarOverlay');
-    const sidebarEl = document.getElementById('adminSidebar');
+    const sidebarEl = document.getElementById('adminSidebar') || document.getElementById('userSidebar');
     const profileDropdownId = 'sidebarProfileDropdown';
     let profileDropdown = document.getElementById(profileDropdownId);
-    const topbarProfileBtn = document.getElementById('topbarProfileBtn');
+    const topbarProfileBtn = document.getElementById('topbarProfileBtn') || document.getElementById('userTopbarProfileBtn');
     const topbarDropdownId = 'topbarProfileDropdown';
     let topbarDropdown = document.getElementById(topbarDropdownId);
-    const topbarNotifBtn = document.getElementById('topbarNotifBtn');
+    const topbarNotifBtn = document.getElementById('topbarNotifBtn') || document.getElementById('userTopbarNotifBtn');
     const topbarNotifDropdownId = 'topbarNotificationsDropdown';
     let topbarNotifDropdown = document.getElementById(topbarNotifDropdownId);
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileSidebarCloseBtn = document.getElementById('mobileSidebarCloseBtn');
+    const mobileSidebarEl = document.getElementById('mobileAdminSidebar') || document.getElementById('mobileUserSidebar');
+    const mobileSidebarCloseBtn = document.getElementById('mobileAdminSidebarCloseBtn') || document.getElementById('mobileUserSidebarCloseBtn') || document.getElementById('mobileSidebarCloseBtn');
     let menuFlyout = null;
     let subFlyout = null;
     const flyouts = {};
@@ -59,9 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!profileDropdown) {
             profileDropdown = document.createElement('div');
             profileDropdown.id = profileDropdownId;
-            profileDropdown.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
-            const name = document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe';
-            const avatarSrc = document.querySelector('#topbarProfileBtn img')?.src || document.querySelector('#sidebarProfileBtn img')?.src || 'https://i.pravatar.cc/80?img=5';
+            profileDropdown.className = 'hidden fixed z-[260] w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
+            const sourceBtn = activeProfileBtn || profileBtn || mobileProfileBtn || topbarProfileBtn;
+            const name = sourceBtn?.dataset.name ?? 'John Doe';
+            const avatarSrc = sourceBtn?.dataset.avatar ?? 'https://i.pravatar.cc/80?img=5';
             profileDropdown.innerHTML = `
                 <div class="p-3 flex items-center gap-3 border-b border-gray-100">
                     <img class="h-9 w-9 rounded-full" src="${avatarSrc}" alt="${name}">
@@ -90,36 +94,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 </nav>
             `;
             document.body.appendChild(profileDropdown);
+            if (window.location.pathname.startsWith('/user')) {
+                const nav = profileDropdown.querySelector('nav');
+                const aProfile = nav ? nav.querySelector('a[href="/admin/profile"]') : null;
+                const aAssets = nav ? nav.querySelector('a[href="/admin/assets"]') : null;
+                const aLogout = nav ? nav.querySelector('a[href="/admin/logout"]') : null;
+                const aSettings = nav ? nav.querySelector('a[href="/admin/settings"]') : null;
+                if (aProfile) aProfile.setAttribute('href', '/user/profile');
+                if (aAssets) aAssets.setAttribute('href', '/user/assets');
+                if (aLogout) aLogout.setAttribute('href', '/user/logout');
+                if (aSettings && aSettings.parentNode) aSettings.parentNode.removeChild(aSettings);
+                const roleEl = profileDropdown.querySelector('.text-xs.text-gray-500');
+                if (roleEl) roleEl.textContent = 'User';
+            }
         }
     }
 
     function openMobileSidebar() {
-        if (!sidebarEl) return;
-        sidebarEl.classList.remove('hidden');
-        sidebarEl.classList.add('fixed','inset-y-0','left-0','z-50','transform','transition-transform','-translate-x-full');
-        setTimeout(() => {
-            sidebarEl.classList.remove('-translate-x-full');
-        }, 10);
+        if (!mobileSidebarEl) return;
+        mobileSidebarEl.classList.add('transform', 'transition-transform', 'duration-300', '-translate-x-full');
+        mobileSidebarEl.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            mobileSidebarEl.classList.remove('-translate-x-full');
+        });
         if (mobileOverlay) mobileOverlay.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     }
     function closeMobileSidebar() {
-        if (!sidebarEl) return;
-        sidebarEl.classList.add('-translate-x-full');
+        if (!mobileSidebarEl) return;
+        mobileSidebarEl.classList.add('-translate-x-full');
         setTimeout(() => {
-            sidebarEl.classList.add('hidden');
-            sidebarEl.classList.remove('fixed','inset-y-0','left-0','z-50','transform','transition-transform');
-        }, 200);
+            mobileSidebarEl.classList.add('hidden');
+        }, 300);
         if (mobileOverlay) mobileOverlay.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
 
     function positionProfileDropdown() {
-        if (!profileDropdown || !profileBtn) return;
-        const btnRect = profileBtn.getBoundingClientRect();
-        const collapsed = shell && shell.classList.contains('sidebar-collapsed');
-        const left = collapsed ? (btnRect.left + 52) : (btnRect.left + 200);
-        profileDropdown.style.left = `${left}px`;
+        const targetBtn = activeProfileBtn || profileBtn || mobileProfileBtn;
+        if (!profileDropdown || !targetBtn) return;
+        const btnRect = targetBtn.getBoundingClientRect();
+
+        if (targetBtn.id === 'mobileSidebarProfileBtn') {
+             const left = btnRect.left + 8;
+             profileDropdown.style.left = `${left}px`;
+        } else {
+            const collapsed = shell && shell.classList.contains('sidebar-collapsed');
+            const left = collapsed ? (btnRect.left + 52) : (btnRect.left + 240);
+            profileDropdown.style.left = `${left}px`;
+        }
         profileDropdown.style.bottom = `${window.innerHeight - btnRect.top + 12}px`;
     }
 
@@ -137,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
             positionProfileDropdown();
             hideAllFlyouts();
-            const sidebar = document.getElementById('adminSidebar');
+            const sidebar = document.getElementById('adminSidebar') || document.getElementById('userSidebar');
             if (collapsed && sidebar) {
                 Array.from(sidebar.querySelectorAll('[data-menu-toggle], [data-submenu-toggle]')).forEach((t) => {
                     t.setAttribute('aria-expanded', 'false');
@@ -163,8 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function setupSidebarMenus() {
-        const sidebar = document.getElementById('adminSidebar');
+    function setupSidebarMenus(sidebarElement) {
+        const sidebar = sidebarElement || document.getElementById('adminSidebar') || document.getElementById('userSidebar');
         const menuTriggers = Array.from(document.querySelectorAll('[data-menu-toggle]'));
         const ACTIVE_CLASSES = ['text-[rgb(var(--color-primary))]', 'bg-[rgb(var(--color-primary)/.06)]'];
         const INACTIVE_CLASSES = ['text-gray-700'];
@@ -227,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const el = document.createElement('div');
             el.id = id;
-            el.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
+            el.className = 'hidden fixed z-[260] w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
             document.body.appendChild(el);
             flyouts[level] = el;
             return el;
@@ -302,7 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const caret = trigger.querySelector('.submenu-caret');
             const expanded = trigger.getAttribute('aria-expanded') === 'true';
             const willExpand = !expanded;
-            const collapsed = shell && shell.classList.contains('sidebar-collapsed');
+            const isMobileSidebar = sidebar.id.startsWith('mobile');
+            const collapsed = !isMobileSidebar && shell && shell.classList.contains('sidebar-collapsed');
 
             if (isTop) {
                 const topTriggers = Array.from(sidebar.querySelectorAll('[data-menu-toggle]'));
@@ -364,22 +388,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupSidebarMenus();
+    if (mobileSidebarEl) {
+        setupSidebarMenus(mobileSidebarEl);
+    }
 
-    if (profileBtn) {
+    if (profileBtn || mobileProfileBtn) {
         ensureProfileDropdown();
-        profileBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            ensureProfileDropdown();
-            positionProfileDropdown();
-            profileDropdown.classList.toggle('hidden');
-            hideAllFlyouts();
-        });
+        
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activeProfileBtn = profileBtn;
+                ensureProfileDropdown();
+                positionProfileDropdown();
+                profileDropdown.classList.toggle('hidden');
+                hideAllFlyouts();
+            });
+        }
+
+        if (mobileProfileBtn) {
+            mobileProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activeProfileBtn = mobileProfileBtn;
+                ensureProfileDropdown();
+                positionProfileDropdown();
+                profileDropdown.classList.toggle('hidden');
+                hideAllFlyouts();
+            });
+        }
+
         document.addEventListener('click', (e) => {
             const t = e.target;
-            const inSidebar = t.closest('#adminSidebar');
+            const inSidebar = t.closest('#adminSidebar') || t.closest('#userSidebar');
             const inFlyout = t.closest('[id^="sidebarFlyout"]');
             const isMenuTrigger = t.closest('[data-menu-toggle]') || t.closest('[data-submenu-toggle]');
-            const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#topbarProfileBtn') || t.closest('#topbarNotifBtn');
+            const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#mobileSidebarProfileBtn') || t.closest('#topbarProfileBtn') || t.closest('#topbarNotifBtn');
             if (inSidebar || inFlyout || isMenuTrigger || isProfileTrigger) return;
             if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
                 profileDropdown.classList.add('hidden');
@@ -400,8 +443,11 @@ document.addEventListener('DOMContentLoaded', () => {
             topbarDropdown = document.createElement('div');
             topbarDropdown.id = topbarDropdownId;
             topbarDropdown.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
-            const name = document.querySelector('#sidebarProfileBtn .font-medium')?.textContent ?? 'John Doe';
-            const avatarSrc = document.querySelector('#topbarProfileBtn img')?.src || document.querySelector('#sidebarProfileBtn img')?.src || 'https://i.pravatar.cc/80?img=5';
+            
+            const sourceBtn = topbarProfileBtn || profileBtn || mobileProfileBtn;
+            const name = sourceBtn?.dataset.name ?? 'John Doe';
+            const avatarSrc = sourceBtn?.dataset.avatar ?? 'https://i.pravatar.cc/80?img=5';
+
             topbarDropdown.innerHTML = `
                 <div class="p-3 flex items-center gap-3 border-b border-gray-100">
                     <img class="h-9 w-9 rounded-full" src="${avatarSrc}" alt="${name}">
@@ -426,6 +472,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </nav>
             `;
             document.body.appendChild(topbarDropdown);
+            if (window.location.pathname.startsWith('/user')) {
+                const nav = topbarDropdown.querySelector('nav');
+                const aProfile = nav ? nav.querySelector('a[href="/admin/profile"]') : null;
+                const aAssets = nav ? nav.querySelector('a[href="/admin/assets"]') : null;
+                const aLogout = nav ? nav.querySelector('a[href="/admin/logout"]') : null;
+                const aSettings = nav ? nav.querySelector('a[href="/admin/settings"]') : null;
+                if (aProfile) aProfile.setAttribute('href', '/user/profile');
+                if (aAssets) aAssets.setAttribute('href', '/user/assets');
+                if (aLogout) aLogout.setAttribute('href', '/user/logout');
+                if (aSettings && aSettings.parentNode) aSettings.parentNode.removeChild(aSettings);
+                const roleEl = topbarDropdown.querySelector('.text-xs.text-gray-500');
+                if (roleEl) roleEl.textContent = 'User';
+            }
         }
     }
 
@@ -524,12 +583,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (window.innerWidth < 1024) {
-                if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) {
-                    closeMobileSidebar();
-                } else {
-                    openMobileSidebar();
-                }
+            if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
             }
         });
     }
@@ -656,7 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
         buildYaml();
         if (!ip) return;
         const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
-        window.axios.get('/admin/assets/server-details', {
+        const detailsUrl = assetsForm?.getAttribute('data-server-details-url') || '/admin/assets/server-details';
+        window.axios.get(detailsUrl, {
             params: { ip },
             headers: { 'X-CSRF-TOKEN': token }
         }).then((res) => {
@@ -723,7 +781,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
-        window.axios.post('/admin/assets/server', { ip: val }, {
+        const saveUrl = assetsForm?.getAttribute('data-server-save-url') || '/admin/assets/server';
+        window.axios.post(saveUrl, { ip: val }, {
             headers: { 'X-CSRF-TOKEN': token }
         }).then((res) => {
             const ip = res?.data?.server?.ip || val;
@@ -732,9 +791,13 @@ document.addEventListener('DOMContentLoaded', () => {
             setCurrentIp(ip);
             assetInput.value = '';
             assetInput.focus();
-            showToast('success', 'Server saved');
-        }).catch(() => {
-            showToast('error', 'Failed to save server');
+            const msg = res?.data?.message || 'Server saved';
+            showToast('success', msg);
+        }).catch((err) => {
+            const status = err?.response?.status;
+            const msg = err?.response?.data?.message || 'Failed to save server';
+            const type = status === 409 ? 'warning' : 'error';
+            showToast(type, msg);
         });
     };
     if (assetAddBtn) assetAddBtn.addEventListener('click', addServerIp);

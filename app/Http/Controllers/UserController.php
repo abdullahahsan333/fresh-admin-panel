@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Project;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -12,7 +13,7 @@ class UserController extends Controller
     public function index()
     {
         if(Auth::guard('web')->check()){
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/user/dashboard');
         }
 
         return view('login');
@@ -28,7 +29,7 @@ class UserController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::guard('web')->attempt($credentials)) {
-            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully');
+            return redirect()->intended('/user/dashboard')->with('success', 'Logged in successfully');
         }
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
@@ -37,7 +38,7 @@ class UserController extends Controller
     public function register()
     {
         if(Auth::guard('web')->check()){
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/user/dashboard');
         }
 
         return view('register');
@@ -59,24 +60,14 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        Project::firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => 'LIVO', 'description' => 'User project']
+        );
+
         Auth::guard('web')->login($user);
 
-        return redirect()->intended('/dashboard')->with('success', 'Account created successfully');
+        return redirect()->intended('/user/dashboard')->with('success', 'Account created successfully');
     }
 
-    public function dashboard()
-    {
-        if(!Auth::guard('web')->check()){
-            return redirect()->intended('/');
-        }
-
-        return view('dashboard');
-    }
-
-    public function logout()
-    {
-        Auth::guard('web')->logout();
-
-        return redirect()->intended('/')->with('success', 'Logged out successfully');
-    }
 }

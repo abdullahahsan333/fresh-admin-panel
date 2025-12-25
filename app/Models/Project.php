@@ -11,6 +11,7 @@ class Project extends Model
 
     protected $fillable = [
         'admin_id',
+        'user_id',
         'name',
         'description',
     ];
@@ -18,6 +19,10 @@ class Project extends Model
     public function admin()
     {
         return $this->belongsTo(Admin::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function servers()

@@ -1,31 +1,30 @@
-<aside id="adminSidebar" class="relative overflow-hidden bg-white border-r border-gray-200 hidden lg:block min-h-screen flex flex-col">
+<aside id="mobileUserSidebar" class="fixed inset-y-0 left-0 z-[250] hidden w-64 flex flex-col bg-white border-r border-gray-200 lg:hidden">
     <div class="px-3 py-3 flex items-center">
         @if(!empty($site->logo))
             <img class="h-9 w-9 rounded-lg object-cover border border-gray-200" src="{{ asset($site->logo) }}" alt="">
         @else
-            <div class="h-9 w-9 rounded-lg bg-emerald-500 grid place-items-center text-white">{{ strtoupper(substr($site->site_name ?? 'A', 0, 1)) }}</div>
+            <div class="h-9 w-9 rounded-lg bg-emerald-500 grid place-items-center text-white">{{ strtoupper(substr($site->site_name ?? 'U', 0, 1)) }}</div>
         @endif
-        <span id="adminBrandText" class="font-semibold sidebar-text">{{ $site->site_name ?? 'Admin' }}</span>
-        <button id="mobileSidebarCloseBtn" class="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-gray-100 lg:hidden" title="Close">
+        <span id="mobileUserBrandText" class="font-semibold sidebar-text">{{ $site->site_name ?? 'User' }}</span>
+        <button id="mobileUserSidebarCloseBtn" class="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-gray-100 lg:hidden" title="Close">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
     </div>
     <nav class="px-2 space-y-1 mb-7">
-        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($activeMenu) && $activeMenu === 'dashboard') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
+        <a href="{{ route('user.dashboard') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($activeMenu) && $activeMenu === 'dashboard') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"></path></svg>
             <span class="sidebar-text">Dashboard</span>
         </a>
-
+    </nav>
+    <nav class="px-2 space-y-1 mb-7">
         <div class="flex items-center justify-around gap-2 px-3 my-1 rounded-md text-gray-700" title="Projects &amp; Assets">
-            <div class="sidebar-text text-xs">
-                Projects &amp; Assets
-            </div>
+            <div class="sidebar-text text-xs">Projects &amp; Assets</div>
             <span class="border border-b-1 border-gray-400 border-r-0 border-l-0 border-t-0 w-[40%] transform -translate-y-1/2"></span>
         </div>
         <div class="">
             @php
-                $admin = auth('admin')->user();
-                $project = $admin ? \App\Models\Project::where('admin_id', $admin->id)->first() : null;
+                $user = auth('web')->user();
+                $project = $user ? \App\Models\Project::where('user_id', $user->id)->first() : null;
             @endphp
             @if($project)
                 @php
@@ -37,8 +36,8 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform {{ $projExpanded ? 'rotate-180' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
                 </a>
                 <div class="{{ $projExpanded ? 'pl-4 open' : 'hidden pl-4 close' }}" data-submenu>
-                    <a href="{{ route('admin.overview') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($subMenu) && $subMenu === 'overview') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="#D9D9D9" d="M512 188c-99.3 0-192.7 38.7-263 109-70.3 70.2-109 163.6-109 263 0 105.6 44.5 205.5 122.6 276h498.8A371.12 371.12 0 0 0 884 560c0-99.3-38.7-192.7-109-263-70.2-70.3-163.6-109-263-109zm-30 44c0-4.4 3.6-8 8-8h44c4.4 0 8 3.6 8 8v80c0 4.4-3.6 8-8 8h-44c-4.4 0-8-3.6-8-8v-80zM270 582c0 4.4-3.6 8-8 8h-80c-4.4 0-8-3.6-8-8v-44c0-4.4 3.6-8 8-8h80c4.4 0 8 3.6 8 8v44zm90.7-204.4l-31.1 31.1a8.03 8.03 0 0 1-11.3 0l-56.6-56.6a8.03 8.03 0 0 1 0-11.3l31.1-31.1c3.1-3.1 8.2-3.1 11.3 0l56.6 56.6c3.1 3.1 3.1 8.2 0 11.3zm291.1 83.5l-84.5 84.5c5 18.7.2 39.4-14.5 54.1a55.95 55.95 0 0 1-79.2 0 55.95 55.95 0 0 1 0-79.2 55.87 55.87 0 0 1 54.1-14.5l84.5-84.5c3.1-3.1 8.2-3.1 11.3 0l28.3 28.3c3.1 3.1 3.1 8.2 0 11.3zm43-52.4l-31.1-31.1a8.03 8.03 0 0 1 0-11.3l56.6-56.6c3.1-3.1 8.2-3.1 11.3 0l31.1 31.1c3.1 3.1 3.1 8.2 0 11.3l-56.6 56.6a8.03 8.03 0 0 1-11.3 0zM846 538v44c0 4.4-3.6 8-8 8h-80c-4.4 0-8-3.6-8-8v-44c0-4.4 3.6-8 8-8h80c4.4 0 8 3.6 8 8z"></path><path d="M623.5 421.5a8.03 8.03 0 0 0-11.3 0L527.7 506c-18.7-5-39.4-.2-54.1 14.5a55.95 55.95 0 0 0 0 79.2 55.95 55.95 0 0 0 79.2 0 55.87 55.87 0 0 0 14.5-54.1l84.5-84.5c3.1-3.1 3.1-8.2 0-11.3l-28.3-28.3zM490 320h44c4.4 0 8-3.6 8-8v-80c0-4.4-3.6-8-8-8h-44c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8z"></path><path d="M924.8 385.6a446.7 446.7 0 0 0-96-142.4 446.7 446.7 0 0 0-142.4-96C631.1 123.8 572.5 112 512 112s-119.1 11.8-174.4 35.2a446.7 446.7 0 0 0-142.4 96 446.7 446.7 0 0 0-96 142.4C75.8 440.9 64 499.5 64 560c0 132.7 58.3 257.7 159.9 343.1l1.7 1.4c5.8 4.8 13.1 7.5 20.6 7.5h531.7c7.5 0 14.8-2.7 20.6-7.5l1.7-1.4C901.7 817.7 960 692.7 960 560c0-60.5-11.9-119.1-35.2-174.4zM761.4 836H262.6A371.12 371.12 0 0 1 140 560c0-99.4 38.7-192.8 109-263 70.3-70.3 163.7-109 263-109 99.4 0 192.8 38.7 263 109 70.3 70.3 109 163.7 109 263 0 105.6-44.5 205.5-122.6 276z"></path><path d="M762.7 340.8l-31.1-31.1a8.03 8.03 0 0 0-11.3 0l-56.6 56.6a8.03 8.03 0 0 0 0 11.3l31.1 31.1c3.1 3.1 8.2 3.1 11.3 0l56.6-56.6c3.1-3.1 3.1-8.2 0-11.3zM750 538v44c0 4.4 3.6 8 8 8h80c4.4 0 8-3.6 8-8v-44c0-4.4-3.6-8-8-8h-80c-4.4 0-8 3.6-8 8zM304.1 309.7a8.03 8.03 0 0 0-11.3 0l-31.1 31.1a8.03 8.03 0 0 0 0 11.3l56.6 56.6c3.1 3.1 8.2 3.1 11.3 0l31.1-31.1c3.1-3.1 3.1-8.2 0-11.3l-56.6-56.6zM262 530h-80c-4.4 0-8 3.6-8 8v44c0 4.4 3.6 8 8 8h80c4.4 0 8-3.6 8-8v-44c0-4.4-3.6-8-8-8z"></path></svg>
+                    <a href="{{ route('user.assets.overview') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ (isset($subMenu) && $subMenu === 'overview') ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="#D9D9D9" d="M512 188c-99.3 0-192.7 38.7-263 109-70.3 70.2-109 163.6-109 263 0 105.6 44.5 205.5 122.6 276h498.8A371.12 371.12 0 0 0 884 560c0-99.3-38.7-192.7-109-263-70.2-70.3-163.6-109-263-109zm-30 44c0-4.4 3.6-8 8-8h44c4.4 0 8 3.6 8 8v80c0 4.4-3.6 8-8 8h-44c-4.4 0-8-3.6-8-8v-80zM270 582c0 4.4-3.6 8-8 8h-80c-4.4 0-8-3.6-8-8v-44c0-4.4 3.6-8 8-8h80c4.4 0 8 3.6 8 8v44zm90.7-204.4l-31.1 31.1a8.03 8.03 0 0 1-11.3 0l-56.6-56.6a8.03 8.03 0 0 1 0-11.3l31.1-31.1c3.1-3.1 8.2-3.1 11.3 0l56.6 56.6c3.1-3.1 3.1 8.2 0 11.3zm291.1 83.5l-84.5 84.5c5 18.7.2 39.4-14.5 54.1a55.95 55.95 0 0 1-79.2 0 55.95 55.95 0 0 1 0-79.2 55.87 55.87 0 0 1 54.1-14.5l84.5-84.5c3.1-3.1 8.2-3.1 11.3 0l28.3 28.3c3.1 3.1 3.1 8.2 0 11.3zm43-52.4l-31.1-31.1a8.03 8.03 0 0 1 0-11.3l56.6-56.6c3.1-3.1 8.2-3.1 11.3 0l31.1 31.1c3.1 3.1 3.1 8.2 0 11.3l-56.6 56.6a8.03 8.03 0 0 1-11.3 0zM846 538v44c0 4.4-3.6 8-8 8h-80c-4.4 0-8-3.6-8-8v-44c0-4.4 3.6-8 8-8h80c4.4 0 8 3.6 8 8z"></path><path d="M623.5 421.5a8.03 8.03 0 0 0-11.3 0L527.7 506c-18.7-5-39.4-.2-54.1 14.5a55.95 55.95 0 0 0 0 79.2 55.95 55.95 0 0 0 79.2 0 55.87 55.87 0 0 0 14.5-54.1l84.5-84.5c3.1-3.1 8.2-3.1 11.3 0l-28.3-28.3zM490 320h44c4.4 0 8-3.6 8-8v-80c0-4.4-3.6-8-8-8h-44c-4.4 0-8 3.6-8 8v80c0 4.4 3.6 8 8 8z"></path><path d="M924.8 385.6a446.7 446.7 0 0 0-96-142.4 446.7 446.7 0 0 0-142.4-96C631.1 123.8 572.5 112 512 112s-119.1 11.8-174.4 35.2a446.7 446.7 0 0 0-142.4 96 446.7 446.7 0 0 0-96 142.4C75.8 440.9 64 499.5 64 560c0 132.7 58.3 257.7 159.9 343.1l1.7 1.4c5.8 4.8 13.1 7.5 20.6 7.5h531.7c7.5 0 14.8-2.7 20.6-7.5l1.7-1.4C901.7 817.7 960 692.7 960 560c0-60.5-11.9-119.1-35.2-174.4zM761.4 836H262.6A371.12 371.12 0 0 1 140 560c0-99.4 38.7-192.8 109-263 70.3-70.3 163.7-109 263-109 99.4 0 192.8 38.7 263 109 70.3 70.3 109 163.7 109 263 0 105.6-44.5 205.5-122.6 276z"></path></svg>
                         <span class="sidebar-text">Overview</span>
                     </a>
                     @php
@@ -64,7 +63,7 @@
                             </a>
                             <div class="{{ $srvExpanded ? 'pl-4' : 'hidden pl-4' }}" data-submenu>
                                 @foreach ($assets as $service )
-                                    <a href="{{ route('admin.server.'. strtolower($service->service_name), $server->id) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $activeServiceLabel === strtolower($service->service_name) ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <a href="{{ route('user.server.'. strtolower($service->service_name), $server->id) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $activeServiceLabel === strtolower($service->service_name) ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
                                         <span class="sidebar-text">{{ strFilter($service->service_name) }}</span>
                                     </a>
@@ -75,80 +74,45 @@
                             <div class="px-3 h-9 my-1 rounded-md text-gray-500">Add IPs in Assets</div>
                         @endif
                     </div>
-                @php $utilsExpanded = isset($subMenu) && $subMenu === 'ssl'; @endphp
-                <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $utilsExpanded ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}" aria-expanded="{{ $utilsExpanded ? 'true' : 'false' }}">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M2 18H9V20H2V18ZM2 11H11V13H2V11ZM2 4H22V6H2V4ZM20.674 13.0251L21.8301 12.634L22.8301 14.366L21.914 15.1711C21.9704 15.4386 22 15.7158 22 16C22 16.2842 21.9704 16.5614 21.914 16.8289L22.8301 17.634L21.8301 19.366L20.674 18.9749C20.2635 19.3441 19.7763 19.6295 19.2391 19.8044L19 21H17L16.7609 19.8044C16.2237 19.6295 15.7365 19.3441 15.326 18.9749L14.1699 19.366L13.1699 17.634L14.086 16.8289C14.0296 16.5614 14 16.2842 14 16C14 15.7158 14.0296 15.4386 14.086 15.1711L13.1699 14.366L14.1699 12.634L15.326 13.0251C15.7365 12.6559 16.2237 12.3705 16.7609 12.1956L17 11H19L19.2391 12.1956C19.7763 12.3705 20.2635 12.6559 20.674 13.0251ZM18 18C19.1046 18 20 17.1046 20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18Z"></path></svg>
-                    <span class="sidebar-text">Utils</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
-                </a>
-                <div class="{{ $utilsExpanded ? 'pl-4 open' : 'hidden pl-4 close' }}" data-submenu>
-                    @if($servers->isNotEmpty())
-                        @php
-                            $sslActive = isset($activeService) && $activeService === 'ssl';
-                            $targetServerId = isset($activeServerId) ? $activeServerId : $servers[0]->id;
-                        @endphp
-                        <a href="{{ route('admin.server.ssl', $targetServerId) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $sslActive ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
-                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 256 256" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M126,136a6,6,0,0,1-6,6H72a6,6,0,0,1,0-12h48A6,6,0,0,1,126,136Zm-6-38H72a6,6,0,0,0,0,12h48a6,6,0,0,0,0-12Zm110,62.62V224a6,6,0,0,1-9,5.21l-25-14.3-25,14.3a6,6,0,0,1-9-5.21V198H40a14,14,0,0,1-14-14V56A14,14,0,0,1,40,42H216a14,14,0,0,1,14,14V87.38a49.91,49.91,0,0,1,0,73.24ZM196,86a38,38,0,1,0,38,38A38,38,0,0,0,196,86ZM162,186V160.62a50,50,0,0,1,56-81.51V56a2,2,0,0,0-2-2H40a2,2,0,0,0-2,2V184a2,2,0,0,0,2,2Zm56-17.11a49.91,49.91,0,0,1-44,0v44.77l19-10.87a6,6,0,0,1,6,0l19,10.87Z"></path></svg>
-                            <span class="sidebar-text">SSL</span>
-                        </a>
-                    @endif
+                    @php $utilsExpanded = isset($subMenu) && $subMenu === 'ssl'; @endphp
+                    <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $utilsExpanded ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)] open' : 'text-gray-700 hover:bg-gray-50 close' }}" aria-expanded="{{ $utilsExpanded ? 'true' : 'false' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M2 18H9V20H2V18ZM2 11H11V13H2V11ZM2 4H22V6H2V4ZM20.674 13.0251L21.8301 12.634L22.8301 14.366L21.914 15.1711C21.9704 15.4386 22 15.7158 22 16C22 16.2842 21.9704 16.5614 21.914 16.8289L22.8301 17.634L21.8301 19.366L20.674 18.9749C20.2635 19.3441 19.7763 19.6295 19.2391 19.8044L19 21H17L16.7609 19.8044C16.2237 19.6295 15.7365 19.3441 15.326 18.9749L14.1699 19.366L13.1699 17.634L14.086 16.8289C14.0296 16.5614 14 16.2842 14 16C14 15.7158 14.0296 15.4386 14.086 15.1711L13.1699 14.366L14.1699 12.634L15.326 13.0251C15.7365 12.6559 16.2237 12.3705 16.7609 12.1956L17 11H19L19.2391 12.1956C19.7763 12.3705 20.2635 12.6559 20.674 13.0251ZM18 18C19.1046 18 20 17.1046 20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18Z"></path></svg>
+                        <span class="sidebar-text">Utils</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+                    </a>
+                    <div class="{{ $utilsExpanded ? 'pl-4 open' : 'hidden pl-4 close' }}" data-submenu>
+                        @if($servers->isNotEmpty())
+                            @php
+                                $sslActive = isset($activeService) && $activeService === 'ssl';
+                                $targetServerId = isset($activeServerId) ? $activeServerId : $servers[0]->id;
+                            @endphp
+                            <a href="{{ route('user.server.ssl', $targetServerId) }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md {{ $sslActive ? 'text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/.06)]' : 'text-gray-700 hover:bg-gray-50' }}">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 256 256" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M126,136a6,6,0,0,1-6,6H72a6,6,0,0,1,0-12h48A6,6,0,0,1,126,136Zm-6-38H72a6,6,0,0,0,0,12h48a6,6,0,0,0,0-12Zm110,62.62V224a6,6,0,0,1-9,5.21l-25-14.3-25,14.3a6,6,0,0,1-9-5.21V198H40a14,14,0,0,1-14-14V56A14,14,0,0,1,40,42H216a14,14,0,0,1,14,14V87.38a49.91,49.91,0,0,1,0,73.24ZM196,86a38,38,0,1,0,38,38A38,38,0,0,0,196,86ZM162,186V160.62a50,50,0,0,1,56-81.51V56a2,2,0,0,0-2-2H40a2,2,0,0,0-2,2V184a2,2,0,0,0,2,2Zm56-17.11a49.91,49.91,0,0,1-44,0v44.77l19-10.87a6,6,0,0,1,6,0l19,10.87Z"></path></svg>
+                                <span class="sidebar-text">SSL</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
             @else
                 <div class="pl-4">
-                    <a href="{{ route('admin.projects.create') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16M4 12h16"/></svg>
-                        <span class="sidebar-text">Create Project</span>
-                    </a>
-                    <a href="{{ route('admin.assets.index') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('user.assets.index') }}" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
                         <span class="sidebar-text">Assets</span>
                     </a>
                 </div>
             @endif
         </div>
-        <div class="hidden pl-4" data-menu>
-            <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-8 4 8 4 8-4-8-4zM4 14l8 4 8-4"/></svg>
-                <span class="sidebar-text">Users</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
-            </a>
-            <div class="hidden pl-4" data-submenu>
-                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
-                    <span class="sidebar-text">All Users</span>
-                </a>
-                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16M4 12h16"/></svg>
-                    <span class="sidebar-text">Create User</span>
-                </a>
-            </div>
-            <a href="javascript:void(0);" data-submenu-toggle class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4v8a8 8 0 11-16 0V6l8-4z"/></svg>
-                <span class="sidebar-text">Settings</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="submenu-caret h-4 w-4 ml-auto transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
-            </a>
-            <div class="hidden pl-4" data-submenu>
-                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/></svg>
-                    <span class="sidebar-text">General</span>
-                </a>
-                <a href="#" class="flex items-center gap-2 px-3 h-9 my-1 rounded-md text-gray-700 hover:bg-gray-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 4-8 4-8-4 8-4zM4 10l8 4 8-4"/></svg>
-                    <span class="sidebar-text">Security</span>
-                </a>
-            </div>
-        </div>
     </nav>
     <div class="fixed bottom-0 left-0 right-0 w-60">
-        <button id="sidebarProfileBtn" 
-            data-name="{{ auth('admin')->user()->name ?? 'John Doe' }}"
-            data-avatar="{{ ($adminUser && !empty($adminUser->avatar)) ? asset($adminUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}"
+        <button id="mobileSidebarProfileBtn" 
+            data-name="{{ auth('web')->user()->name ?? 'John Doe' }}"
+            data-avatar="{{ ($webUser && !empty($webUser->avatar)) ? asset($webUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}"
             class="w-full flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-gray-50">
-            <img class="h-9 w-9 rounded-full" src="{{ ($adminUser && !empty($adminUser->avatar)) ? asset($adminUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}" alt="{{ auth('admin')->user()->name ?? 'John Doe' }}">
+            <img class="h-9 w-9 rounded-full" src="{{ ($webUser && !empty($webUser->avatar)) ? asset($webUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}" alt="{{ auth('web')->user()->name ?? 'John Doe' }}">
             <div class="sidebar-meta flex justify-between items-center w-full">
                 <div class="text-sm text-left grid grid-cols-1">
-                    <div class="font-medium sidebar-text">{{ auth('admin')->user()->name ?? 'John Doe' }}</div>
-                    <div class="text-gray-500 sidebar-text">Admin</div>
+                    <div class="font-medium sidebar-text">{{ auth('web')->user()->name ?? 'John Doe' }}</div>
+                    <div class="text-gray-500 sidebar-text">User</div>
                 </div>
                 <div class="sidebar-extra ml-auto inline-block w-4 h-4 rounded-full bg-emerald-500">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
