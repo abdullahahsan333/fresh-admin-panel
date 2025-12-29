@@ -7,7 +7,7 @@
     @if (!empty($site->favicon))
         <link rel="icon" href="{{ asset($site->favicon) }}" type="image/x-icon">
     @endif
-    @vite(['resources/css/app.css','resources/js/app.js'])
+    @vite(['resources/css/user.css','resources/js/user.js'])
     <style>
         #userSidebar {
             transition: width 200ms ease, padding 200ms ease;

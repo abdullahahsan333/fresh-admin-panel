@@ -26,7 +26,7 @@ class AssetController extends Controller
         if (!$uid) return null;
         return Project::firstOrCreate(
             ['user_id' => $uid],
-            ['name' => (Auth::guard('web')->user()->name ?? 'User') . '\'s Project', 'description' => 'User project']
+            ['name' => 'LIVO', 'description' => 'User project']
         );
     }
 
@@ -38,7 +38,10 @@ class AssetController extends Controller
         }
         $project = $this->getUserProject();
         $servers = $project ? Server::where('project_id', $project->id)->get() : collect();
+        $data['assets'] = $project ? Asset::where('project_id', $project->id)->get() : collect();
+        $data['hostnames'] = $project ? Hostname::where('project_id', $project->id)->get() : collect();
         $data['server'] = $servers;
+
         return view('user.assets.index', $data);
     }
 
@@ -57,7 +60,7 @@ class AssetController extends Controller
             }
             $server = Server::firstOrCreate(
                 ['project_id' => $project->id, 'ip' => $validated['ip']],
-                ['status' => 'active']
+                ['status' => 1]
             );
             $msg = $server->wasRecentlyCreated ? 'IP added to your project' : 'IP already exists in your project';
             return response()->json(['ok' => true, 'server' => $server, 'message' => $msg]);
@@ -172,6 +175,18 @@ class AssetController extends Controller
         }
     }
 
+    public function overview()
+    {
+        $data = menuActive('projects_assets', 'overview', '');
+        if (!Auth::guard('web')->check()) {
+            return redirect()->intended(route('login'));
+        }
+        $project = $this->getUserProject();
+        $servers = $project ? Server::where('project_id', $project->id)->get() : collect();
+        $data['server'] = $servers;
+        return view('user.assets.overview', $data);
+    }
+
     public function ssl(Request $request, $id)
     {
         if (!Auth::guard('web')->check()) {
@@ -189,6 +204,10 @@ class AssetController extends Controller
         $data['activeService'] = 'ssl';
         $data['subMenu'] = 'ssl';
         $data['server'] = $server;
+
+        // Fetch hostnames for this server
+        $data['hostnames'] = Hostname::where('project_id', $project->id)->get();
+
         return view('user.server.ssl', $data);
     }
     
@@ -209,6 +228,7 @@ class AssetController extends Controller
         $data['activeService'] = 'linux';
         $data['subMenu'] = 'linux';
         $data['server'] = $server;
+
         return view('user.server.linux', $data);
     }
     
@@ -229,6 +249,7 @@ class AssetController extends Controller
         $data['activeService'] = 'mysql';
         $data['subMenu'] = 'mysql';
         $data['server'] = $server;
+
         return view('user.server.mysql', $data);
     }
     
@@ -249,6 +270,7 @@ class AssetController extends Controller
         $data['activeService'] = 'mongodb';
         $data['subMenu'] = 'mongodb';
         $data['server'] = $server;
+
         return view('user.server.mongodb', $data);
     }
     
@@ -269,6 +291,7 @@ class AssetController extends Controller
         $data['activeService'] = 'redis';
         $data['subMenu'] = 'redis';
         $data['server'] = $server;
+
         return view('user.server.redis', $data);
     }
     
@@ -289,6 +312,7 @@ class AssetController extends Controller
         $data['activeService'] = 'api_log';
         $data['subMenu'] = 'api_log';
         $data['server'] = $server;
+
         return view('user.server.api_log', $data);
     }
     
@@ -309,6 +333,7 @@ class AssetController extends Controller
         $data['activeService'] = 'scheduler';
         $data['subMenu'] = 'scheduler';
         $data['server'] = $server;
+
         return view('user.server.scheduler', $data);
     }
     
@@ -384,17 +409,5 @@ class AssetController extends Controller
             Log::error('User import failed', ['error' => $e->getMessage()]);
             return back()->with('error', 'Failed to import project');
         }
-    }
-
-    public function overview()
-    {
-        $data = menuActive('projects_assets', 'overview', '');
-        if (!Auth::guard('web')->check()) {
-            return redirect()->intended(route('login'));
-        }
-        $project = $this->getUserProject();
-        $servers = $project ? Server::where('project_id', $project->id)->get() : collect();
-        $data['server'] = $servers;
-        return view('user.assets.overview', $data);
     }
 }

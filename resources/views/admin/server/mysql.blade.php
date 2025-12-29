@@ -2,7 +2,6 @@
 
 @section('content')
 
-
 <!-- Top bar -->
 <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 sticky top-0 mb-6">
     <div class="flex items-center gap-4">
@@ -293,234 +292,186 @@
 @endsection
 
 @push('footer_scripts')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
     const cp = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
     const cpCsv = cp.replace(/\s+/g, ',');
     const themeColor = `rgb(${cpCsv})`;
-    var options = {
-            series: [67],
-            chart: {
-            height: 150,
-            type: 'radialBar',
-            offsetY: -10
-        },
-        colors: [themeColor],
-        plotOptions: {
-            radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            dataLabels: {
-                name: {
-                    fontSize: '16px',
-                    color: undefined,
-                    offsetY: 120
-                },
-                value: {
-                    offsetY: 76,
-                    fontSize: '22px',
-                    color: undefined,
-                    formatter: function (val) {
-                        return val + "%";
-                    }
-                }
-            }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                shadeIntensity: 0.15,
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 50, 65, 91]
-            },
-        },
-        stroke: {
-            dashArray: 4
-        },
-        labels: ['Connection Usage'],
-    };
+    
+    function createRadialChart(elementId, value, label) {
+        const element = document.getElementById(elementId);
+        if (!element) return null;
+        
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
+        svg.setAttribute("viewBox", "0 0 200 200");
+        
+        const defs = document.createElementNS(svgNS, "defs");
+        const gradient = document.createElementNS(svgNS, "linearGradient");
+        gradient.setAttribute("id", `gradient-${elementId}`);
+        gradient.setAttribute("x1", "0%");
+        gradient.setAttribute("y1", "0%");
+        gradient.setAttribute("x2", "100%");
+        gradient.setAttribute("y2", "100%");
+        
+        const stop1 = document.createElementNS(svgNS, "stop");
+        stop1.setAttribute("offset", "0%");
+        stop1.setAttribute("stop-color", themeColor);
+        stop1.setAttribute("stop-opacity", "0.8");
+        
+        const stop2 = document.createElementNS(svgNS, "stop");
+        stop2.setAttribute("offset", "100%");
+        stop2.setAttribute("stop-color", themeColor);
+        stop2.setAttribute("stop-opacity", "0.4");
+        
+        gradient.appendChild(stop1);
+        gradient.appendChild(stop2);
+        defs.appendChild(gradient);
+        svg.appendChild(defs);
+        
+        const backgroundCircle = document.createElementNS(svgNS, "circle");
+        backgroundCircle.setAttribute("cx", "100");
+        backgroundCircle.setAttribute("cy", "100");
+        backgroundCircle.setAttribute("r", "70");
+        backgroundCircle.setAttribute("fill", "none");
+        backgroundCircle.setAttribute("stroke", "#f3f4f6");
+        backgroundCircle.setAttribute("stroke-width", "10");
+        svg.appendChild(backgroundCircle);
+        
+        const progressCircle = document.createElementNS(svgNS, "circle");
+        progressCircle.setAttribute("cx", "100");
+        progressCircle.setAttribute("cy", "100");
+        progressCircle.setAttribute("r", "70");
+        progressCircle.setAttribute("fill", "none");
+        progressCircle.setAttribute("stroke", `url(#gradient-${elementId})`);
+        progressCircle.setAttribute("stroke-width", "10");
+        progressCircle.setAttribute("stroke-linecap", "round");
+        progressCircle.setAttribute("stroke-dasharray", `${value * 4.4} 440`);
+        progressCircle.setAttribute("transform", "rotate(-90 100 100)");
+        svg.appendChild(progressCircle);
+        
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", "100");
+        text.setAttribute("y", "100");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "middle");
+        text.setAttribute("font-size", "28");
+        text.setAttribute("font-weight", "bold");
+        text.setAttribute("fill", "#1f2937");
+        text.textContent = `${value}%`;
+        svg.appendChild(text);
+        
+        const labelText = document.createElementNS(svgNS, "text");
+        labelText.setAttribute("x", "100");
+        labelText.setAttribute("y", "130");
+        labelText.setAttribute("text-anchor", "middle");
+        labelText.setAttribute("font-size", "12");
+        labelText.setAttribute("fill", "#6b7280");
+        labelText.textContent = label;
+        svg.appendChild(labelText);
+        
+        element.innerHTML = '';
+        element.appendChild(svg);
+        
+        return svg;
+    }
 
-    var TableOpenCacheOptions = {
-        series: [67],
-        chart: {
-            height: 150,
-            type: 'radialBar',
-            offsetY: -10
-        },
-        colors: [themeColor],
-        plotOptions: {
-            radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            dataLabels: {
-                name: {
-                    fontSize: '16px',
-                    color: undefined,
-                    offsetY: 120
-                },
-                value: {
-                    offsetY: 76,
-                    fontSize: '22px',
-                    color: undefined,
-                    formatter: function (val) {
-                        return val + "%";
-                    }
-                }
+    function createLineChart(elementId, title, data, categories) {
+        const element = document.getElementById(elementId);
+        if (!element) return null;
+        
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
+        svg.setAttribute("viewBox", "0 0 300 120");
+        
+        const titleText = document.createElementNS(svgNS, "text");
+        titleText.setAttribute("x", "10");
+        titleText.setAttribute("y", "15");
+        titleText.setAttribute("font-size", "12");
+        titleText.setAttribute("font-weight", "bold");
+        titleText.setAttribute("fill", "#374151");
+        titleText.textContent = title;
+        svg.appendChild(titleText);
+        
+        const maxValue = Math.max(...data);
+        const minValue = Math.min(...data);
+        const range = maxValue - minValue;
+        const padding = 30;
+        const chartWidth = 280;
+        const chartHeight = 70;
+        const xStep = chartWidth / (categories.length - 1);
+        
+        let pathData = '';
+        data.forEach((value, index) => {
+            const x = padding + index * xStep;
+            const y = padding + chartHeight - ((value - minValue) / range) * chartHeight;
+            
+            if (index === 0) {
+                pathData = `M ${x} ${y}`;
+            } else {
+                pathData += ` L ${x} ${y}`;
             }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                shadeIntensity: 0.15,
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 50, 65, 91]
-            },
-        },
-        stroke: {
-            dashArray: 4
-        },
-        labels: ['Cache Usage'],
-    };
-    var InnodbBufferPoolOptions = {
-        series: [67],
-        chart: {
-            height: 150,
-            type: 'radialBar',
-            offsetY: -10
-        },
-        colors: [themeColor],
-        plotOptions: {
-            radialBar: {
-            startAngle: -135,
-            endAngle: 135,
-            dataLabels: {
-                name: {
-                    fontSize: '16px',
-                    color: undefined,
-                    offsetY: 120
-                },
-                value: {
-                    offsetY: 76,
-                    fontSize: '22px',
-                    color: undefined,
-                    formatter: function (val) {
-                        return val + "%";
-                    }
-                }
-            }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                shadeIntensity: 0.15,
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 50, 65, 91]
-            },
-        },
-        stroke: {
-            dashArray: 4
-        },
-        labels: ['Cache Usage'],
-    };
+        });
+        
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", pathData);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", themeColor);
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        svg.appendChild(path);
+        
+        data.forEach((value, index) => {
+            const x = padding + index * xStep;
+            const y = padding + chartHeight - ((value - minValue) / range) * chartHeight;
+            
+            const circle = document.createElementNS(svgNS, "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", "3");
+            circle.setAttribute("fill", themeColor);
+            svg.appendChild(circle);
+            
+            const label = document.createElementNS(svgNS, "text");
+            label.setAttribute("x", x);
+            label.setAttribute("y", padding + chartHeight + 15);
+            label.setAttribute("text-anchor", "middle");
+            label.setAttribute("font-size", "10");
+            label.setAttribute("fill", "#6b7280");
+            label.textContent = categories[index];
+            svg.appendChild(label);
+        });
+        
+        element.innerHTML = '';
+        element.appendChild(svg);
+        
+        return svg;
+    }
 
-    var bytesSent = {
-        series: [{
-            name: "Desktops",
-            data: [60, 70, 160, 90, 100, 110]
-        }],
-        chart: {
-            height: 150,
-            type: 'line',
-            zoom: {
-                enabled: false
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            curve: 'smooth'
-        },
-        title: {
-            text: 'Output Traffic',
-            align: 'left'
-        },
-        grid: {
-            row: {
-                colors: ['#f3f3f3', 'transparent'],
-                opacity: 0.5
-            },
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        }
-    };
-
-    var bytesReceived = {
-        series: [{
-            name: "Desktops",
-            data: [60, 70, 160, 90, 100, 110]
-        }],
-        chart: {
-            height: 150,
-            type: 'line',
-            zoom: {
-                enabled: false
-            }
-        },
-        dataLabels: {
-            enabled: false
-        },
-        stroke: {
-            curve: 'smooth'
-        },
-        title: {
-            text: 'Input Traffic',
-            align: 'left'
-        },
-        grid: {
-            row: {
-                colors: ['#f3f3f3', 'transparent'],
-                opacity: 0.5
-            },
-        },
-        xaxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        }
-    };
-
-    var bytesSentChart = new ApexCharts(document.querySelector("#bytesSent"), bytesSent);
-    bytesSentChart.render();
-
-    var bytesReceivedChart = new ApexCharts(document.querySelector("#bytesReceived"), bytesReceived);
-    bytesReceivedChart.render();
-
-    var chart = new ApexCharts(document.querySelector("#connectionUsage"), options);
-    chart.render();
-
-    var openCacheChart = new ApexCharts(document.querySelector("#tableOpenCache"), TableOpenCacheOptions);
-    openCacheChart.render();
-
-    var InnodbBufferPoolChart = new ApexCharts(document.querySelector("#innodbBufferPool"), InnodbBufferPoolOptions);
-    InnodbBufferPoolChart.render();
-    (function(){
-        var tabsEl = document.getElementById('adminMysqlConcernsTabs');
-        var contentEl = document.getElementById('adminMysqlConcernsContent');
-        if (!tabsEl || !contentEl) return;
-        var activeTab = 'slow';
-        function renderContent(){
+    createRadialChart('connectionUsage', 67, 'Connection Usage');
+    createRadialChart('tableOpenCache', 67, 'Cache Usage');
+    createRadialChart('innodbBufferPool', 67, 'Cache Usage');
+    
+    createLineChart('bytesSent', 'Output Traffic', 
+        [60, 70, 160, 90, 100, 110], 
+        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+    
+    createLineChart('bytesReceived', 'Input Traffic', 
+        [60, 70, 160, 90, 100, 110], 
+        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
+    
+    const tabsEl = document.getElementById('adminMysqlConcernsTabs');
+    const contentEl = document.getElementById('adminMysqlConcernsContent');
+    
+    if (tabsEl && contentEl) {
+        let activeTab = 'slow';
+        
+        function renderContent() {
             if (activeTab === 'slow') {
                 contentEl.innerHTML = '<div class="text-sm text-gray-500">No slow queries</div>';
             } else if (activeTab === 'warns') {
@@ -529,9 +480,10 @@
                 contentEl.innerHTML = '<div class="text-sm text-gray-500">No errors</div>';
             }
         }
-        function setActiveTab(tab){
+        
+        function setActiveTab(tab) {
             activeTab = tab;
-            tabsEl.querySelectorAll('button').forEach(function(btn){
+            tabsEl.querySelectorAll('button').forEach(function(btn) {
                 if (btn.dataset.tab === tab) {
                     btn.className = 'w-full py-2 text-purple-600 border-b-2 border-purple-600 font-medium text-sm';
                 } else {
@@ -540,14 +492,16 @@
             });
             renderContent();
         }
-        tabsEl.addEventListener('click', function(e){
-            var btn = e.target.closest('button[data-tab]');
+        
+        tabsEl.addEventListener('click', function(e) {
+            const btn = e.target.closest('button[data-tab]');
             if (!btn) return;
             e.preventDefault();
             setActiveTab(btn.dataset.tab);
         });
+        
         setActiveTab('slow');
-    })();
+    }
+});
 </script>
-    
 @endpush

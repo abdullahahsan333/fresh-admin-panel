@@ -85,4 +85,6 @@
     </div>
 </form>
 
+@include('partials.assets-readme')
+
 @endsection

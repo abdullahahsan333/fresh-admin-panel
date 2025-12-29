@@ -23,69 +23,39 @@
             </div>
             
             <div id="sslTabs" class="p-3 space-y-2 overflow-y-auto flex-1">
-                <!-- List Item 1 -->
-                <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="heylivo-com">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"></div>
-                            <div>
-                                <div class="text-sm font-semibold text-gray-700">heylivo.com</div>
-                                <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
+                @if(isset($hostnames) && $hostnames->count() > 0)
+                    @foreach($hostnames as $hostname)
+                        <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="{{ Str::slug($hostname->hostname) }}" data-hostname="{{ $hostname->hostname }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"></div>
+                                    <div>
+                                        <div class="text-sm font-semibold text-gray-700">{{ $hostname->hostname }}</div>
+                                        <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
+                                    </div>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
                             </div>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- List Item 2 -->
-                <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="google-com">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"></div>
-                            <div>
-                                <div class="text-sm font-semibold text-gray-700">google.com</div>
-                                <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
+                    @endforeach
+                @else
+                    <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="facebook-com" data-hostname="facebook.com">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"></div>
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-700">facebook.com</div>
+                                    <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
+                                </div>
                             </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
                     </div>
-                </div>
-
-                <!-- List Item 3 -->
-                <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="facebook-com">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"></div>
-                            <div>
-                                <div class="text-sm font-semibold text-gray-700">facebook.com</div>
-                                <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
-                            </div>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- List Item 4 -->
-                <div class="p-3 rounded-lg cursor-pointer border border-gray-100 hover:border-[rgb(var(--color-primary)/.30)] hover:bg-gray-50 hover:text-[rgb(var(--color-primary))] group transition-all" data-ssl-key="apprise-it">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="h-2 w-2 rounded-full bg-purple-500"></div>
-                            <div>
-                                <div class="text-sm font-semibold text-gray-700">apprise.it</div>
-                                <div class="text-xs text-gray-400 group-hover:text-gray-500">Click to check SSL</div>
-                            </div>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -94,14 +64,14 @@
     <div class="flex-1 min-w-0 h-full">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div id="sslEmpty" class="py-24 text-center text-gray-500 text-sm">Select a domain to view SSL information</div>
-            <div id="sslPanel-google-com" class="hidden">
+            <div id="sslPanel" class="hidden">
                 <div class="flex items-start justify-between mb-8">
                     <div class="flex items-center gap-3">
                         <div class="h-10 w-10 rounded-full bg-[rgb(var(--color-primary)/.06)] flex items-center justify-center text-[rgb(var(--color-primary))]">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-900">google.com</h1>
+                            <h1 id="sslDomainTitleAdmin" class="text-2xl font-bold text-gray-900">google.com</h1>
                             <p class="text-sm text-gray-500">SSL Certificate Information</p>
                         </div>
                     </div>
@@ -131,7 +101,7 @@
                     </div>
                     <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-1"><div class="text-xs font-medium text-gray-500 uppercase">Issuer</div><div class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800 font-mono">C=US, O=Google Trust Services, CN=WR2</div></div>
-                        <div class="space-y-1"><div class="text-xs font-medium text-gray-500 uppercase">Subject</div><div class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800 font-mono">CN=*.google.com</div></div>
+                        <div class="space-y-1"><div class="text-xs font-medium text-gray-500 uppercase">Subject</div><div id="sslSubjectCnAdmin" class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800 font-mono">CN=*.google.com</div></div>
                         <div class="space-y-1"><div class="text-xs font-medium text-gray-500 uppercase">Valid From</div><div class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800">December 3, 2025</div></div>
                         <div class="space-y-1"><div class="text-xs font-medium text-gray-500 uppercase">Valid Until</div><div class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800">February 25, 2026</div></div>
                         <div class="space-y-1 md:col-span-2"><div class="text-xs font-medium text-gray-500 uppercase">Serial Number</div><div class="bg-white border border-gray-200 rounded px-4 py-2 text-sm text-gray-800 font-mono">56C74F44A4CE9B190AD981A4FC39C286</div></div>
@@ -217,14 +187,12 @@
     document.addEventListener('DOMContentLoaded', () => {
         const tabs = Array.from(document.querySelectorAll('#sslTabs [data-ssl-key]'));
         const empty = document.getElementById('sslEmpty');
-        const panels = {};
-        tabs.forEach(t => {
-            const key = t.getAttribute('data-ssl-key');
-            panels[key] = document.getElementById('sslPanel-' + key);
-        });
-        const setActive = (key) => {
+        const panel = document.getElementById('sslPanel');
+        const titleEl = document.getElementById('sslDomainTitleAdmin');
+        const subjectEl = document.getElementById('sslSubjectCnAdmin');
+        const setActiveTab = (tab) => {
             tabs.forEach(t => {
-                const isActive = t.getAttribute('data-ssl-key') === key;
+                const isActive = t === tab;
                 const cls = t.classList;
                 if (isActive) {
                     cls.add('bg-[rgb(var(--color-primary)/.10)]','border-[rgb(var(--color-primary)/.25)]','text-[rgb(var(--color-primary))]','cursor-default');
@@ -234,15 +202,16 @@
                     cls.add('hover:bg-gray-50','hover:text-[rgb(var(--color-primary))]','hover:border-[rgb(var(--color-primary)/.30)]');
                 }
             });
-            Object.keys(panels).forEach(k => {
-                const p = panels[k];
-                if (!p) return;
-                if (k === key) p.classList.remove('hidden');
-                else p.classList.add('hidden');
-            });
-            if (empty) empty.classList.toggle('hidden', !!key);
+            const domain = tab.getAttribute('data-hostname') || '';
+            if (titleEl) titleEl.textContent = domain || 'domain.com';
+            if (subjectEl) subjectEl.textContent = 'CN=' + (domain ? '*.' + domain : '*.domain.com');
+            if (panel) panel.classList.remove('hidden');
+            if (empty) empty.classList.add('hidden');
         };
-        tabs.forEach(t => t.addEventListener('click', () => setActive(t.getAttribute('data-ssl-key'))));
+        tabs.forEach(t => t.addEventListener('click', () => setActiveTab(t)));
+        if (tabs.length > 0) {
+            setActiveTab(tabs[0]);
+        }
     });
 </script>
 @endpush

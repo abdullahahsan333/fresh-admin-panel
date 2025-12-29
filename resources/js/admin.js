@@ -16,44 +16,38 @@ document.addEventListener('DOMContentLoaded', () => {
         span.textContent = text;
         el.appendChild(span);
         toastRoot.appendChild(el);
-        setTimeout(() => {
-            el.style.opacity = '1';
-        }, 10);
+        setTimeout(() => { el.style.opacity = '1'; }, 10);
         setTimeout(() => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(-4px)';
-            setTimeout(() => {
-                if (el.parentNode) el.parentNode.removeChild(el);
-            }, 300);
+            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
         }, timeout);
     };
     const flashMessages = Array.isArray(window.__flash) ? window.__flash : [];
     flashMessages.forEach(m => showToast(m.type, m.text));
-    const shell = document.getElementById('adminShell') || document.getElementById('userShell');
-    const toggleBtn = document.getElementById('sidebarToggle') || document.getElementById('menuToggle');
+    const shell = document.getElementById('adminShell');
+    const toggleBtn = document.getElementById('sidebarToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
     const mobileProfileBtn = document.getElementById('mobileSidebarProfileBtn');
     let activeProfileBtn = null;
     const mobileOverlay = document.getElementById('mobileSidebarOverlay');
-    const sidebarEl = document.getElementById('adminSidebar') || document.getElementById('userSidebar');
+    const sidebarEl = document.getElementById('adminSidebar');
     const profileDropdownId = 'sidebarProfileDropdown';
     let profileDropdown = document.getElementById(profileDropdownId);
-    const topbarProfileBtn = document.getElementById('topbarProfileBtn') || document.getElementById('userTopbarProfileBtn');
+    const topbarProfileBtn = document.getElementById('topbarProfileBtn');
     const topbarDropdownId = 'topbarProfileDropdown';
     let topbarDropdown = document.getElementById(topbarDropdownId);
-    const topbarNotifBtn = document.getElementById('topbarNotifBtn') || document.getElementById('userTopbarNotifBtn');
+    const topbarNotifBtn = document.getElementById('topbarNotifBtn');
     const topbarNotifDropdownId = 'topbarNotificationsDropdown';
     let topbarNotifDropdown = document.getElementById(topbarNotifDropdownId);
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileSidebarEl = document.getElementById('mobileAdminSidebar') || document.getElementById('mobileUserSidebar');
-    const mobileSidebarCloseBtn = document.getElementById('mobileAdminSidebarCloseBtn') || document.getElementById('mobileUserSidebarCloseBtn') || document.getElementById('mobileSidebarCloseBtn');
+    const mobileSidebarEl = document.getElementById('mobileAdminSidebar');
+    const mobileSidebarCloseBtn = document.getElementById('mobileAdminSidebarCloseBtn') || document.getElementById('mobileSidebarCloseBtn');
     let menuFlyout = null;
     let subFlyout = null;
     const flyouts = {};
     function hideAllFlyouts() {
-        Object.values(flyouts).forEach((f) => {
-            if (f && !f.classList.contains('hidden')) f.classList.add('hidden');
-        });
+        Object.values(flyouts).forEach((f) => { if (f && !f.classList.contains('hidden')) f.classList.add('hidden'); });
         if (menuFlyout && !menuFlyout.classList.contains('hidden')) menuFlyout.classList.add('hidden');
         if (subFlyout && !subFlyout.classList.contains('hidden')) subFlyout.classList.add('hidden');
     }
@@ -88,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>Asset Archive</span>
                     </a>
                     <a href="/admin/settings" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11-1.71l-44.89 18.07a10.81 10.81 0 0 1-13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0 6.05 14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11 1.71l-44.89 18.07a10.81 10.81 0 0 1 13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6.05 14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
                         <span>Settings</span>
                     </a>
                     <a href="/admin/logout" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
@@ -98,21 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </nav>
             `;
             document.body.appendChild(profileDropdown);
-            if (window.location.pathname.startsWith('/user')) {
-                const nav = profileDropdown.querySelector('nav');
-                const aProfile = nav ? nav.querySelector('a[href="/admin/profile"]') : null;
-                const aAssets = nav ? nav.querySelector('a[href="/admin/assets"]') : null;
-                const aArchive = nav ? nav.querySelector('a[href="/admin/assets/archive"]') : null;
-                const aLogout = nav ? nav.querySelector('a[href="/admin/logout"]') : null;
-                const aSettings = nav ? nav.querySelector('a[href="/admin/settings"]') : null;
-                if (aProfile) aProfile.setAttribute('href', '/user/profile');
-                if (aAssets) aAssets.setAttribute('href', '/user/assets');
-                if (aArchive && aArchive.parentNode) aArchive.parentNode.removeChild(aArchive);
-                if (aLogout) aLogout.setAttribute('href', '/user/logout');
-                if (aSettings && aSettings.parentNode) aSettings.parentNode.removeChild(aSettings);
-                const roleEl = profileDropdown.querySelector('.text-xs.text-gray-500');
-                if (roleEl) roleEl.textContent = 'User';
-            }
         }
     }
 
@@ -120,18 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!mobileSidebarEl) return;
         mobileSidebarEl.classList.add('transform', 'transition-transform', 'duration-300', '-translate-x-full');
         mobileSidebarEl.classList.remove('hidden');
-        requestAnimationFrame(() => {
-            mobileSidebarEl.classList.remove('-translate-x-full');
-        });
+        requestAnimationFrame(() => { mobileSidebarEl.classList.remove('-translate-x-full'); });
         if (mobileOverlay) mobileOverlay.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     }
     function closeMobileSidebar() {
         if (!mobileSidebarEl) return;
         mobileSidebarEl.classList.add('-translate-x-full');
-        setTimeout(() => {
-            mobileSidebarEl.classList.add('hidden');
-        }, 300);
+        setTimeout(() => { mobileSidebarEl.classList.add('hidden'); }, 300);
         if (mobileOverlay) mobileOverlay.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
@@ -140,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetBtn = activeProfileBtn || profileBtn || mobileProfileBtn;
         if (!profileDropdown || !targetBtn) return;
         const btnRect = targetBtn.getBoundingClientRect();
-
         if (targetBtn.id === 'mobileSidebarProfileBtn') {
              const left = btnRect.left + 8;
              profileDropdown.style.left = `${left}px`;
@@ -166,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
             positionProfileDropdown();
             hideAllFlyouts();
-            const sidebar = document.getElementById('adminSidebar') || document.getElementById('userSidebar');
+            const sidebar = document.getElementById('adminSidebar');
             if (collapsed && sidebar) {
                 Array.from(sidebar.querySelectorAll('[data-menu-toggle], [data-submenu-toggle]')).forEach((t) => {
                     t.setAttribute('aria-expanded', 'false');
@@ -184,16 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         });
-        if (mobileOverlay) {
-            mobileOverlay.addEventListener('click', closeMobileSidebar);
-        }
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeMobileSidebar();
-        });
+        if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileSidebar);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobileSidebar(); });
     }
 
     function setupSidebarMenus(sidebarElement) {
-        const sidebar = sidebarElement || document.getElementById('adminSidebar') || document.getElementById('userSidebar');
+        const sidebar = sidebarElement || document.getElementById('adminSidebar');
         const menuTriggers = Array.from(document.querySelectorAll('[data-menu-toggle]'));
         const ACTIVE_CLASSES = ['text-[rgb(var(--color-primary))]', 'bg-[rgb(var(--color-primary)/.06)]'];
         const INACTIVE_CLASSES = ['text-gray-700'];
@@ -203,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ACTIVE_CLASSES.forEach(c => active ? cls.add(c) : cls.remove(c));
             INACTIVE_CLASSES.forEach(c => active ? cls.remove(c) : cls.add(c));
         };
-
         const slideUp = (el, duration = 200) => {
             if (!el || el.classList.contains('hidden')) return;
             el.style.transitionProperty = 'height, opacity';
@@ -211,10 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.overflow = 'hidden';
             el.style.height = `${el.scrollHeight}px`;
             el.style.opacity = '1';
-            requestAnimationFrame(() => {
-                el.style.height = '0px';
-                el.style.opacity = '0';
-            });
+            requestAnimationFrame(() => { el.style.height = '0px'; el.style.opacity = '0'; });
             setTimeout(() => {
                 el.classList.add('hidden');
                 el.style.removeProperty('height');
@@ -224,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.style.removeProperty('opacity');
             }, duration);
         };
-
         const slideDown = (el, duration = 200) => {
             if (!el || !el.classList.contains('hidden')) return;
             el.classList.remove('hidden');
@@ -234,10 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.overflow = 'hidden';
             el.style.height = '0px';
             el.style.opacity = '0';
-            requestAnimationFrame(() => {
-                el.style.height = `${height}px`;
-                el.style.opacity = '1';
-            });
+            requestAnimationFrame(() => { el.style.height = `${height}px`; el.style.opacity = '1'; });
             setTimeout(() => {
                 el.style.removeProperty('height');
                 el.style.removeProperty('overflow');
@@ -246,14 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.style.removeProperty('opacity');
             }, duration);
         };
-
         const ensureFlyoutLevel = (level) => {
             const id = `sidebarFlyout${level}`;
             const existing = document.getElementById(id);
-            if (existing) {
-                flyouts[level] = existing;
-                return existing;
-            }
+            if (existing) { flyouts[level] = existing; return existing; }
             const el = document.createElement('div');
             el.id = id;
             el.className = 'hidden fixed z-[260] w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
@@ -261,14 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
             flyouts[level] = el;
             return el;
         };
-
         const positionFlyoutNextTo = (flyout, rect, offsetX = 8, offsetY = 0) => {
             const left = rect.right + offsetX;
             const top = rect.top + offsetY;
             flyout.style.left = `${left}px`;
             flyout.style.top = `${top}px`;
         };
-
         const renderPanelToFlyout = (panel, flyout, level = 1) => {
             const items = Array.from(panel.querySelectorAll(':scope > a'));
             flyout.innerHTML = `<div class="p-2"></div>`;
@@ -290,12 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         openFlyoutForPanel(subPanel, er, level + 1);
                     });
                 } else {
-                    // Navigate if entry anchor has href
                     const href = a.getAttribute('href');
                     if (href && href !== '#') {
-                        entry.addEventListener('click', () => {
-                            window.location.href = href;
-                        });
+                        entry.addEventListener('click', () => { window.location.href = href; });
                     }
                 }
             });
@@ -305,21 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPanelToFlyout(panel, fly, level);
             positionFlyoutNextTo(fly, rect, 8, 0);
             fly.classList.remove('hidden');
-            Object.keys(flyouts).forEach((l) => {
-                const li = Number(l);
-                if (li > level && flyouts[li]) flyouts[li].classList.add('hidden');
-            });
+            Object.keys(flyouts).forEach((l) => { const li = Number(l); if (li > level && flyouts[li]) flyouts[li].classList.add('hidden'); });
         };
         const hideFlyoutsFrom = (level) => {
-            Object.keys(flyouts).forEach((l) => {
-                const li = Number(l);
-                if (li >= level && flyouts[li] && !flyouts[li].classList.contains('hidden')) {
-                    flyouts[li].classList.add('hidden');
-                }
-            });
+            Object.keys(flyouts).forEach((l) => { const li = Number(l); if (li >= level && flyouts[li] && !flyouts[li].classList.contains('hidden')) { flyouts[li].classList.add('hidden'); } });
         };
-        
-
         if (!sidebar) return;
         sidebar.addEventListener('click', (e) => {
             const trigger = e.target.closest('[data-menu-toggle], [data-submenu-toggle]');
@@ -333,7 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const willExpand = !expanded;
             const isMobileSidebar = sidebar.id.startsWith('mobile');
             const collapsed = !isMobileSidebar && shell && shell.classList.contains('sidebar-collapsed');
-
             if (isTop) {
                 const topTriggers = Array.from(sidebar.querySelectorAll('[data-menu-toggle]'));
                 topTriggers.forEach(t => {
@@ -361,10 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             }
-
             trigger.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
             applyActive(trigger, willExpand);
-
             if (collapsed) {
                 const rect = trigger.getBoundingClientRect();
                 const level = isTop ? 1 : (Number(trigger.getAttribute('data-level')) || 2);
@@ -374,11 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     hideFlyoutsFrom(level);
                 }
             } else {
-                if (willExpand) {
-                    slideDown(panel);
-                } else {
-                    slideUp(panel);
-                }
+                if (willExpand) { slideDown(panel); } else { slideUp(panel); }
                 if (caret) caret.classList.toggle('rotate-180', willExpand);
                 if (willExpand && isTop) {
                     panel.querySelectorAll('[data-submenu-toggle]').forEach(st => {
@@ -392,15 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     setupSidebarMenus();
-    if (mobileSidebarEl) {
-        setupSidebarMenus(mobileSidebarEl);
-    }
+    if (mobileSidebarEl) setupSidebarMenus(mobileSidebarEl);
 
     if (profileBtn || mobileProfileBtn) {
         ensureProfileDropdown();
-        
         if (profileBtn) {
             profileBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -411,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideAllFlyouts();
             });
         }
-
         if (mobileProfileBtn) {
             mobileProfileBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -422,23 +353,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideAllFlyouts();
             });
         }
-
         document.addEventListener('click', (e) => {
             const t = e.target;
-            const inSidebar = t.closest('#adminSidebar') || t.closest('#userSidebar');
+            const inSidebar = t.closest('#adminSidebar');
             const inFlyout = t.closest('[id^="sidebarFlyout"]');
             const isMenuTrigger = t.closest('[data-menu-toggle]') || t.closest('[data-submenu-toggle]');
             const isProfileTrigger = t.closest('#sidebarProfileBtn') || t.closest('#mobileSidebarProfileBtn') || t.closest('#topbarProfileBtn') || t.closest('#topbarNotifBtn');
             if (inSidebar || inFlyout || isMenuTrigger || isProfileTrigger) return;
-            if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
-                profileDropdown.classList.add('hidden');
-            }
-            if (topbarNotifDropdown && !topbarNotifDropdown.classList.contains('hidden')) {
-                topbarNotifDropdown.classList.add('hidden');
-            }
-            if (topbarDropdown && !topbarDropdown.classList.contains('hidden')) {
-                topbarDropdown.classList.add('hidden');
-            }
+            if (profileDropdown && !profileDropdown.classList.contains('hidden')) profileDropdown.classList.add('hidden');
+            if (topbarNotifDropdown && !topbarNotifDropdown.classList.contains('hidden')) topbarNotifDropdown.classList.add('hidden');
+            if (topbarDropdown && !topbarDropdown.classList.contains('hidden')) topbarDropdown.classList.add('hidden');
             hideAllFlyouts();
         });
         window.addEventListener('resize', positionProfileDropdown);
@@ -449,11 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
             topbarDropdown = document.createElement('div');
             topbarDropdown.id = topbarDropdownId;
             topbarDropdown.className = 'hidden fixed z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl';
-            
             const sourceBtn = topbarProfileBtn || profileBtn || mobileProfileBtn;
             const name = sourceBtn?.dataset.name ?? 'John Doe';
             const avatarSrc = sourceBtn?.dataset.avatar ?? 'https://i.pravatar.cc/80?img=5';
-
             topbarDropdown.innerHTML = `
                 <div class="p-3 flex items-center gap-3 border-b border-gray-100">
                     <img class="h-9 w-9 rounded-full" src="${avatarSrc}" alt="${name}">
@@ -468,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>My Profile</span>
                     </a>
                     <a href="/admin/settings" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11 1.71l-44.89 18.07a10.81 10.81 0 0 1 13.14-4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16 16 0 0 0-6.07-13.94l-38.19-30A10.81 10.81 0 0 1 49.48 186l42.77-74a10.81 10.81 0 0 1 13.14-4.59l44.9 18.08a16.11 16.11 0 0 0 15.17-1.75A164.48 164.48 0 0 1 187 111.2a15.94 15.94 0 0 0 8.82-12.14l6.73-47.89A11.08 11.08 0 0 1 213.23 42h85.54a11.11 11.11 0 0 1 10.69 8.87l6.72 47.82a16.07 16.07 0 0 0 9 12.22 155.3 155.3 0 0 1 21.46 12.57 16 16 0 0 0 15.11 1.71l-44.89-18.07a10.81 10.81 0 0 1 13.14 4.58l42.77 74a10.8 10.8 0 0 1-2.45 13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.29 192.31a64 64 0 1 0 57.4 57.4 64.13 64.13 0 0 0-57.4-57.4zM416.39 256a154.34 154.34 0 0 1-1.53 20.79l45.21 35.46a10.81 10.81 0 0 1 2.45 13.75l-42.77 74a10.81 10.81 0 0 1-13.14 4.59l-44.9-18.08a16.11 16.11 0 0 0-15.17 1.75A164.48 164.48 0 0 1 325 400.8a15.94 15.94 0 0 0-8.82 12.14l-6.73 47.89a11.08 11.08 0 0 1-10.68 9.17h-85.54a11.11 11.11 0 0 1-10.69-8.87l-6.72-47.82a16.07 16.07 0 0 0-9-12.22 155.3 155.3 0 0 1-21.46-12.57 16 16 0 0 0-15.11 1.71l-44.89 18.07a10.81 10.81 0 0 1 13.14 4.58l-42.77 74a10.8 10.8 0 0 1 2.45-13.75l-38.21 30a16.05 16.05 0 0 0 6-14.08c.33 4.14.55 8.3.55 12.47z"></path></svg>
                         <span>Settings</span>
                     </a>
                     <a href="/admin/logout" class="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50">
@@ -478,22 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </nav>
             `;
             document.body.appendChild(topbarDropdown);
-            if (window.location.pathname.startsWith('/user')) {
-                const nav = topbarDropdown.querySelector('nav');
-                const aProfile = nav ? nav.querySelector('a[href="/admin/profile"]') : null;
-                const aAssets = nav ? nav.querySelector('a[href="/admin/assets"]') : null;
-                const aLogout = nav ? nav.querySelector('a[href="/admin/logout"]') : null;
-                const aSettings = nav ? nav.querySelector('a[href="/admin/settings"]') : null;
-                if (aProfile) aProfile.setAttribute('href', '/user/profile');
-                if (aAssets) aAssets.setAttribute('href', '/user/assets');
-                if (aLogout) aLogout.setAttribute('href', '/user/logout');
-                if (aSettings && aSettings.parentNode) aSettings.parentNode.removeChild(aSettings);
-                const roleEl = topbarDropdown.querySelector('.text-xs.text-gray-500');
-                if (roleEl) roleEl.textContent = 'User';
-            }
         }
     }
-
     function positionTopbarDropdown() {
         if (!topbarDropdown || !topbarProfileBtn) return;
         const btnRect = topbarProfileBtn.getBoundingClientRect();
@@ -502,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         topbarDropdown.style.left = `${left}px`;
         topbarDropdown.style.top = `${top}px`;
     }
-
     if (topbarProfileBtn) {
         ensureTopbarDropdown();
         topbarProfileBtn.addEventListener('click', (e) => {
@@ -526,38 +433,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="max-h-80 overflow-auto">
                     <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
                         <span class="h-6 w-6 rounded bg-blue-100 text-blue-600 grid place-items-center">ℹ️</span>
-                        <div class="text-sm">
-                            <div class="font-medium text-gray-800">Server 128.199.73.128 CPU spike</div>
-                            <div class="text-xs text-gray-500">2 min ago</div>
-                        </div>
+                        <div class="text-sm"><div class="font-medium text-gray-800">Server 128.199.73.128 CPU spike</div><div class="text-xs text-gray-500">2 min ago</div></div>
                     </a>
                     <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
                         <span class="h-6 w-6 rounded bg-yellow-100 text-yellow-600 grid place-items-center">⚠️</span>
-                        <div class="text-sm">
-                            <div class="font-medium text-gray-800">SSL expires in 65 days</div>
-                            <div class="text-xs text-gray-500">10 min ago</div>
-                        </div>
-                    </a>
-                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
-                        <span class="h-6 w-6 rounded bg-emerald-100 text-emerald-600 grid place-items-center">✅</span>
-                        <div class="text-sm">
-                            <div class="font-medium text-gray-800">Deployment completed</div>
-                            <div class="text-xs text-gray-500">30 min ago</div>
-                        </div>
-                    </a>
-                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
-                        <span class="h-6 w-6 rounded bg-red-100 text-red-600 grid place-items-center">⛔</span>
-                        <div class="text-sm">
-                            <div class="font-medium text-gray-800">Redis memory high</div>
-                            <div class="text-xs text-gray-500">1 hr ago</div>
-                        </div>
-                    </a>
-                    <a href="javascript:void(0);" class="flex items-start gap-3 px-3 py-3 hover:bg-gray-50">
-                        <span class="h-6 w-6 rounded bg-purple-100 text-purple-600 grid place-items-center">🔒</span>
-                        <div class="text-sm">
-                            <div class="font-medium text-gray-800">New admin login</div>
-                            <div class="text-xs text-gray-500">2 hr ago</div>
-                        </div>
+                        <div class="text-sm"><div class="font-medium text-gray-800">SSL expires in 65 days</div><div class="text-xs text-gray-500">10 min ago</div></div>
                     </a>
                 </div>
                 <div class="p-3 border-t border-gray-100">
@@ -589,18 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) {
-                closeMobileSidebar();
-            } else {
-                openMobileSidebar();
-            }
+            if (mobileOverlay && !mobileOverlay.classList.contains('hidden')) closeMobileSidebar(); else openMobileSidebar();
         });
     }
     if (mobileSidebarCloseBtn) {
-        mobileSidebarCloseBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeMobileSidebar();
-        });
+        mobileSidebarCloseBtn.addEventListener('click', (e) => { e.stopPropagation(); closeMobileSidebar(); });
     }
 
     document.querySelectorAll('[data-copy-target]').forEach((btn) => {
@@ -610,12 +483,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!el) return;
             const text = (el.textContent || '').trim();
             if (!text) return;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('success', 'Copied to clipboard');
-            });
+            navigator.clipboard.writeText(text).then(() => { showToast('success', 'Copied to clipboard'); });
         });
     });
-    
+
     const hnInput = document.getElementById('hostnameInput');
     const hnBtn = document.getElementById('addHostnameBtn');
     const hnList = document.getElementById('hostnamesList');
@@ -623,10 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let hostnames = [];
     const renderHostnames = () => {
         if (!hnList) return;
-        if (!hostnames.length) {
-            hnList.textContent = 'No hostnames yet. Add one to start.';
-            return;
-        }
+        if (!hostnames.length) { hnList.textContent = 'No hostnames yet. Add one to start.'; return; }
         const container = document.createElement('div');
         container.className = 'space-y-2';
         hostnames.forEach((name, i) => {
@@ -638,66 +506,42 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
             const textWrap = document.createElement('div');
             const titleEl = document.createElement(/^https?:\/\//.test(name) ? 'a' : 'span');
-            if (titleEl.tagName.toLowerCase() === 'a') {
-                titleEl.href = name;
-                titleEl.target = '_blank';
-                titleEl.rel = 'noreferrer';
-            }
+            if (titleEl.tagName.toLowerCase() === 'a') { titleEl.href = name; titleEl.target = '_blank'; titleEl.rel = 'noreferrer'; }
             titleEl.className = 'text-sm font-medium hover:underline';
             titleEl.textContent = name;
             const sub = document.createElement('div');
             sub.className = 'text-xs text-gray-500';
             sub.textContent = 'Hostname';
-            textWrap.appendChild(titleEl);
-            textWrap.appendChild(sub);
-            left.appendChild(dot);
-            left.appendChild(textWrap);
+            textWrap.appendChild(titleEl); textWrap.appendChild(sub);
+            left.appendChild(dot); left.appendChild(textWrap);
             const actions = document.createElement('div');
             actions.className = 'flex items-center gap-2';
             const remove = document.createElement('button');
             remove.type = 'button';
             remove.className = 'btn btn-secondary h-8 px-3 text-xs';
             remove.textContent = 'Remove';
-            remove.addEventListener('click', () => {
-                hostnames.splice(i, 1);
-                renderHostnames();
-            });
+            remove.addEventListener('click', () => { hostnames.splice(i, 1); renderHostnames(); });
             actions.appendChild(remove);
-            row.appendChild(left);
-            row.appendChild(actions);
+            row.appendChild(left); row.appendChild(actions);
             container.appendChild(row);
         });
-        hnList.innerHTML = '';
-        hnList.appendChild(container);
+        hnList.innerHTML = ''; hnList.appendChild(container);
         if (hnHidden) {
             hnHidden.innerHTML = '';
-            hostnames.forEach((h) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'hostnames[]';
-                input.value = h;
-                hnHidden.appendChild(input);
-            });
+            hostnames.forEach((h) => { const input = document.createElement('input'); input.type = 'hidden'; input.name = 'hostnames[]'; input.value = h; hnHidden.appendChild(input); });
         }
     };
     const addHostname = () => {
         if (!hnInput) return;
         const val = (hnInput.value || '').trim();
         if (!val) return;
-        if (!hostnames.includes(val)) {
-            hostnames.push(val);
-            renderHostnames();
-        }
-        hnInput.value = '';
-        hnInput.focus();
+        if (!hostnames.includes(val)) { hostnames.push(val); renderHostnames(); }
+        hnInput.value = ''; hnInput.focus();
     };
     if (hnBtn) hnBtn.addEventListener('click', addHostname);
-    if (hnInput) hnInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') addHostname();
-    });
-    
+    if (hnInput) hnInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addHostname(); });
+
     let currentIp = '';
-    
     const ipHidden = document.getElementById('ipHidden');
     const serverIdHidden = document.getElementById('serverIdHidden');
     const assetInput = document.getElementById('assetInput');
@@ -707,9 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let servers = [];
     const serverServicesCount = {};
     const initialServers = Array.isArray(window.__servers) ? window.__servers : [];
-    if (initialServers.length) {
-        servers = initialServers.slice();
-    }
+    if (initialServers.length) { servers = initialServers.slice(); }
     const isIp = (val) => /^\d{1,3}(\.\d{1,3}){3}$/.test(val);
     const setCurrentIp = (ip) => {
         currentIp = ip;
@@ -720,29 +562,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ip) return;
         const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
         const detailsUrl = assetsForm?.getAttribute('data-server-details-url') || '/admin/assets/server-details';
-        window.axios.get(detailsUrl, {
-            params: { ip },
-            headers: { 'X-CSRF-TOKEN': token }
-        }).then((res) => {
+        window.axios.get(detailsUrl, { params: { ip }, headers: { 'X-CSRF-TOKEN': token } }).then((res) => {
             const data = res?.data || {};
             const services = Array.isArray(data.services) ? data.services : [];
             const hns = Array.isArray(data.hostnames) ? data.hostnames : [];
             if (serverIdHidden) serverIdHidden.value = String(data.server_id || '');
             const inputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
             inputs.forEach(i => { i.checked = false; });
-            services.forEach(svc => {
-                const match = inputs.find(i => i.value === String(svc));
-                if (match) match.checked = true;
-            });
+            services.forEach(svc => { const match = inputs.find(i => i.value === String(svc)); if (match) match.checked = true; });
             serverServicesCount[ip] = services.length;
             renderSelectedServices();
             buildYaml();
             hostnames = hns.slice();
             renderHostnames();
             renderServers();
-        }).catch(() => {
-            // ignore
-        });
+        }).catch(() => {});
     };
     const renderServers = () => {
         if (!assetsList) return;
@@ -771,10 +605,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sub.className = 'text-gray-500';
             const count = serverServicesCount[ip] ?? 0;
             sub.textContent = `Server · ${count} services`;
-            meta.appendChild(title);
-            meta.appendChild(sub);
-            row.appendChild(dot);
-            row.appendChild(meta);
+            meta.appendChild(title); meta.appendChild(sub);
+            row.appendChild(dot); row.appendChild(meta);
             row.addEventListener('click', () => setCurrentIp(ip));
             assetsList.appendChild(row);
         });
@@ -782,15 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const addServerIp = () => {
         if (!assetInput) return;
         const val = (assetInput.value || '').trim();
-        if (!val || !isIp(val)) {
-            showToast('warning', 'Enter a valid IP like 128.199.73.128');
-            return;
-        }
+        if (!val || !isIp(val)) { showToast('warning', 'Enter a valid IP like 128.199.73.128'); return; }
         const token = document.querySelector('#assetsForm input[name="_token"]')?.value || '';
         const saveUrl = assetsForm?.getAttribute('data-server-save-url') || '/admin/assets/server';
-        window.axios.post(saveUrl, { ip: val }, {
-            headers: { 'X-CSRF-TOKEN': token }
-        }).then((res) => {
+        window.axios.post(saveUrl, { ip: val }, { headers: { 'X-CSRF-TOKEN': token } }).then((res) => {
             const ip = res?.data?.server?.ip || val;
             if (!servers.includes(ip)) servers.push(ip);
             renderServers();
@@ -807,11 +634,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     if (assetAddBtn) assetAddBtn.addEventListener('click', addServerIp);
-    if (assetInput) assetInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') addServerIp();
-    });
-    
-    
+    if (assetInput) assetInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addServerIp(); });
+
     const assetsForm = document.getElementById('assetsForm');
     if (assetsForm) {
         assetsForm.addEventListener('submit', (e) => {
@@ -826,7 +650,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
     let serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
     const servicesCountEl = document.getElementById('servicesCount');
     const servicesChipsEl = document.getElementById('selectedServicesChips');
@@ -843,32 +666,15 @@ document.addEventListener('DOMContentLoaded', () => {
             servicesChipsEl.appendChild(chip);
         });
     };
-    const exporterMap = {
-        linux: 'linux_exporter',
-        mysql: 'mysql_exporter',
-        mongodb: 'mongodb_exporter',
-        redis: 'redis_exporter',
-        api_log: 'api_log_exporter',
-        scheduler: 'scheduler_exporter',
-    };
+    const exporterMap = { linux: 'linux_exporter', mysql: 'mysql_exporter', mongodb: 'mongodb_exporter', redis: 'redis_exporter', api_log: 'api_log_exporter', scheduler: 'scheduler_exporter' };
     const servicesContainer = document.getElementById('servicesSelectContainer');
-    const serviceLabelMap = {
-        linux: 'Linux',
-        mysql: 'MySQL',
-        mongodb: 'MongoDB',
-        redis: 'Redis',
-        api_log: 'API Log',
-        scheduler: 'Scheduler',
-    };
+    const serviceLabelMap = { linux: 'Linux', mysql: 'MySQL', mongodb: 'MongoDB', redis: 'Redis', api_log: 'API Log', scheduler: 'Scheduler' };
     const wireServiceInputs = () => {
         serviceInputs.forEach(i => {
             i.addEventListener('change', () => {
                 renderSelectedServices();
                 buildYaml();
-                if (currentIp) {
-                    serverServicesCount[currentIp] = getSelectedServices().length;
-                    renderServers();
-                }
+                if (currentIp) { serverServicesCount[currentIp] = getSelectedServices().length; renderServers(); }
             });
         });
     };
@@ -880,115 +686,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = document.createElement('label');
             label.className = 'inline-flex items-center';
             const input = document.createElement('input');
-            input.type = 'checkbox';
-            input.name = 'services[]';
-            input.value = k;
-            input.className = 'peer sr-only';
+            input.type = 'checkbox'; input.name = 'services[]'; input.value = k; input.className = 'peer sr-only';
             const chip = document.createElement('span');
             chip.className = 'px-3 h-9 inline-flex items-center rounded-full border border-gray-300 text-gray-700 peer-checked:bg-[rgb(var(--color-primary))] peer-checked:text-white peer-checked:border-transparent';
             chip.textContent = serviceLabelMap[k] || k;
-            label.appendChild(input);
-            label.appendChild(chip);
-            frag.appendChild(label);
+            label.appendChild(input); label.appendChild(chip); frag.appendChild(label);
         });
-        servicesContainer.innerHTML = '';
-        servicesContainer.appendChild(frag);
+        servicesContainer.innerHTML = ''; servicesContainer.appendChild(frag);
         serviceInputs = Array.from(document.querySelectorAll('input[name="services[]"]'));
-        wireServiceInputs();
-        renderSelectedServices();
-        buildYaml();
+        wireServiceInputs(); renderSelectedServices(); buildYaml();
     };
-    // postpone initial render until YAML builder is defined
-    const getGlobalBlock = () => [
-        'global:',
-        '  app_name: "Live Shopping"',
-        '  purpose: "A E-commerce Project for API Logs."',
-        `  ip: "${currentIp || '128.199.73.128'}"`
-    ].join('\n');
+    const getGlobalBlock = () => ['global:','  app_name: "Live Shopping"','  purpose: "A E-commerce Project for API Logs."',`  ip: "${currentIp || '128.199.73.128'}"`].join('\n');
     const blocks = {
-        linux_exporter: [
-            'linux_exporter:',
-            '  enabled: true',
-            '  interval: 30',
-            '  receiver_url: "https://api.example.com/collect"'
-        ].join('\n'),
-        scheduler_exporter: [
-            'scheduler_exporter:',
-            '  enabled: true',
-            '  export_interval: 60',
-            '  receiver_url: "http://157.245.207.91:4000/metrics/scheduler"',
-            '  sources:',
-            '    - type: cron',
-            '      enabled: true',
-            '      name: system_cron',
-            '      syslog_path: /var/log/syslog',
-            '      log_window_minutes: 1',
-            '      max_logs: 50',
-            '    - type: systemd',
-            '      enabled: true',
-            '      name: systemd_timers',
-            '      syslog_path: undefined',
-            '      log_window_minutes: 1',
-            '      max_logs: 50'
-        ].join('\n'),
-        mysql_exporter: [
-            'mysql_exporter:',
-            '  enabled: true',
-            '  mysql_host: "127.0.0.1"',
-            '  mysql_port: 3306',
-            '  mysql_user: "monitor_user"',
-            '  mysql_password: "secure_password"',
-            '  receiver_url: "https://api.example.com/collect"',
-            '  export_interval: 30',
-            '  receiver_url_logs: "https://api.example.com/collect"',
-            '  mysql_log_file: "/var/log/mysql/error.log"',
-            '  log_check_interval: 30',
-            '  max_logs_per_batch: 100'
-        ].join('\n'),
-        mongodb_exporter: [
-            'mongodb_exporter:',
-            '  enabled: true',
-            '  mongo_uri: "mongodb://localhost:27017"',
-            '  export_interval: 30',
-            '  receiver_url: "https://api.example.com/collect"',
-            '  receiver_url_logs: "https://api.example.com/collect"',
-            '  mongo_log_file: "/var/log/mongodb/mongod.log"',
-            '  log_check_interval: 30',
-            '  max_logs_per_batch: 100'
-        ].join('\n'),
-        redis_exporter: [
-            'redis_exporter:',
-            '  enabled: true',
-            '  redis_host: "127.0.0.1"',
-            '  redis_port: 6379',
-            '  redis_password: ""',
-            '  receiver_url: "https://api.example.com/collect"',
-            '  export_interval: 30',
-            '  receiver_url_logs: "https://api.example.com/collect"',
-            '  redis_log_file: "/var/log/redis/redis-server.log"',
-            '  log_check_interval: 30',
-            '  max_logs_per_batch: 100'
-        ].join('\n'),
-        api_log_exporter: [
-            'api_log_exporter:',
-            '  enabled: true',
-            '  export_interval: 60',
-            '  receiver_url: "https://api.example.com/collect"',
-            '  sources:',
-            '    - type: nginx',
-            '      enabled: false',
-            '      name: nginx_prod',
-            '      access_log_path: /var/log/nginx/access.log',
-            '      log_window_minutes: 1',
-            '      max_logs: 100',
-            '    - type: mongoose',
-            '      enabled: true',
-            '      name: mongoose_logs',
-            '      mongo_uri: "mongodb://localhost:27017"',
-            '      collection: logs',
-            '      log_window_minutes: 1',
-            '      max_logs: 200'
-        ].join('\n'),
+        linux_exporter: ['linux_exporter:','  enabled: true','  interval: 30','  receiver_url: "https://api.example.com/collect"'].join('\n'),
+        scheduler_exporter: ['scheduler_exporter:','  enabled: true','  export_interval: 60','  receiver_url: "http://157.245.207.91:4000/metrics/scheduler"','  sources:','    - type: cron','      enabled: true','      name: system_cron','      syslog_path: /var/log/syslog','      log_window_minutes: 1','      max_logs: 50','    - type: systemd','      enabled: true','      name: systemd_timers','      syslog_path: undefined','      log_window_minutes: 1','      max_logs: 50'].join('\n'),
+        mysql_exporter: ['mysql_exporter:','  enabled: true','  mysql_host: "127.0.0.1"','  mysql_port: 3306','  mysql_user: "monitor_user"','  mysql_password: "secure_password"','  receiver_url: "https://api.example.com/collect"','  export_interval: 30','  receiver_url_logs: "https://api.example.com/collect"','  mysql_log_file: "/var/log/mysql/error.log"','  log_check_interval: 30','  max_logs_per_batch: 100'].join('\n'),
+        mongodb_exporter: ['mongodb_exporter:','  enabled: true','  mongo_uri: "mongodb://localhost:27017"','  export_interval: 30','  receiver_url: "https://api.example.com/collect"','  receiver_url_logs: "https://api.example.com/collect"','  mongo_log_file: "/var/log/mongodb/mongod.log"','  log_check_interval: 30','  max_logs_per_batch: 100'].join('\n'),
+        redis_exporter: ['redis_exporter:','  enabled: true','  redis_host: "127.0.0.1"','  redis_port: 6379','  redis_password: ""','  receiver_url: "https://api.example.com/collect"','  export_interval: 30','  receiver_url_logs: "https://api.example.com/collect"','  redis_log_file: "/var/log/redis/redis-server.log"','  log_check_interval: 30','  max_logs_per_batch: 100'].join('\n'),
+        api_log_exporter: ['api_log_exporter:','  enabled: true','  export_interval: 60','  receiver_url: "https://api.example.com/collect"','  sources:','    - type: nginx','      enabled: false','      name: nginx_prod','      access_log_path: /var/log/nginx/access.log','      log_window_minutes: 1','      max_logs: 100','    - type: mongoose','      enabled: true','      name: mongoose_logs','      mongo_uri: "mongodb://localhost:27017"','      collection: logs','      log_window_minutes: 1','      max_logs: 200'].join('\n'),
     };
     const buildYaml = () => {
         if (!yamlEl) return;
@@ -996,10 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         getSelectedServices().forEach(s => {
             const exporter = exporterMap[s];
             const block = exporter ? blocks[exporter] : '';
-            if (block) {
-                parts.push('');
-                parts.push(block);
-            }
+            if (block) { parts.push(''); parts.push(block); }
         });
         yamlEl.textContent = parts.join('\n');
     };
@@ -1008,16 +720,9 @@ document.addEventListener('DOMContentLoaded', () => {
         i.addEventListener('change', () => {
             renderSelectedServices();
             buildYaml();
-            if (currentIp) {
-                serverServicesCount[currentIp] = getSelectedServices().length;
-                renderServers();
-            }
+            if (currentIp) { serverServicesCount[currentIp] = getSelectedServices().length; renderServers(); }
         });
     });
-    renderSelectedServices();
-    buildYaml();
-    renderServers();
-    if (servers.length) {
-        setCurrentIp(servers[0]);
-    }
+    renderSelectedServices(); buildYaml(); renderServers();
+    if (servers.length) { setCurrentIp(servers[0]); }
 });

@@ -7,7 +7,7 @@
     @if (!empty($site->favicon))
         <link rel="icon" href="{{ asset($site->favicon) }}" type="image/x-icon">
     @endif
-    @vite(['resources/css/app.css','resources/js/app.js'])
+    @vite(['resources/css/admin.css','resources/js/admin.js'])
     <style>
         #adminSidebar {
             transition: width 200ms ease, padding 200ms ease;
@@ -26,6 +26,8 @@
         .sidebar-collapsed #sidebarProfileBtn .sidebar-extra { opacity: 0; transform: translateX(-4px); transition: opacity 200ms ease, transform 200ms ease; }
         .sidebar-collapsed .submenu-caret { display: none; }
     </style>
+
+    @stack('styles')
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-900">
     <div id="adminShell" class="flex min-h-screen">
@@ -58,9 +60,38 @@
     <div id="mobileSidebarOverlay" class="fixed inset-0 z-[200] hidden">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
     </div>
-    @include('partials.mobile-sidebar')
-    
+        @include('partials.mobile-sidebar')
+        
 
+    <script>
+        (function(){
+            try {
+                var links = document.querySelectorAll('#adminSidebar nav a .sidebar-text');
+                for (var i = 0; i < links.length; i++) {
+                    var text = links[i].textContent.trim();
+                    if (text === 'Create User') {
+                        var anchor = links[i].closest('a');
+                        if (anchor) {
+                            anchor.setAttribute('href', '{{ route('admin.users.create') }}');
+                        }
+                    }
+                }
+            } catch(e) {}
+            try {
+                var btn = document.getElementById('sidebarProfileBtn');
+                var dd = document.getElementById('sidebarProfileDropdown');
+                if (btn && dd) {
+                    btn.addEventListener('click', function(e){
+                        e.stopPropagation();
+                        dd.classList.toggle('hidden');
+                    });
+                    document.addEventListener('click', function(){
+                        dd.classList.add('hidden');
+                    });
+                }
+            } catch(e) {}
+        })();
+    </script>
     @stack('footer_scripts')
 </body>
 </html>

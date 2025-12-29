@@ -56,7 +56,7 @@ class PanelController extends Controller
         $user->phone = $request->phone;
         $user->address = $request->address;
         if ($request->hasFile('avatar')) {
-            $path = uploadImage($request->file('avatar'), 'uploads/avatars', 96, 96, 90, 'user');
+            $path = uploadImage($request->file('avatar'), 'uploads/avatars', '', '', '', 'user');
             if ($path) {
                 $user->avatar = $path;
             }

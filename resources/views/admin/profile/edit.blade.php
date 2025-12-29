@@ -48,7 +48,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                    <input type="email" name="email" value="{{ old('email', $admin->email ?? '') }}" class="w-full h-10 line-height-5 pl-4 leading-6 border border-[rgb(var(--color-primary)/.35)] rounded-md shadow-sm focus:border-[rgb(var(--color-primary))] focus:outline-none focus:ring focus:ring-[rgb(var(--color-primary)/.2)] focus:ring-opacity-50">
+                    <input type="email" name="email" value="{{ old('email', $admin->email ?? '') }}" readonly class="mt-1 w-full h-10 border rounded-lg px-3 bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed focus:outline-none focus:ring-0 focus:border-gray-200">
                 </div>
 
                 <div>
