@@ -1,34 +1,8 @@
 import './bootstrap';
+import { showToast, setupFlashMessages, copyToClipboard, isIp, slideUp, slideDown } from './utils';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const toastRoot = document.getElementById('toastRoot');
-    const showToast = (type, text, timeout = 3200) => {
-        if (!toastRoot || !text) return;
-        const el = document.createElement('div');
-        el.className = 'pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg text-sm';
-        let base = 'bg-gray-900 text-white';
-        if (type === 'success') base = 'bg-emerald-600 text-white';
-        else if (type === 'error') base = 'bg-red-600 text-white';
-        else if (type === 'warning') base = 'bg-amber-500 text-black';
-        else if (type === 'info') base = 'bg-blue-600 text-white';
-        el.className += ' ' + base;
-        const span = document.createElement('span');
-        span.textContent = text;
-        el.appendChild(span);
-        toastRoot.appendChild(el);
-        setTimeout(() => {
-            el.style.opacity = '1';
-        }, 10);
-        setTimeout(() => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(-4px)';
-            setTimeout(() => {
-                if (el.parentNode) el.parentNode.removeChild(el);
-            }, 300);
-        }, timeout);
-    };
-    const flashMessages = Array.isArray(window.__flash) ? window.__flash : [];
-    flashMessages.forEach(m => showToast(m.type, m.text));
+    setupFlashMessages();
     const shell = document.getElementById('adminShell') || document.getElementById('userShell');
     const toggleBtn = document.getElementById('sidebarToggle') || document.getElementById('menuToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
@@ -710,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (initialServers.length) {
         servers = initialServers.slice();
     }
-    const isIp = (val) => /^\d{1,3}(\.\d{1,3}){3}$/.test(val);
+
     const setCurrentIp = (ip) => {
         currentIp = ip;
         if (selectedAssetIp) selectedAssetIp.textContent = ip || 'No IP';

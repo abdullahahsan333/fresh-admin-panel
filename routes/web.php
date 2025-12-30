@@ -80,6 +80,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/server/{id}/mongodb', [AdminAssetController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
     Route::get('/server/{id}/mongodb-data', [AdminAssetController::class, 'mongodb_data'])->middleware('admin')->name('admin.assets.mongodb.data');
     Route::get('/server/{id}/redis', [AdminAssetController::class, 'redis'])->middleware('admin')->name('admin.server.redis');
+    Route::get('/server/{id}/redis-data', [AdminAssetController::class, 'redis_data'])->middleware('admin')->name('admin.assets.redis.data');
     Route::get('/server/{id}/api-log', [AdminAssetController::class, 'api_log'])->middleware('admin')->name('admin.server.api_log');
     Route::get('/server/{id}/api-log/data', [AdminAssetController::class, 'api_log_data'])->middleware('admin')->name('admin.server.api_log.data');
     Route::get('/server/{id}/scheduler', [AdminAssetController::class, 'scheduler'])->middleware('admin')->name('admin.server.scheduler');

@@ -169,7 +169,9 @@ class AssetController extends Controller
         $data = $this->baseViewData;
 
         $data['projects'] = Project::where('admin_id', Auth::guard('admin')->id())->get();
+
         $projectIds = $data['projects']->pluck('id');
+
         $data['servers'] = Server::whereIn('project_id', $projectIds)->get();
         $data['assets'] = Asset::whereIn('project_id', $projectIds)->get();
         $data['hostnames'] = Hostname::whereIn('project_id', $projectIds)->get();
@@ -222,11 +224,15 @@ class AssetController extends Controller
             $chartData = [
                 'cpu' => processLatestChartData($linuxData, 'cpu_usage_percent', 6),
                 'memory' => processLatestChartData($linuxData, 'memory_used_percent', 6),
-                'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6)
+                'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6),
+                'network' => [
+                    'labels' => processLatestChartData($linuxData, 'net_input_mb', 6)['labels'] ?? [],
+                    'input' => processLatestChartData($linuxData, 'net_input_mb', 6)['data'] ?? [],
+                    'output' => processLatestChartData($linuxData, 'net_output_mb', 6)['data'] ?? []
+                ]
             ];
 
-            $topProcesses = getTopProcesses($linuxData, 6);
-            
+            $topProcesses = getTopProcesses($linuxData);
             $apiStatus = getAPIServerStatus($server->ip);
 
             return response()->json([
@@ -290,25 +296,42 @@ class AssetController extends Controller
         }
 
         try {
-            // Use the helper function from APIHelper.php
-            $mysqlData = fetchMySQLData($server->ip, 'livo', 60);
+            $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
             $summary = calculateMySQLSummary($mysqlData);
+            $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name, 15);
             
-            // Process chart data
+            // Process chart data with correct metric names from API
             $chartData = [
                 'queries' => processLatestChartData($mysqlData, 'queries_per_second', 12),
-                'connections' => processLatestChartData($mysqlData, 'threads_connected', 12),
-                'buffer_hit' => processLatestChartData($mysqlData, 'innodb_buffer_pool_hit_rate', 12)
+                'connections' => processLatestChartData($mysqlData, 'current_connections', 12),
+                'buffer_hit' => [
+                    'labels' => processLatestChartData($mysqlData, 'current_connections', 12)['labels'] ?? [],
+                    'data' => [], // We'll calculate this below
+                ]
             ];
             
+            // Calculate buffer hit rate for each data point
+            if (!empty($mysqlData)) {
+                $bufferHitData = [];
+                foreach ($mysqlData as $dataPoint) {
+                    $metrics = $dataPoint['metrics'] ?? [];
+                    $reads = $metrics['innodb_buffer_pool_reads'] ?? 0;
+                    $requests = $metrics['innodb_buffer_pool_read_requests'] ?? 0;
+                    $hitRate = $requests > 0 ? (1 - ($reads / $requests)) * 100 : 0;
+                    $bufferHitData[] = round($hitRate, 2);
+                }
+                $chartData['buffer_hit']['data'] = array_slice($bufferHitData, -12);
+            }
+            
             $apiStatus = getAPIServerStatus($server->ip);
-
+            
             return response()->json([
                 'ok' => !empty($mysqlData) || $apiStatus['connected'],
                 'server_id' => $server->id,
                 'ip' => $server->ip,
                 'summary' => $summary,
                 'chartData' => $chartData,
+                'slowQueries' => $slowQueries,
                 'apiStatus' => $apiStatus,
                 'message' => empty($mysqlData) ? 'No data available from API' : null
             ]);
@@ -424,6 +447,98 @@ class AssetController extends Controller
         $data['server'] = $server;
 
         return view('admin.server.redis', $data);
+    }
+
+    public function redis_data(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            // Use the helper function from APIHelper.php
+            $redisData = fetchRedisData($server->ip, 'livo', 60);
+            $summary = calculateRedisSummary($redisData);
+            // Limit window to last 10 data points for charts and stats
+            $lastSlice = is_array($redisData) ? array_slice($redisData, -10) : [];
+            
+            // Process chart data
+            $chartData = [
+                'ops' => processLatestChartData($lastSlice ?: $redisData, 'instantaneous_ops_per_sec', 10),
+                'memory' => processLatestChartData($lastSlice ?: $redisData, 'used_memory', 10),
+                'network' => [
+                    'labels' => processLatestChartData($lastSlice ?: $redisData, 'instantaneous_ops_per_sec', 10)['labels'] ?? [],
+                    'input' => processLatestChartData($lastSlice ?: $redisData, 'total_net_input_bytes', 10)['data'] ?? [],
+                    'output' => processLatestChartData($lastSlice ?: $redisData, 'total_net_output_bytes', 10)['data'] ?? []
+                ]
+            ];
+            // Convert memory bytes to MB for chart
+            if (!empty($chartData['memory']['data'])) {
+                $chartData['memory']['data'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['memory']['data']);
+            }
+            // Convert network bytes to MB for chart
+            if (!empty($chartData['network']['input'])) {
+                $chartData['network']['input'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['network']['input']);
+            }
+            if (!empty($chartData['network']['output'])) {
+                $chartData['network']['output'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['network']['output']);
+            }
+            
+            // Add memory_percent to summary if available
+            if (!empty($redisData)) {
+                $latest = end($redisData);
+                $m = $latest['metrics'] ?? [];
+                $used = $m['used_memory'] ?? null;
+                $total = $m['total_system_memory'] ?? null;
+                if (is_numeric($used) && is_numeric($total) && $total > 0) {
+                    $summary['memory_percent'] = round(($used / $total) * 100, 1);
+                    $summary['total_system_memory'] = round($total / 1024 / 1024, 2); // MB
+                }
+            }
+            // Command statistics from last 10 points
+            if (!empty($lastSlice)) {
+                $cmdGet = 0; $cmdSet = 0; $cmdHGet = 0; $cmdHSet = 0;
+                foreach ($lastSlice as $item) {
+                    $m = $item['metrics'] ?? [];
+                    $cmdGet += is_numeric($m['commandstats_get'] ?? null) ? (float)$m['commandstats_get'] : 0;
+                    $cmdSet += is_numeric($m['commandstats_set'] ?? null) ? (float)$m['commandstats_set'] : 0;
+                    $cmdHGet += is_numeric($m['commandstats_hget'] ?? null) ? (float)$m['commandstats_hget'] : 0;
+                    $cmdHSet += is_numeric($m['commandstats_hset'] ?? null) ? (float)$m['commandstats_hset'] : 0;
+                }
+                $summary['commandstats_get'] = $cmdGet;
+                $summary['commandstats_set'] = $cmdSet;
+                $summary['commandstats_hget'] = $cmdHGet;
+                $summary['commandstats_hset'] = $cmdHSet;
+            }
+            
+            $apiStatus = getAPIServerStatus($server->ip);
+
+            return response()->json([
+                'ok' => !empty($redisData) || $apiStatus['connected'],
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'summary' => $summary,
+                'chartData' => $chartData,
+                'apiStatus' => $apiStatus,
+                'message' => empty($redisData) ? 'No data available from API' : null
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Redis data fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to fetch Redis data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function api_log(Request $request, $id)

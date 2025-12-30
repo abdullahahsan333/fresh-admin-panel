@@ -1,30 +1,8 @@
 import './bootstrap';
+import { showToast, setupFlashMessages, copyToClipboard, isIp, slideUp, slideDown } from './utils';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const toastRoot = document.getElementById('toastRoot');
-    const showToast = (type, text, timeout = 3200) => {
-        if (!toastRoot || !text) return;
-        const el = document.createElement('div');
-        el.className = 'pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg text-sm';
-        let base = 'bg-gray-900 text-white';
-        if (type === 'success') base = 'bg-emerald-600 text-white';
-        else if (type === 'error') base = 'bg-red-600 text-white';
-        else if (type === 'warning') base = 'bg-amber-500 text-black';
-        else if (type === 'info') base = 'bg-blue-600 text-white';
-        el.className += ' ' + base;
-        const span = document.createElement('span');
-        span.textContent = text;
-        el.appendChild(span);
-        toastRoot.appendChild(el);
-        setTimeout(() => { el.style.opacity = '1'; }, 10);
-        setTimeout(() => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(-4px)';
-            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
-        }, timeout);
-    };
-    const flashMessages = Array.isArray(window.__flash) ? window.__flash : [];
-    flashMessages.forEach(m => showToast(m.type, m.text));
+    setupFlashMessages();
     const shell = document.getElementById('userShell');
     const toggleBtn = document.getElementById('menuToggle');
     const profileBtn = document.getElementById('sidebarProfileBtn');
@@ -164,41 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ACTIVE_CLASSES.forEach(c => active ? cls.add(c) : cls.remove(c));
             INACTIVE_CLASSES.forEach(c => active ? cls.remove(c) : cls.add(c));
         };
-        const slideUp = (el, duration = 200) => {
-            if (!el || el.classList.contains('hidden')) return;
-            el.style.transitionProperty = 'height, opacity';
-            el.style.transitionDuration = `${duration}ms`;
-            el.style.overflow = 'hidden';
-            el.style.height = `${el.scrollHeight}px`;
-            el.style.opacity = '1';
-            requestAnimationFrame(() => { el.style.height = '0px'; el.style.opacity = '0'; });
-            setTimeout(() => {
-                el.classList.add('hidden');
-                el.style.removeProperty('height');
-                el.style.removeProperty('overflow');
-                el.style.removeProperty('transition-property');
-                el.style.removeProperty('transition-duration');
-                el.style.removeProperty('opacity');
-            }, duration);
-        };
-        const slideDown = (el, duration = 200) => {
-            if (!el || !el.classList.contains('hidden')) return;
-            el.classList.remove('hidden');
-            const height = el.scrollHeight;
-            el.style.transitionProperty = 'height, opacity';
-            el.style.transitionDuration = `${duration}ms`;
-            el.style.overflow = 'hidden';
-            el.style.height = '0px';
-            el.style.opacity = '0';
-            requestAnimationFrame(() => { el.style.height = `${height}px`; el.style.opacity = '1'; });
-            setTimeout(() => {
-                el.style.removeProperty('height');
-                el.style.removeProperty('overflow');
-                el.style.removeProperty('transition-property');
-                el.style.removeProperty('transition-duration');
-                el.style.removeProperty('opacity');
-            }, duration);
-        };
+
         const ensureFlyoutLevel = (level) => {
             const id = `sidebarFlyout${level}`;
             const existing = document.getElementById(id);
@@ -526,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverServicesCount = {};
     const initialServers = Array.isArray(window.__servers) ? window.__servers : [];
     if (initialServers.length) { servers = initialServers.slice(); }
-    const isIp = (val) => /^\d{1,3}(\.\d{1,3}){3}$/.test(val);
+
     const setCurrentIp = (ip) => {
         currentIp = ip;
         if (selectedAssetIp) selectedAssetIp.textContent = ip || 'No IP';

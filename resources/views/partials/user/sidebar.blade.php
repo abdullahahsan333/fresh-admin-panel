@@ -103,7 +103,7 @@
             @endif
         </div>
     </nav>
-    <div class="fixed bottom-0 left-0 right-0 w-60">
+    <div class="fixed bottom-0 left-0 bg-white right-0 w-60">
         <button id="sidebarProfileBtn" 
             data-name="{{ auth('web')->user()->name ?? 'John Doe' }}"
             data-avatar="{{ ($webUser && !empty($webUser->avatar)) ? asset($webUser->avatar) : 'https://i.pravatar.cc/80?img=5' }}"

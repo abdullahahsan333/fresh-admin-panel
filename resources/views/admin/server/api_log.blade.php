@@ -146,20 +146,24 @@
                 <!-- Tabs -->
                 <div class="border-b border-gray-200">
                     <nav class="flex -mb-px" id="detail-tabs">
-                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-blue-600 text-blue-600"
+                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-blue-600 text-blue-600 flex items-center gap-2"
                                 data-tab="request">
+                            <i class="ri-send-plane-line"></i>
                             Request
                         </button>
-                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2"
                                 data-tab="response">
+                            <i class="ri-reply-line"></i>
                             Response
                         </button>
-                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2"
                                 data-tab="headers">
+                            <i class="ri-file-list-3-line"></i>
                             Headers
                         </button>
-                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        <button class="detail-tab-btn px-6 py-3 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2"
                                 data-tab="metadata">
+                            <i class="ri-information-line"></i>
                             Metadata
                         </button>
                     </nav>
@@ -426,7 +430,10 @@
         initSearch();
         initLogSelection();
         initCollapsible();
+        
+        // Fetch data immediately and set up polling
         fetchData();
+        setInterval(fetchData, 30000); // Refresh every 30 seconds
 
         // Set first log as active if exists
         if (currentLog) {
@@ -444,16 +451,23 @@
 
         async function fetchData() {
             try {
+                console.log('Fetching API data from:', dataUrl);
                 const res = await fetch(dataUrl, { 
                     headers: { 
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
                     } 
                 });
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+                }
+                
                 const json = await res.json();
+                console.log('API response:', json);
                 
                 if (!json.ok) {
-                    showError(json.message || 'Failed to load API logs');
+                    showError(json.message || 'Failed to load API logs. API server may be unreachable.');
                     // Keep existing groupedLogs and UI if API fails
                     updateMethodTabs(groupedLogs);
                     return;
@@ -465,6 +479,12 @@
                 
                 // Store all logs for search
                 allLogs = json.logs || [];
+                
+                // If no logs are available, show demo data
+                if (Object.keys(groupedLogs).length === 0 && allLogs.length === 0) {
+                    showDemoData();
+                    return;
+                }
                 
                 // Update method tabs
                 updateMethodTabs(groupedLogs);
@@ -495,7 +515,9 @@
                     });
             } catch(e) {
                 console.error('Fetch error:', e);
-                showError('Failed to load API logs. Please try again.');
+                showError('Failed to load API logs. Please check API server connection.');
+                // Show demo data when API is unreachable
+                showDemoData();
             }
         }
 
@@ -802,6 +824,135 @@
                     document.getElementById('tab-content-container').scrollTop = 0;
                 }
             });
+        }
+
+        // Show demo data when API is not available
+        function showDemoData() {
+            console.log('Showing demo data');
+            
+            // Create demo data structure
+            const demoLogs = [
+                {
+                    id: 'demo-1',
+                    method: 'GET',
+                    url: '/api/user/profile',
+                    status: 200,
+                    response_time_ms: 45.2,
+                    ip: '192.168.1.100',
+                    date: new Date().toISOString(),
+                    body: { user_id: 12345, action: 'get_profile' },
+                    response: { success: true, data: { name: 'John Doe', email: 'john@example.com' } },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': 'Bearer token123',
+                        'User-Agent': 'Mozilla/5.0'
+                    },
+                    metadata: { 
+                        timestamp: new Date().toISOString(),
+                        user_agent: 'Mozilla/5.0',
+                        request_id: 'req-123456'
+                    }
+                },
+                {
+                    id: 'demo-2',
+                    method: 'POST',
+                    url: '/api/user/update',
+                    status: 201,
+                    response_time_ms: 78.9,
+                    ip: '192.168.1.101',
+                    date: new Date(Date.now() - 300000).toISOString(),
+                    body: { name: 'Jane Smith', email: 'jane@example.com' },
+                    response: { success: true, message: 'User updated successfully' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer token456',
+                        'X-Request-ID': 'req-789012'
+                    },
+                    metadata: { 
+                        timestamp: new Date(Date.now() - 300000).toISOString(),
+                        user_agent: 'Postman/7.0',
+                        request_id: 'req-789012'
+                    }
+                },
+                {
+                    id: 'demo-3',
+                    method: 'GET',
+                    url: '/api/products/list',
+                    status: 200,
+                    response_time_ms: 32.1,
+                    ip: '192.168.1.102',
+                    date: new Date(Date.now() - 600000).toISOString(),
+                    body: { category: 'electronics', page: 1 },
+                    response: { 
+                        success: true, 
+                        data: [
+                            { id: 1, name: 'Laptop', price: 999.99 },
+                            { id: 2, name: 'Phone', price: 499.99 }
+                        ]
+                    },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    metadata: { 
+                        timestamp: new Date(Date.now() - 600000).toISOString(),
+                        user_agent: 'curl/7.68.0',
+                        request_id: 'req-345678'
+                    }
+                }
+            ];
+            
+            // Create grouped logs structure
+            const demoGroupedLogs = {
+                'GET': {
+                    '/api/user/profile': [
+                        { id: 'demo-1', log: demoLogs[0] }
+                    ],
+                    '/api/products/list': [
+                        { id: 'demo-3', log: demoLogs[2] }
+                    ]
+                },
+                'POST': {
+                    '/api/user/update': [
+                        { id: 'demo-2', log: demoLogs[1] }
+                    ]
+                }
+            };
+            
+            // Update UI with demo data
+            updateSummary({
+                request_count: demoLogs.length,
+                requests_per_min: (demoLogs.length / 5).toFixed(1),
+                failed_requests: 0,
+                avg_response_time: ((45.2 + 78.9 + 32.1) / 3).toFixed(1),
+                min_response_time: 32.1,
+                max_response_time: 78.9,
+                success_rate: 100
+            });
+            
+            groupedLogs = demoGroupedLogs;
+            allLogs = demoLogs;
+            
+            // Update method tabs
+            updateMethodTabs(groupedLogs);
+            
+            // Load first method content
+            if (Object.keys(groupedLogs).length > 0) {
+                const firstMethod = Object.keys(groupedLogs)[0];
+                activeMethod = firstMethod;
+                loadMethodContent(firstMethod, groupedLogs[firstMethod]);
+                
+                // Set first log as active
+                currentLog = demoLogs[0];
+                updateRequestHeader(currentLog);
+                updateAllDetailTabs(currentLog);
+            }
+            
+            // Show demo indicator
+            const demoIndicator = document.createElement('div');
+            demoIndicator.className = 'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded mb-4';
+            demoIndicator.innerHTML = '<i class="ri-information-line"></i> Showing demo data - API server returned no logs';
+            document.getElementById('error-banner').appendChild(demoIndicator);
         }
 
         // Initialize collapsible sections

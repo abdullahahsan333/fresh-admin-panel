@@ -196,7 +196,7 @@
         </div>
         
         <div class="mt-6">
-            <div id="networkTrafficChart" class="h-48"></div>
+            <div id="networkTrafficChart" class="h-80"></div>
         </div>
     </div>
 </div>
@@ -215,7 +215,7 @@
 @endsection
 
 @push('footer_scripts')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const serverId = {{ $server->id }};
     const serverIp = "{{ $server->ip }}";
@@ -223,136 +223,161 @@
     // Initialize charts with empty data
     let opsChart, memoryChart, connectionChart, networkChart;
     
+    function createChartCanvas(selectorId) {
+        const container = document.querySelector(`#${selectorId}`);
+        if (!container) return null;
+        container.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        container.appendChild(canvas);
+        return canvas.getContext('2d');
+    }
+    
+    function setGaugeCenter(containerId, percent, label) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        let center = container.querySelector('.gauge-center');
+        if (!center) {
+            center = document.createElement('div');
+            center.className = 'gauge-center';
+            center.style.position = 'absolute';
+            center.style.inset = '0';
+            center.style.display = 'flex';
+            center.style.flexDirection = 'column';
+            center.style.alignItems = 'center';
+            center.style.justifyContent = 'center';
+            center.style.pointerEvents = 'none';
+            center.innerHTML = '<div class="gauge-percent text-2xl font-semibold text-gray-800"></div><div class="gauge-label text-xs text-gray-500"></div>';
+            container.style.position = 'relative';
+            container.appendChild(center);
+        }
+        const pctEl = center.querySelector('.gauge-percent');
+        const lblEl = center.querySelector('.gauge-label');
+        if (pctEl) pctEl.textContent = `${Math.round(percent || 0)}%`;
+        if (lblEl) lblEl.textContent = label || '';
+    }
+    
     function initializeCharts() {
-        // Operations Per Second Chart
-        opsChart = new ApexCharts(document.querySelector('#mongoOpsPerSecond'), {
-            series: [{
-                name: 'Operations',
-                data: []
-            }],
-            chart: {
-                height: '100%',
+        const opsCtx = createChartCanvas('mongoOpsPerSecond');
+        if (opsCtx) {
+            opsChart = new Chart(opsCtx, {
                 type: 'line',
-                zoom: { enabled: false },
-                toolbar: { show: false }
-            },
-            colors: ['#3B82F6'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            grid: { borderColor: '#e7e7e7', row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-            markers: { size: 4 },
-            xaxis: {
-                categories: [],
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            },
-            yaxis: {
-                title: { text: 'Ops/Sec', style: { color: '#6b7280', fontSize: '12px' } },
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            },
-            tooltip: {
-                y: {
-                    formatter: function (value) {
-                        return value + ' ops/sec';
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Ops/Sec',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: 'Operations Per Second' } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
                     }
                 }
-            }
-        });
-        opsChart.render();
+            });
+        }
         
-        // Memory Usage Chart
-        memoryChart = new ApexCharts(document.querySelector('#mongoMemoryUsage'), {
-            series: [{
-                name: 'Memory (MB)',
-                data: []
-            }],
-            chart: {
-                height: '100%',
-                type: 'area',
-                zoom: { enabled: false },
-                toolbar: { show: false }
-            },
-            colors: ['#10B981'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.7,
-                    opacityTo: 0.3,
-                    stops: [0, 90, 100]
+        const memCtx = createChartCanvas('mongoMemoryUsage');
+        if (memCtx) {
+            memoryChart = new Chart(memCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Memory (MB)',
+                        data: [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: 'Memory Usage' } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+                    }
                 }
-            },
-            grid: { borderColor: '#e7e7e7', row: { colors: ['#f3f3f3', 'transparent'], opacity: 0.5 } },
-            xaxis: {
-                categories: [],
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            },
-            yaxis: {
-                title: { text: 'MB', style: { color: '#6b7280', fontSize: '12px' } },
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            }
-        });
-        memoryChart.render();
+            });
+        }
         
-        // Connection Usage Gauge
-        connectionChart = new ApexCharts(document.querySelector('#mongoConnectionUsage'), {
-            series: [0],
-            chart: {
-                height: '100%',
-                type: 'radialBar',
-            },
-            colors: ['#8B5CF6'],
-            plotOptions: {
-                radialBar: {
-                    hollow: { size: '70%' },
-                    dataLabels: {
-                        name: { show: false },
-                        value: {
-                            fontSize: '22px',
-                            formatter: function(val) {
-                                return val + '%';
-                            }
+        const connCtx = createChartCanvas('mongoConnectionUsage');
+        if (connCtx) {
+            connectionChart = new Chart(connCtx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['rgb(139, 92, 246)', '#e5e7eb'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false }, title: { display: true, text: 'Connection Usage' } }
+                }
+            });
+            setGaugeCenter('mongoConnectionUsage', 0, 'Usage');
+        }
+        
+        const netCtx = createChartCanvas('networkTrafficChart');
+        if (netCtx) {
+            networkChart = new Chart(netCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Bytes In',
+                            data: [],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Bytes Out',
+                            data: [],
+                            borderColor: 'rgb(16, 185, 129)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
                         }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { position: 'top' }, title: { display: true, text: 'Network Traffic' } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
                     }
                 }
-            },
-            labels: ['Connection Usage']
-        });
-        connectionChart.render();
-        
-        // Network Traffic Chart
-        networkChart = new ApexCharts(document.querySelector('#networkTrafficChart'), {
-            series: [
-                { name: 'Bytes In', data: [] },
-                { name: 'Bytes Out', data: [] }
-            ],
-            chart: {
-                height: '100%',
-                type: 'line',
-                zoom: { enabled: false },
-                toolbar: { show: false }
-            },
-            colors: ['#3B82F6', '#10B981'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 3 },
-            grid: { borderColor: '#e7e7e7' },
-            xaxis: {
-                categories: [],
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            },
-            yaxis: {
-                title: { text: 'MB', style: { color: '#6b7280', fontSize: '12px' } },
-                labels: { style: { colors: '#6b7280', fontSize: '12px' } }
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'left',
-                fontSize: '12px',
-                labels: { colors: '#6b7280' }
-            }
-        });
-        networkChart.render();
+            });
+        }
     }
     
     // Fetch MongoDB data
@@ -416,44 +441,28 @@
         document.getElementById('bytesIn').textContent = (metrics.network_in || 0) + ' MB';
         document.getElementById('bytesOut').textContent = (metrics.network_out || 0) + ' MB';
         
-        // Update charts if we have chart data
         if (data.chartData) {
-            // Update operations chart
             if (data.chartData.operations && opsChart) {
-                opsChart.updateSeries([{
-                    name: 'Operations',
-                    data: data.chartData.operations.data || []
-                }]);
-                opsChart.updateOptions({
-                    xaxis: { categories: data.chartData.operations.labels || [] }
-                });
+                opsChart.data.labels = data.chartData.operations.labels || [];
+                opsChart.data.datasets[0].data = data.chartData.operations.data || [];
+                opsChart.update();
             }
-            
-            // Update memory chart
             if (data.chartData.memory && memoryChart) {
-                memoryChart.updateSeries([{
-                    name: 'Memory (MB)',
-                    data: data.chartData.memory.data || []
-                }]);
-                memoryChart.updateOptions({
-                    xaxis: { categories: data.chartData.memory.labels || [] }
-                });
+                memoryChart.data.labels = data.chartData.memory.labels || [];
+                memoryChart.data.datasets[0].data = data.chartData.memory.data || [];
+                memoryChart.update();
             }
-            
-            // Update connection gauge
-            if (metrics.connections_percent && connectionChart) {
-                connectionChart.updateSeries([metrics.connections_percent]);
+            if (metrics.connections_percent !== undefined && connectionChart) {
+                const val = metrics.connections_percent || 0;
+                connectionChart.data.datasets[0].data = [val, 100 - val];
+                connectionChart.update();
+                setGaugeCenter('mongoConnectionUsage', val, 'Usage');
             }
-            
-            // Update network chart
             if (data.chartData.network && networkChart) {
-                networkChart.updateSeries([
-                    { name: 'Bytes In', data: data.chartData.network.in || [] },
-                    { name: 'Bytes Out', data: data.chartData.network.out || [] }
-                ]);
-                networkChart.updateOptions({
-                    xaxis: { categories: data.chartData.network.labels || [] }
-                });
+                networkChart.data.labels = data.chartData.network.labels || [];
+                networkChart.data.datasets[0].data = data.chartData.network.in || [];
+                networkChart.data.datasets[1].data = data.chartData.network.out || [];
+                networkChart.update();
             }
         }
         
@@ -482,11 +491,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         initializeCharts();
         refreshData();
-        
-        // Set up refresh button
         document.getElementById('refreshBtn').addEventListener('click', refreshData);
-        
-        // Auto-refresh every 30 seconds
         setInterval(refreshData, 30000);
     });
 </script>

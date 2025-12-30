@@ -6,11 +6,17 @@
 <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 sticky top-0 mb-6">
     <div class="flex items-center gap-4">
         <h1 class="text-lg font-semibold text-gray-800">Linux</h1>
+        <div id="apiStatusDot" class="hidden">
+            <span class="inline-block w-2 h-2 rounded-full"></span>
+        </div>
     </div>
     <div class="flex items-center gap-4">
         <div class="text-sm text-gray-500">Last updated: <span id="last-updated-time">{{ now()->format('M d, H:i') }}</span></div>
     </div>
 </header>
+
+<!-- Toast container injected dynamically -->
+<div id="toast-container" class="fixed top-4 right-4 z-50"></div>
 
 <!-- Top Row -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -117,7 +123,12 @@
     $chartData = [
         'cpu' => processLatestChartData($linuxData, 'cpu_usage_percent', 6),
         'memory' => processLatestChartData($linuxData, 'memory_used_percent', 6),
-        'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6)
+        'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6),
+        'network' => [
+            'labels' => processLatestChartData($linuxData, 'net_input_mb', 6)['labels'] ?? [],
+            'input' => processLatestChartData($linuxData, 'net_input_mb', 6)['data'] ?? [],
+            'output' => processLatestChartData($linuxData, 'net_output_mb', 6)['data'] ?? []
+        ]
     ];
 @endphp
 
@@ -125,7 +136,7 @@
     <!-- CPU Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
-            <div id="cpu-usage-chart" class="h-36"></div>
+            <div id="cpu-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['cpu_usage'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest CPU Usage</span>
         </div>
@@ -134,7 +145,7 @@
     <!-- RAM Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
-            <div id="ram-usage-chart" class="h-36"></div>
+            <div id="ram-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['memory_percent'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest RAM Usage</span>
         </div>
@@ -143,7 +154,7 @@
     <!-- Disk Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
-            <div id="disk-usage-chart" class="h-36"></div>
+            <div id="disk-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['disk_percent'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest Disk Usage</span>
         </div>
@@ -151,9 +162,9 @@
 </div>
 
 <!-- Bottom Section -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <!-- Top Resource Consumers -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 lg:col-span-1">
+    <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 lg:col-span-1">
         <div class="flex justify-between items-start mb-4">
             <h3 class="text-gray-700 font-medium">Top Resource Consumers</h3>
             <button class="text-gray-400 hover:text-gray-600">
@@ -162,7 +173,7 @@
                 </svg>
             </button>
         </div>
-        <div class="overflow-x-auto">
+        <div class="max-h-96 overflow-x-auto">
             <table class="w-full text-sm text-left text-gray-500">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
@@ -173,9 +184,9 @@
                 </thead>
                 <tbody>
                     @php
-                        $topProcesses = getTopProcesses($linuxData, 6);
+                        $topProcesses = getTopProcesses($linuxData);
                     @endphp
-                    
+
                     @if(empty($topProcesses))
                         <!-- Placeholder row -->
                         <tr class="bg-white border-b hover:bg-gray-50">
@@ -186,9 +197,19 @@
                     @else
                         @foreach($topProcesses as $process)
                             <tr class="bg-white border-b hover:bg-gray-50">
-                                <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">{{ $process['name'] ?? '-' }}</td>
-                                <td class="px-3 py-2">{{ $process['cpu'] ?? '-' }}%</td>
-                                <td class="px-3 py-2">{{ $process['mem'] ?? '-' }} MB</td>
+                                <td class="whitespace-nowrap px-3 py-2 font-medium text-gray-900">{{ $process['name'] ?? '-' }}</td>
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    @php $cpuVal = (float)($process['cpu'] ?? 0); @endphp
+                                    <span class="px-2 py-0.5 rounded text-xs font-medium {{ $cpuVal < 50 ? 'bg-green-100 text-green-800' : ($cpuVal < 80 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ isset($process['cpu']) ? ($cpuVal . '%') : '-' }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-2">
+                                    @php $memVal = (float)($process['mem'] ?? 0); @endphp
+                                    <span class="px-2 py-0.5 rounded text-xs font-medium {{ $memVal < 200 ? 'bg-green-100 text-green-800' : ($memVal < 500 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ isset($process['mem']) ? ($memVal . ' MB') : '-' }}
+                                    </span>
+                                </td>
                             </tr>
                         @endforeach
                     @endif
@@ -197,255 +218,146 @@
         </div>
     </div>
 
-    <!-- Logs -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 lg:col-span-1">
-        <div class="flex justify-between items-start mb-4">
-            <h3 class="text-gray-700 font-medium">System Logs</h3>
-            <button class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-            </button>
-        </div>
-        <div class="h-full overflow-y-auto text-sm">
-            @if(!empty($linuxData) && count($linuxData) > 0)
-                <div class="space-y-2">
-                    @foreach(array_slice($linuxData, -3) as $log)
-                        <div class="text-gray-600">
-                            <span class="text-gray-400 text-xs">{{ $log['timestamp'] ?? 'N/A' }}</span>
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                <span>CPU: {{ $log['metrics']['cpu_usage_percent'] ?? 0 }}%</span>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="h-full flex items-center justify-center text-gray-400">
-                    No log data available
-                </div>
-            @endif
-        </div>
-    </div>
-
     <!-- Traffic -->
     <div class="lg:col-span-1 space-y-6">
         <!-- Input Traffic -->
         <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="inputTrafficChart" class="h-24"></div>
+            <div id="inputTrafficChart" class="h-52"></div>
         </div>
 
         <!-- Output Traffic -->
         <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="outputTrafficChart" class="h-24"></div>
+            <div id="outputTrafficChart" class="h-52"></div>
         </div>
     </div>
 </div>
 @endsection
 
 @push('footer_scripts')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const chartData = @json($chartData);
     const serverIp = @json($server->ip);
     const dataUrl = "{{ route('admin.server.linux.data', $server->id) }}";
-    
-    function createChartOptions(title, labels, data, color) {
-        return {
-            series: [{
-                name: title,
-                data: data
-            }],
-            chart: {
-                height: 140,
-                type: 'area',
-                zoom: { enabled: false },
-                toolbar: { show: false }
+    let charts = {};
+    function q(sel) { try { return document.querySelector(sel); } catch(e) { return null; } }
+    function setText(target, value) {
+        const el = (target.startsWith('#') || target.startsWith('.')) ? q(target) : document.getElementById(target);
+        if (el) el.textContent = value;
+    }
+    function showToast(type, message) {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.style.position = 'fixed';
+            container.style.top = '1rem';
+            container.style.right = '1rem';
+            container.style.zIndex = '9999';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '0.5rem';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `px-3 py-2 rounded-lg shadow-sm border text-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+            if (!container.childElementCount) container.remove();
+        }, 3500);
+    }
+    function createChartCanvas(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        container.innerHTML = '';
+        const canvas = document.createElement('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        container.appendChild(canvas);
+        return canvas.getContext('2d');
+    }
+    function showApiStatus(type, message) {
+        const dotWrap = document.getElementById('apiStatusDot');
+        if (!dotWrap) return;
+        const dot = dotWrap.querySelector('span') || dotWrap;
+        dotWrap.classList.remove('hidden');
+        dot.className = `inline-block w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        showToast(type, type === 'success' ? 'Connected' : (message || 'Connection failed'));
+    }
+    function makeLineChart(ctx, labels, data, color, titleText) {
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels || [],
+                datasets: [{
+                    data: data || [],
+                    borderColor: color,
+                    backgroundColor: color.replace('rgb(', 'rgba(').replace(')', ', 0.15)'),
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
             },
-            title: {
-                text: title,
-                align: 'left',
-                style: { fontSize: '12px', fontWeight: 600, color: '#374151' }
-            },
-            colors: [color],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.7,
-                    opacityTo: 0.1,
-                    stops: [0, 90, 100]
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { 
+                    legend: { display: false },
+                    title: { display: !!titleText, text: titleText }
+                },
+                scales: {
+                    x: { grid: { display: false }, title: { display: true, text: 'Time' } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
                 }
-            },
-            grid: {
-                borderColor: '#f1f1f1',
-                strokeDashArray: 3,
-                yaxis: { lines: { show: true } }
-            },
-            xaxis: {
-                categories: labels,
-                labels: {
-                    show: true,
-                    style: { colors: '#6b7280', fontSize: '10px' }
-                },
-                axisBorder: { show: false },
-                axisTicks: { show: false },
-                title: { text: 'Time', style: { color: '#6b7280', fontSize: '11px' } }
-            },
-            yaxis: {
-                labels: {
-                    show: true,
-                    style: { colors: '#6b7280', fontSize: '10px' },
-                    formatter: function(val) { return val.toFixed(1) + '%'; }
-                },
-                min: 0,
-                title: { text: 'Percent', style: { color: '#6b7280', fontSize: '11px' } }
-            },
-            tooltip: {
-                x: { format: 'HH:mm' },
-                y: { formatter: function(val) { return val.toFixed(1) + '%' } }
             }
-        };
+        });
     }
-    
-    function createTrafficChartOptions(title, labels, inData, outData) {
-        return {
-            series: [
-                { name: 'Input', data: inData },
-                { name: 'Output', data: outData }
-            ],
-            chart: {
-                height: 100,
-                type: 'line',
-                zoom: { enabled: false },
-                toolbar: { show: false }
-            },
-            title: {
-                text: title,
-                align: 'left',
-                style: { fontSize: '12px', fontWeight: 600, color: '#374151' }
-            },
-            colors: ['#3b82f6', '#ef4444'],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2 },
-            grid: {
-                borderColor: '#f1f1f1',
-                strokeDashArray: 3,
-                yaxis: { lines: { show: true } }
-            },
-            xaxis: {
-                categories: labels,
-                labels: {
-                    show: true,
-                    style: { colors: '#6b7280', fontSize: '10px' }
-                },
-                title: { text: 'Time', style: { color: '#6b7280', fontSize: '11px' } }
-            },
-            yaxis: {
-                labels: {
-                    show: true,
-                    style: { colors: '#6b7280', fontSize: '10px' },
-                    formatter: function(val) { return val.toFixed(1) + ' MB'; }
-                },
-                title: { text: 'MB', style: { color: '#6b7280', fontSize: '11px' } }
-            },
-            legend: { show: false },
-            tooltip: {
-                x: { format: 'HH:mm' },
-                y: { formatter: function(val) { return val.toFixed(2) + ' MB'; } }
-            }
-        };
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        const cpuOptions = createChartOptions(
-            'CPU Usage',
-            chartData.cpu.labels || [],
-            chartData.cpu.data || [],
-            '#3b82f6'
-        );
-        const cpuChart = new ApexCharts(document.querySelector("#cpu-usage-chart"), cpuOptions);
-        cpuChart.render();
-
-        const ramOptions = createChartOptions(
-            'RAM Usage',
-            chartData.memory.labels || [],
-            chartData.memory.data || [],
-            '#8b5cf6'
-        );
-        const ramChart = new ApexCharts(document.querySelector("#ram-usage-chart"), ramOptions);
-        ramChart.render();
-
-        const diskOptions = createChartOptions(
-            'Disk Usage',
-            chartData.disk.labels || [],
-            chartData.disk.data || [],
-            '#f59e0b'
-        );
-        const diskChart = new ApexCharts(document.querySelector("#disk-usage-chart"), diskOptions);
-        diskChart.render();
-
-        @php
-            $networkData = processLatestChartData($linuxData, 'net_input_mb', 6);
-            $networkDataOut = processLatestChartData($linuxData, 'net_output_mb', 6);
-        @endphp
-        
-        const trafficOptions = createTrafficChartOptions(
-            'Network Traffic',
-            @json($networkData['labels'] ?? []),
-            @json($networkData['data'] ?? []),
-            @json($networkDataOut['data'] ?? [])
-        );
-        
-        const inputTrafficOptions = {
-            ...trafficOptions,
-            series: [{ name: 'Input', data: @json($networkData['data'] ?? []) }],
-            colors: ['#3b82f6']
-        };
-        const inputTrafficChart = new ApexCharts(document.querySelector("#inputTrafficChart"), inputTrafficOptions);
-        inputTrafficChart.render();
-
-        const outputTrafficOptions = {
-            ...trafficOptions,
-            series: [{ name: 'Output', data: @json($networkDataOut['data'] ?? []) }],
-            colors: ['#ef4444']
-        };
-        const outputTrafficChart = new ApexCharts(document.querySelector("#outputTrafficChart"), outputTrafficOptions);
-        outputTrafficChart.render();
-
+        const cpuCtx = createChartCanvas('cpu-usage-chart');
+        if (cpuCtx) charts.cpu = makeLineChart(cpuCtx, chartData.cpu.labels || [], chartData.cpu.data || [], 'rgb(59, 130, 246)', 'CPU Usage');
+        const ramCtx = createChartCanvas('ram-usage-chart');
+        if (ramCtx) charts.ram = makeLineChart(ramCtx, chartData.memory.labels || [], chartData.memory.data || [], 'rgb(139, 92, 246)', 'RAM Usage');
+        const diskCtx = createChartCanvas('disk-usage-chart');
+        if (diskCtx) charts.disk = makeLineChart(diskCtx, chartData.disk.labels || [], chartData.disk.data || [], 'rgb(245, 158, 11)', 'Disk Usage');
+        const inputCtx = createChartCanvas('inputTrafficChart');
+        if (inputCtx) charts.netIn = makeLineChart(inputCtx, chartData.network.labels || [], chartData.network.input || [], 'rgb(59, 130, 246)', 'Network Input (MB)');
+        const outputCtx = createChartCanvas('outputTrafficChart');
+        if (outputCtx) charts.netOut = makeLineChart(outputCtx, chartData.network.labels || [], chartData.network.output || [], 'rgb(239, 68, 68)', 'Network Output (MB)');
         let isUpdating = false;
-        
         async function updateDashboard() {
             if (isUpdating) return;
             isUpdating = true;
-            
             try {
                 const response = await fetch(dataUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
                 const contentType = response.headers.get('content-type') || '';
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 if (!contentType.includes('application/json')) throw new Error('Invalid content-type');
                 const data = await response.json();
-                
                 if (data.ok) {
-                    cpuChart.updateSeries([{ data: data.chartData.cpu.data }]);
-                    ramChart.updateSeries([{ data: data.chartData.memory.data }]);
-                    diskChart.updateSeries([{ data: data.chartData.disk.data }]);
-                    
-                    document.querySelector('[data-cpu]').textContent = data.summary.cpu_usage + '%';
-                    document.querySelector('[data-memory]').textContent = data.summary.memory_percent + '%';
-                    document.querySelector('[data-disk]').textContent = data.summary.disk_percent + '%';
-                    
+                    showApiStatus('success', 'API connected successfully');
+                    if (charts.cpu) { charts.cpu.data.labels = data.chartData.cpu.labels || []; charts.cpu.data.datasets[0].data = data.chartData.cpu.data || []; charts.cpu.update(); }
+                    if (charts.ram) { charts.ram.data.labels = data.chartData.memory.labels || []; charts.ram.data.datasets[0].data = data.chartData.memory.data || []; charts.ram.update(); }
+                    if (charts.disk) { charts.disk.data.labels = data.chartData.disk.labels || []; charts.disk.data.datasets[0].data = data.chartData.disk.data || []; charts.disk.update(); }
+                    if (data.chartData.network) {
+                        if (charts.netIn) { charts.netIn.data.labels = data.chartData.network.labels || []; charts.netIn.data.datasets[0].data = data.chartData.network.input || []; charts.netIn.update(); }
+                        if (charts.netOut) { charts.netOut.data.labels = data.chartData.network.labels || []; charts.netOut.data.datasets[0].data = data.chartData.network.output || []; charts.netOut.update(); }
+                    }
+                    setText('[data-cpu]', (data.summary.cpu_usage ?? '--') + '%');
+                    setText('[data-memory]', (data.summary.memory_percent ?? '--') + '%');
+                    setText('[data-disk]', (data.summary.disk_percent ?? '--') + '%');
                     const now = new Date();
-                    document.getElementById('last-updated-time').textContent = 
+                    setText('last-updated-time',
                         now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +
-                        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    document.getElementById('metrics-updated').textContent = 
-                        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                    setText('metrics-updated',
+                        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
                 }
             } catch (error) {
                 console.error('Update failed:', error);
+                showApiStatus('error', 'Network error - cannot connect to API');
             } finally {
                 isUpdating = false;
             }
