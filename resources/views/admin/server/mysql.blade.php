@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="p-6">
+    {{-- 01989225119 ANKON Bai --}}
     <!-- Header -->
     <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100 sticky top-0 z-10 mb-6">
         <div class="flex items-center gap-3">
@@ -12,19 +13,16 @@
             <p class="text-gray-600">Real-time database performance metrics</p>
         </div>
         <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-500" id="lastUpdated">
-                Last updated: {{ now()->format('M d, H:i') }}
-            </div>
-            <button onclick="fetchMySQLData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+            <button onclick="fetchMySQLData()" class="px-4 py-2 text-blue-600 flex items-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Refresh</span>
             </button>
+            <div class="text-sm text-gray-500" id="lastUpdated">
+                Last updated: {{ now()->format('M d, H:i') }}
+            </div>
         </div>
     </div>
-
-    <!-- API Connection Status removed -->
 
     <!-- Top Metrics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -32,8 +30,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="p-3 bg-blue-100 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.553 0-1 .447-1 1v4c0 .553.447 1 1 1h2c.553 0 1-.447 1-1v-4c0-.553-.447-1-1-1h-2z" />
+                    <svg stroke="currentColor" class="h-6 w-6 text-blue-600" fill="none" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
                 </div>
                 <div class="text-right">
@@ -83,8 +81,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="p-3 bg-purple-100 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    <svg stroke="currentColor" class="h-6 w-6 text-purple-600" fill="currentColor" stroke-width="0" viewBox="0 0 32 32">
+                        <path d="M 20.21875 5 C 18.539063 5 17.15625 6.382813 17.15625 8.0625 C 17.15625 9.742188 18.539063 11.125 20.21875 11.125 C 21.902344 11.125 23.3125 9.742188 23.3125 8.0625 C 23.3125 6.382813 21.902344 5 20.21875 5 Z M 20.21875 7 C 20.820313 7 21.3125 7.464844 21.3125 8.0625 C 21.3125 8.660156 20.820313 9.125 20.21875 9.125 C 19.621094 9.125 19.15625 8.664063 19.15625 8.0625 C 19.15625 7.464844 19.621094 7 20.21875 7 Z M 12.9375 9 C 12.457031 9.058594 11.972656 9.28125 11.625 9.65625 L 8.25 13.3125 L 9.75 14.6875 L 13.09375 11.03125 C 13.128906 10.996094 13.175781 10.972656 13.21875 11 L 14.8125 12.0625 L 12.46875 15.3125 C 11.734375 16.34375 11.855469 17.761719 12.75 18.65625 L 16.28125 22.1875 L 13.375 28 L 15.625 28 L 18.09375 23.09375 C 18.480469 22.324219 18.328125 21.390625 17.71875 20.78125 L 14.1875 17.25 C 13.984375 17.046875 13.957031 16.703125 14.125 16.46875 L 16.46875 13.1875 L 17.28125 13.71875 L 18.875 16.125 C 19.246094 16.679688 19.863281 17 20.53125 17 L 25 17 L 25 15 L 20.53125 15 L 18.84375 12.4375 L 18.71875 12.28125 L 18.5625 12.15625 L 14.34375 9.34375 C 13.917969 9.058594 13.417969 8.941406 12.9375 9 Z M 12.0625 19.53125 L 10.59375 21 L 6 21 L 6 23 L 10.59375 23 C 11.121094 23 11.625 22.785156 12 22.40625 L 13.46875 20.9375 Z"></path>
                     </svg>
                 </div>
                 <div class="text-right">
@@ -201,35 +199,36 @@
         </div>
     </div>
 
-    <!-- Concerns & Slow Queries -->
+    <!-- Performance Concerns - UPDATED SECTION -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-semibold text-gray-800">Performance Concerns</h3>
             <div class="flex space-x-2">
-                <button onclick="showTab('slow')" id="tabSlow" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Slow Queries</button>
-                <button onclick="showTab('warnings')" id="tabWarnings" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Warnings</button>
-                <button onclick="showTab('errors')" id="tabErrors" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Errors</button>
+                <button onclick="showConcernTab('slow')" id="tabConcernSlow" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Slow Queries</button>
+                <button onclick="showConcernTab('warnings')" id="tabConcernWarnings" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Warnings</button>
+                <button onclick="showConcernTab('errors')" id="tabConcernErrors" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Errors</button>
             </div>
         </div>
         
-        <div id="slowQueriesContent" class="space-y-4">
-            <!-- Slow queries will be dynamically loaded here -->
+        <!-- Slow Queries Tab Content -->
+        <div id="concernSlowQueriesContent" class="space-y-4">
             <div class="text-center py-8 text-gray-500">
-                Loading slow queries...
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-600">Loading slow queries...</p>
             </div>
         </div>
         
-        <div id="warningsContent" class="space-y-4 hidden">
-            <!-- Warnings will be dynamically loaded here -->
+        <!-- Warnings Tab Content -->
+        <div id="concernWarningsContent" class="space-y-4 hidden">
             <div class="text-center py-8 text-gray-500">
-                No warnings detected
+                Loading warnings...
             </div>
         </div>
         
-        <div id="errorsContent" class="space-y-4 hidden">
-            <!-- Errors will be dynamically loaded here -->
+        <!-- Errors Tab Content -->
+        <div id="concernErrorsContent" class="space-y-4 hidden">
             <div class="text-center py-8 text-gray-500">
-                No errors detected
+                Loading errors...
             </div>
         </div>
     </div>
@@ -238,12 +237,11 @@
 
 @push('footer_scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
 // Global variables
 let mysqlData = null;
 let charts = {};
-let activeTab = 'slow';
+let activeConcernTab = 'slow';
 const serverId = {{ ($activeServerId ?? ($server->id ?? null)) ?? 'null' }};
 const apiBaseUrl = '{{ url("/") }}';
 
@@ -269,8 +267,7 @@ function initializeCharts() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                title: { display: true, text: 'Queries Per Second' }
+                legend: { display: false }
             },
             scales: {
                 y: {
@@ -310,8 +307,7 @@ function initializeCharts() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                title: { display: true, text: 'Connections' }
+                legend: { display: false }
             },
             scales: {
                 y: {
@@ -342,8 +338,7 @@ function initializeCharts() {
             maintainAspectRatio: false,
             cutout: '70%',
             plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'Buffer Pool' }
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -370,8 +365,7 @@ function initializeCharts() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: 'Query Types Distribution' }
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -407,8 +401,7 @@ function initializeCharts() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top' },
-                title: { display: true, text: 'Network Traffic' }
+                legend: { position: 'top' }
             },
             scales: {
                 y: {
@@ -423,6 +416,700 @@ function initializeCharts() {
     });
 }
 
+// Concern Tab Management
+function showConcernTab(tabName) {
+    activeConcernTab = tabName;
+    
+    // Update tab buttons
+    const btnSlow = document.getElementById('tabConcernSlow');
+    const btnWarn = document.getElementById('tabConcernWarnings');
+    const btnErr = document.getElementById('tabConcernErrors');
+    
+    // Reset all buttons
+    [btnSlow, btnWarn, btnErr].forEach(btn => {
+        if (btn) {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        }
+    });
+    
+    // Activate current tab button
+    const activeTabId = 'tabConcern' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const activeBtn = document.getElementById(activeTabId);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+    }
+    
+    // Show/hide content
+    const slowEl = document.getElementById('concernSlowQueriesContent');
+    const warnEl = document.getElementById('concernWarningsContent');
+    const errEl = document.getElementById('concernErrorsContent');
+    
+    [slowEl, warnEl, errEl].forEach(el => {
+        if (el) el.classList.add('hidden');
+    });
+    
+    const targetEl = document.getElementById(`concern${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Content`);
+    if (targetEl) {
+        targetEl.classList.remove('hidden');
+    }
+    
+    // Load content for active tab
+    loadConcernTabContent(tabName);
+}
+
+// Load content for active concern tab
+async function loadConcernTabContent(tabName) {
+    const contentEl = document.getElementById(`concern${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Content`);
+    
+    if (tabName === 'slow') {
+        // Show loading state
+        contentEl.innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600 mb-4"></div>
+                <p class="text-gray-600 font-medium">Loading slow queries...</p>
+                <p class="text-sm text-gray-500 mt-2">Fetching data from the database</p>
+            </div>
+        `;
+        
+        try {
+            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-slow-queries?minutes=15`);
+            const data = await response.json();
+            
+            if (data.ok && data.slowQueries && Array.isArray(data.slowQueries) && data.slowQueries.length > 0) {
+                const slowQueries = data.slowQueries;
+                renderSlowQueries(contentEl, slowQueries);
+            } else {
+                let message = 'No slow queries detected in the selected time window';
+                if (data.message) {
+                    message = data.message;
+                }
+                contentEl.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="text-gray-600 font-medium">No Slow Queries</p>
+                        <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto">${message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading slow queries:', error);
+            contentEl.innerHTML = `
+                <div class="text-center py-12 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="text-gray-600 font-medium">Unable to Load Slow Queries</p>
+                    <p class="text-sm text-gray-500 mt-2">Network or server error occurred</p>
+                    <button onclick="loadConcernTabContent('slow')" class="mt-4 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium">
+                        Retry
+                    </button>
+                </div>
+            `;
+        }
+    } else if (tabName === 'warnings') {
+        contentEl.innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-yellow-200 border-t-yellow-600 mb-4"></div>
+                <p class="text-gray-600 font-medium">Loading MySQL warnings...</p>
+                <p class="text-sm text-gray-500 mt-2">Checking for database warnings</p>
+            </div>
+        `;
+        
+        try {
+            // Fetch MySQL data which includes warnings
+            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-data`);
+            const data = await response.json();
+            
+            if (data.ok && data.summary) {
+                renderWarningsTab(contentEl, data.summary);
+            } else {
+                renderDefaultWarnings(contentEl, data.message || 'Unable to load warnings');
+            }
+        } catch (error) {
+            console.error('Error loading warnings:', error);
+            renderDefaultWarnings(contentEl, 'Network error occurred');
+        }
+    } else if (tabName === 'errors') {
+        contentEl.innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-red-200 border-t-red-600 mb-4"></div>
+                <p class="text-gray-600 font-medium">Loading MySQL errors...</p>
+                <p class="text-sm text-gray-500 mt-2">Checking for database errors</p>
+            </div>
+        `;
+        
+        try {
+            // Fetch MySQL data which might include error indicators
+            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-data`);
+            const data = await response.json();
+            
+            if (data.ok && data.summary) {
+                renderErrorsTab(contentEl, data.summary);
+            } else {
+                renderDefaultErrors(contentEl, data.message || 'Unable to load errors');
+            }
+        } catch (error) {
+            console.error('Error loading errors:', error);
+            renderDefaultErrors(contentEl, 'Network error occurred');
+        }
+    }
+}
+
+function renderWarningsTab(containerEl, summary) {
+    const warnings = [];
+    
+    // Check for potential warnings based on metrics
+    if (summary.connections_percent > 80) {
+        warnings.push({
+            type: 'Connection Usage',
+            severity: 'high',
+            message: `High connection usage: ${summary.connections_percent}% of max connections`,
+            suggestion: 'Consider increasing max_connections or optimizing connection pooling'
+        });
+    }
+    
+    if (summary.slow_queries > 10) {
+        warnings.push({
+            type: 'Slow Queries',
+            severity: 'medium',
+            message: `${summary.slow_queries} slow queries detected`,
+            suggestion: 'Review and optimize slow queries, check indexes'
+        });
+    }
+    
+    if (summary.innodb_buffer_pool_hit < 95) {
+        warnings.push({
+            type: 'Buffer Pool Efficiency',
+            severity: 'low',
+            message: `Buffer pool hit rate is ${summary.innodb_buffer_pool_hit.toFixed(1)}%`,
+            suggestion: 'Consider increasing innodb_buffer_pool_size'
+        });
+    }
+    
+    if (summary.table_locks > 5) {
+        warnings.push({
+            type: 'Table Locks',
+            severity: 'medium',
+            message: `${summary.table_locks} table locks waited`,
+            suggestion: 'Check for long-running queries or optimize table schema'
+        });
+    }
+    
+    if (warnings.length === 0) {
+        containerEl.innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-green-50 border border-green-100 rounded-lg p-6">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h4 class="text-lg font-semibold text-green-800 mb-2">No Active Warnings</h4>
+                            <p class="text-green-700">All MySQL metrics are within normal operating ranges.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="space-y-4">
+            <div class="mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    ${warnings.length} warning${warnings.length !== 1 ? 's' : ''} detected
+                </span>
+            </div>
+    `;
+    
+    warnings.forEach(warning => {
+        const severityClass = warning.severity === 'high' ? 'border-red-200 bg-red-50' :
+                            warning.severity === 'medium' ? 'border-yellow-200 bg-yellow-50' :
+                            'border-blue-200 bg-blue-50';
+        const severityText = warning.severity === 'high' ? 'High Priority' :
+                            warning.severity === 'medium' ? 'Medium Priority' :
+                            'Low Priority';
+        
+        html += `
+            <div class="border rounded-lg p-4 ${severityClass}">
+                <div class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 mt-0.5 ${warning.severity === 'high' ? 'text-red-500' : warning.severity === 'medium' ? 'text-yellow-500' : 'text-blue-500'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${warning.type}</h4>
+                                <span class="inline-block px-2 py-1 text-xs font-medium rounded-full ${warning.severity === 'high' ? 'bg-red-100 text-red-800' : warning.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}">
+                                    ${severityText}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-700">${warning.message}</p>
+                        <div class="mt-2 p-2 bg-white rounded border text-sm">
+                            <span class="font-medium text-gray-700">Suggestion:</span> ${warning.suggestion}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    containerEl.innerHTML = html;
+}
+
+function renderDefaultWarnings(containerEl, message) {
+    containerEl.innerHTML = `
+        <div class="space-y-4">
+            <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-6">
+                <div class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-yellow-800 mb-2">Unable to Load Warnings</h4>
+                        <p class="text-yellow-700">${message}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderErrorsTab(containerEl, summary) {
+    const errors = [];
+    
+    // Check for potential errors based on metrics
+    if (summary.connections_percent >= 100) {
+        errors.push({
+            type: 'Connection Limit Reached',
+            severity: 'critical',
+            message: 'MySQL has reached maximum connection limit',
+            action: 'Immediately increase max_connections or kill idle connections'
+        });
+    }
+    
+    if (summary.threads_running > 50) {
+        errors.push({
+            type: 'High Thread Count',
+            severity: 'high',
+            message: `${summary.threads_running} threads running (high load)`,
+            action: 'Investigate long-running queries and optimize'
+        });
+    }
+    
+    if (summary.innodb_buffer_pool_hit < 80) {
+        errors.push({
+            type: 'Poor Buffer Pool Performance',
+            severity: 'medium',
+            message: `Buffer pool hit rate is only ${summary.innodb_buffer_pool_hit.toFixed(1)}%`,
+            action: 'Increase innodb_buffer_pool_size immediately'
+        });
+    }
+    
+    if (errors.length === 0) {
+        containerEl.innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-green-50 border border-green-100 rounded-lg p-6">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h4 class="text-lg font-semibold text-green-800 mb-2">No Critical Errors</h4>
+                            <p class="text-green-700">MySQL database is operating without critical errors.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="space-y-4">
+            <div class="mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    ${errors.length} error${errors.length !== 1 ? 's' : ''} detected
+                </span>
+            </div>
+    `;
+    
+    errors.forEach(error => {
+        const severityClass = error.severity === 'critical' ? 'border-red-300 bg-red-50' :
+                            error.severity === 'high' ? 'border-red-200 bg-red-50' :
+                            'border-orange-200 bg-orange-50';
+        const severityText = error.severity === 'critical' ? 'Critical' :
+                            error.severity === 'high' ? 'High Priority' :
+                            'Medium Priority';
+        
+        html += `
+            <div class="border rounded-lg p-4 ${severityClass}">
+                <div class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 mt-0.5 ${error.severity === 'critical' ? 'text-red-600' : error.severity === 'high' ? 'text-red-500' : 'text-orange-500'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${error.type}</h4>
+                                <span class="inline-block px-2 py-1 text-xs font-medium rounded-full ${error.severity === 'critical' ? 'bg-red-200 text-red-900' : error.severity === 'high' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}">
+                                    ${severityText}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-700">${error.message}</p>
+                        <div class="mt-2 p-2 bg-white rounded border border-red-100 text-sm">
+                            <span class="font-medium text-gray-700">Recommended Action:</span> ${error.action}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    containerEl.innerHTML = html;
+}
+
+function renderDefaultErrors(containerEl, message) {
+    containerEl.innerHTML = `
+        <div class="space-y-4">
+            <div class="bg-red-50 border border-red-100 rounded-lg p-6">
+                <div class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-red-800 mb-2">Unable to Load Error Information</h4>
+                        <p class="text-red-700">${message}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderSlowQueries(containerEl, slowQueries) {
+    if (!slowQueries || slowQueries.length === 0) {
+        containerEl.innerHTML = `
+            <div class="text-center py-12 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-gray-600 font-medium">No Slow Queries Found</p>
+                <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto">No queries exceeded the slow query threshold in the selected time window.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="timeline-container">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 01118 0z" />
+                        </svg>
+                        ${slowQueries.length} slow queries detected
+                    </span>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <span class="font-medium">Time Window:</span> Last 15 minutes
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex items-center space-x-4 text-sm">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                        <span>Critical (>10s)</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                        <span>High (5-10s)</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                        <span>Medium (2-5s)</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                        <span>Low (<2s)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="space-y-6">
+    `;
+    
+    // Sort by start_time descending (newest first)
+    slowQueries.sort((a, b) => {
+        const timeA = new Date(a.start_time || '');
+        const timeB = new Date(b.start_time || '');
+        return timeB - timeA;
+    });
+    
+    // Limit to 20 queries for performance
+    const limitedQueries = slowQueries.slice(0, 20);
+    
+    limitedQueries.forEach((query, index) => {
+        const startTime = query.start_time || '';
+        const userHost = query.user_host || '';
+        const queryTime = query.query_time || '';
+        const sqlText = query.sql_text || '';
+        
+        // Extract execution time in seconds
+        let execTimeSeconds = 0;
+        let execTimeFormatted = queryTime;
+        if (queryTime) {
+            // Parse HH:MM:SS.ssssss format
+            const timeParts = queryTime.split(':');
+            if (timeParts.length === 3) {
+                const hours = parseFloat(timeParts[0]) || 0;
+                const minutes = parseFloat(timeParts[1]) || 0;
+                const seconds = parseFloat(timeParts[2]) || 0;
+                execTimeSeconds = hours * 3600 + minutes * 60 + seconds;
+                execTimeFormatted = `${execTimeSeconds.toFixed(3)}s`;
+            }
+        }
+        
+        // Determine severity based on execution time
+        let severityColor = '';
+        let severityBg = '';
+        let severityText = '';
+        if (execTimeSeconds > 10) {
+            severityColor = 'text-red-600';
+            severityBg = 'bg-red-100';
+            severityText = 'Critical';
+        } else if (execTimeSeconds > 5) {
+            severityColor = 'text-orange-600';
+            severityBg = 'bg-orange-100';
+            severityText = 'High';
+        } else if (execTimeSeconds > 2) {
+            severityColor = 'text-yellow-600';
+            severityBg = 'bg-yellow-100';
+            severityText = 'Medium';
+        } else {
+            severityColor = 'text-blue-600';
+            severityBg = 'bg-blue-100';
+            severityText = 'Low';
+        }
+        
+        // Format date if available
+        let formattedDate = '';
+        let formattedTime = '';
+        if (startTime) {
+            try {
+                const date = new Date(startTime);
+                formattedDate = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                formattedTime = date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            } catch (e) {
+                formattedDate = startTime.split('T')[0] || startTime;
+                formattedTime = startTime.split('T')[1]?.split('.')[0] || '';
+            }
+        }
+        
+        // Extract username from user_host format: username[username] @ [IP]
+        let username = 'Unknown';
+        let ipAddress = '';
+        if (userHost) {
+            const atIndex = userHost.indexOf('@');
+            if (atIndex > 0) {
+                username = userHost.substring(0, atIndex).trim();
+                ipAddress = userHost.substring(atIndex + 1).replace(/[\[\]]/g, '').trim();
+            } else {
+                username = userHost;
+            }
+        }
+        
+        // Truncate SQL for preview
+        const sqlPreview = sqlText.length > 200 ? sqlText.substring(0, 200) + '...' : sqlText;
+        
+        html += `
+            <li class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
+                <div class="p-5">
+                    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center flex-wrap gap-2 mb-2">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${severityBg} ${severityColor}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    ${severityText} - ${execTimeFormatted}
+                                </span>
+                                
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    ${username}
+                                </span>
+                                
+                                ${ipAddress ? `
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3" />
+                                    </svg>
+                                    ${ipAddress}
+                                </span>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="text-sm text-gray-600 mb-2">
+                                <span class="font-medium">Execution Time:</span> ${queryTime}
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-900 mb-1">${formattedDate}</div>
+                            <div class="text-sm text-gray-500">${formattedTime}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-100 pt-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">SQL Query</h4>
+                        <div class="relative">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <pre class="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words leading-relaxed max-h-60 overflow-y-auto" 
+                                     id="sqlText-${index}" 
+                                     data-full-text="${escapeHtml(sqlText)}" 
+                                     data-is-full="false">${escapeHtml(sqlPreview)}</pre>
+                                
+                                ${sqlText.length > 200 ? `
+                                <div class="mt-3">
+                                    <button onclick="toggleFullSql(${index})" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center" id="toggleBtn-${index}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                        Show Full Query
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+                                <span>Length: ${sqlText.length} characters</span>
+                                <button onclick="copyToClipboard(${index}, \`${escapeHtml(sqlText)}\`)" class="text-blue-600 hover:text-blue-800 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Copy SQL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        `;
+    });
+    
+    html += `
+            </ul>
+        </div>
+    `;
+    
+    containerEl.innerHTML = html;
+}
+
+// Helper functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toggleFullSql(index) {
+    const sqlTextEl = document.getElementById('sqlText-' + index);
+    const toggleBtn = document.getElementById('toggleBtn-' + index);
+    const fullText = sqlTextEl.dataset.fullText;
+    
+    if (!fullText) return;
+    
+    if (sqlTextEl.dataset.isFull === 'true') {
+        // Show preview
+        const preview = fullText.length > 200 ? fullText.substring(0, 200) + '...' : fullText;
+        sqlTextEl.innerHTML = escapeHtml(preview);
+        sqlTextEl.dataset.isFull = 'false';
+        toggleBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            Show Full Query
+        `;
+    } else {
+        // Show full text
+        sqlTextEl.innerHTML = escapeHtml(fullText);
+        sqlTextEl.dataset.isFull = 'true';
+        toggleBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            Show Less
+        `;
+    }
+}
+
+function copyToClipboard(index, sqlText) {
+    // Create a temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = sqlText;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            // Show success message
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Copied!
+            `;
+            btn.classList.remove('text-blue-600', 'hover:text-blue-800');
+            btn.classList.add('text-green-600');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('text-green-600');
+                btn.classList.add('text-blue-600', 'hover:text-blue-800');
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Failed to copy text: ', err);
+    }
+    
+    document.body.removeChild(textarea);
+}
+
 // Fetch MySQL data from API
 async function fetchMySQLData() {
     try {
@@ -433,6 +1120,14 @@ async function fetchMySQLData() {
             updateDashboard(data);
             updateCharts(data);
             showApiStatus('success', 'API connected successfully');
+            
+            // Update concern tabs if they're visible
+            if (activeConcernTab === 'slow' && data.slowQueries) {
+                const contentEl = document.getElementById('concernSlowQueriesContent');
+                if (contentEl && !contentEl.classList.contains('hidden')) {
+                    renderSlowQueries(contentEl, data.slowQueries);
+                }
+            }
         } else {
             showApiStatus('error', data.message || 'Failed to fetch data');
         }
@@ -570,80 +1265,53 @@ function showToast(type, message) {
     }, 3500);
 }
 
-// Tab switching
-function showTab(tabName) {
-    activeTab = tabName;
-    
-    // Update tab buttons
-    document.getElementById('tabSlow').classList.remove('bg-blue-600', 'text-white');
-    document.getElementById('tabWarnings').classList.remove('bg-blue-600', 'text-white');
-    document.getElementById('tabErrors').classList.remove('bg-blue-600', 'text-white');
-    
-    document.getElementById('tabSlow').classList.add('bg-gray-200', 'text-gray-700');
-    document.getElementById('tabWarnings').classList.add('bg-gray-200', 'text-gray-700');
-    document.getElementById('tabErrors').classList.add('bg-gray-200', 'text-gray-700');
-    
-    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`)
-        .classList.remove('bg-gray-200', 'text-gray-700');
-    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`)
-        .classList.add('bg-blue-600', 'text-white');
-    
-    // Show/hide content
-    document.getElementById('slowQueriesContent').classList.add('hidden');
-    document.getElementById('warningsContent').classList.add('hidden');
-    document.getElementById('errorsContent').classList.add('hidden');
-    
-    document.getElementById(`${tabName}QueriesContent`).classList.remove('hidden');
-    
-    // Load content for active tab
-    loadTabContent(tabName);
-}
-
-// Load content for active tab
-async function loadTabContent(tabName) {
-    const contentEl = document.getElementById(`${tabName}QueriesContent`);
-    
-    if (tabName === 'slow') {
-        // Load slow queries
-        contentEl.innerHTML = `
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-                <p class="text-gray-600">Loading slow queries...</p>
-            </div>
-        `;
-        
-        const slow = (mysqlData && mysqlData.slowQueries) ? mysqlData.slowQueries : [];
-        if (!slow.length) {
-            contentEl.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    No slow queries in selected window
-                </div>
-            `;
-            return;
-        }
-        let html = '<div class="space-y-4">';
-        slow.slice(0, 20).forEach(item => {
-            const start = item.start_time || '';
-            const user = item.user_host || '';
-            const duration = item.query_time || '';
-            const sql = item.sql_text || '';
-            html += `
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="font-medium text-yellow-800">${user}</div>
-                            <div class="text-sm text-yellow-600 mt-1">Duration: ${duration}</div>
-                        </div>
-                        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${start}</span>
-                    </div>
-                    <code class="block mt-2 text-sm bg-white p-2 rounded border overflow-x-auto">${sql}</code>
-                </div>
-            `;
-        });
-        html += '</div>';
-        contentEl.innerHTML = html;
+// Add CSS for better styling
+const style = document.createElement('style');
+style.textContent = `
+    .timeline-container {
+        position: relative;
     }
-}
+    
+    .sql-container {
+        position: relative;
+    }
+    
+    .sql-container pre {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        tab-size: 2;
+    }
+    
+    .sql-container pre::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .sql-container pre::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .sql-container pre::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+    
+    .sql-container pre::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+`;
+document.head.appendChild(style);
 
 // Auto-refresh every 30 seconds
 setInterval(fetchMySQLData, 30000);
@@ -652,7 +1320,7 @@ setInterval(fetchMySQLData, 30000);
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     fetchMySQLData();
-    showTab('slow');
+    showConcernTab('slow'); // Initialize concern tab
 });
 </script>
 @endpush

@@ -11,6 +11,7 @@ use App\Models\Asset;
 use App\Models\Hostname;
 use Throwable;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class AssetController extends Controller
 {
@@ -162,6 +163,192 @@ class AssetController extends Controller
             return response()->json(['ok' => false, 'message' => 'Failed to load server details', 'error' => $e->getMessage()], 500);
         }
     }
+    // Add to AssetController.php after mysql_data method
+    public function mysql_warnings(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
+            $warnings = detectMySQLWarnings($mysqlData);
+            
+            return response()->json([
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'warnings' => $warnings,
+                'count' => count($warnings),
+                'message' => count($warnings) > 0 ? 'Warnings detected' : 'No warnings'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('MySQL warnings fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to fetch warnings',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function mysql_errors(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
+            $errors = detectMySQLErrors($mysqlData);
+            
+            return response()->json([
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'errors' => $errors,
+                'count' => count($errors),
+                'message' => count($errors) > 0 ? 'Errors detected' : 'No errors'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('MySQL errors fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to fetch errors',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function mysql_slow_queries(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            $minutes = (int) $request->query('minutes', 15);
+            $limit = (int) $request->query('limit', 50);
+            
+            // Use the updated helper function
+            $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name, $minutes);
+            
+            // Apply limit
+            if ($limit > 0 && count($slowQueries) > $limit) {
+                $slowQueries = array_slice($slowQueries, 0, $limit);
+            }
+            
+            return response()->json([
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'slowQueries' => $slowQueries,
+                'count' => count($slowQueries),
+                'minutes' => $minutes,
+                'limit' => $limit,
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('MySQL slow queries fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to fetch slow queries',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function test_slow_queries_api(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            $now = new \DateTime('now', new \DateTimeZone('UTC'));
+            $end12 = $now->format('h:i:sA');
+            $startTime = clone $now;
+            $startTime->modify("-15 minutes");
+            $start12 = $startTime->format('h:i:sA');
+            $dateStr = $now->format('Y-m-d');
+            $formattedIp = str_replace('.', '_', $server->ip);
+            
+            $url = API_BASE_URL . "/{$project->name}/{$formattedIp}/slowquery/metrics?date={$dateStr}&start={$start12}&end={$end12}";
+            
+            $response = Http::timeout(15)->get($url);
+            
+            $rawData = $response->body();
+            $jsonData = $response->json();
+            
+            // Check for slow queries in the response
+            $hasSlowQueries = false;
+            $foundQueries = [];
+            
+            if (is_array($jsonData)) {
+                // Handle array response (list of data points)
+                foreach ($jsonData as $entry) {
+                    if (isset($entry['metrics']['mysql_slow_queries']) && is_array($entry['metrics']['mysql_slow_queries']) && !empty($entry['metrics']['mysql_slow_queries'])) {
+                        $hasSlowQueries = true;
+                        $foundQueries = array_merge($foundQueries, $entry['metrics']['mysql_slow_queries']);
+                    }
+                    elseif (isset($entry['metrics']['slow_queries']) && is_array($entry['metrics']['slow_queries']) && !empty($entry['metrics']['slow_queries'])) {
+                        $hasSlowQueries = true;
+                        $foundQueries = array_merge($foundQueries, $entry['metrics']['slow_queries']);
+                    }
+                }
+            }
+            
+            return response()->json([
+                'ok' => $response->ok(),
+                'status' => $response->status(),
+                'url' => $url,
+                'raw_data_sample' => substr($rawData, 0, 1000),
+                'json_data_sample' => is_array($jsonData) ? array_slice($jsonData, 0, 2) : $jsonData,
+                'data_count' => is_array($jsonData) ? count($jsonData) : 0,
+                'has_mysql_slow_queries' => $hasSlowQueries,
+                'found_queries_count' => count($foundQueries),
+                'found_queries_sample' => array_slice($foundQueries, 0, 5),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Test failed',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
+        }
+    }
 
     public function overview()
     {
@@ -221,10 +408,38 @@ class AssetController extends Controller
             $linuxData = fetchLinuxData($server->ip, 'livo', 60);
             $summary = calculateLinuxSummary($linuxData);
             
+            // Build Disk Usage percent series from raw metrics (used/total)
+            $diskLabels = [];
+            $diskSeries = [];
+            if (!empty($linuxData)) {
+                $slice = array_slice($linuxData, -6);
+                foreach ($slice as $point) {
+                    $timestamp = $point['timestamp'] ?? '';
+                    $metrics = $point['metrics'] ?? [];
+                    $used = (float)($metrics['disk_used_gb'] ?? 0);
+                    $total = (float)($metrics['disk_total_gb'] ?? 0);
+                    $pct = $total > 0 ? round(($used / $total) * 100, 2) : 0.0;
+                    if ($timestamp) {
+                        try {
+                            $date = new \DateTime($timestamp);
+                            $diskLabels[] = $date->format('H:i');
+                        } catch (\Exception $e) {
+                            $diskLabels[] = $timestamp;
+                        }
+                    } else {
+                        $diskLabels[] = '';
+                    }
+                    $diskSeries[] = $pct;
+                }
+            }
+
             $chartData = [
                 'cpu' => processLatestChartData($linuxData, 'cpu_usage_percent', 6),
                 'memory' => processLatestChartData($linuxData, 'memory_used_percent', 6),
-                'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6),
+                'disk' => [
+                    'labels' => $diskLabels,
+                    'data' => $diskSeries,
+                ],
                 'network' => [
                     'labels' => processLatestChartData($linuxData, 'net_input_mb', 6)['labels'] ?? [],
                     'input' => processLatestChartData($linuxData, 'net_input_mb', 6)['data'] ?? [],
@@ -298,7 +513,15 @@ class AssetController extends Controller
         try {
             $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
             $summary = calculateMySQLSummary($mysqlData);
-            $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name, 15);
+            
+            // Fetch slow queries with better error handling
+            $slowQueries = [];
+            try {
+                $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name, 15);
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch slow queries, using empty array: " . $e->getMessage());
+                $slowQueries = [];
+            }
             
             // Process chart data with correct metric names from API
             $chartData = [
@@ -332,6 +555,7 @@ class AssetController extends Controller
                 'summary' => $summary,
                 'chartData' => $chartData,
                 'slowQueries' => $slowQueries,
+                'slowQueriesCount' => count($slowQueries),
                 'apiStatus' => $apiStatus,
                 'message' => empty($mysqlData) ? 'No data available from API' : null
             ]);
@@ -469,6 +693,34 @@ class AssetController extends Controller
             // Limit window to last 10 data points for charts and stats
             $lastSlice = is_array($redisData) ? array_slice($redisData, -10) : [];
             
+            // Extract command statistics from raw Redis data
+            $commandStats = [];
+            if (!empty($redisData)) {
+                // Get command stats from the latest data point
+                $latest = end($redisData);
+                $metrics = $latest['metrics'] ?? [];
+                
+                // Extract all commandstats from metrics (they start with 'commandstats_')
+                foreach ($metrics as $key => $value) {
+                    if (strpos($key, 'commandstats_') === 0) {
+                        $commandName = str_replace('commandstats_', '', $key);
+                        // Handle different formats: commandstats_get, commandstats_get_calls, etc.
+                        $commandStats[$commandName] = $value;
+                    }
+                }
+                
+                // Also add network speed metrics
+                $summary['instantaneous_input_kbps'] = $metrics['instantaneous_input_kbps'] ?? 0;
+                $summary['instantaneous_output_kbps'] = $metrics['instantaneous_output_kbps'] ?? 0;
+                $summary['total_net_input_bytes'] = $metrics['total_net_input_bytes'] ?? 0;
+                $summary['total_net_output_bytes'] = $metrics['total_net_output_bytes'] ?? 0;
+                
+                // Add command stats to summary
+                foreach ($commandStats as $cmd => $value) {
+                    $summary['commandstats_' . $cmd] = $value;
+                }
+            }
+            
             // Process chart data
             $chartData = [
                 'ops' => processLatestChartData($lastSlice ?: $redisData, 'instantaneous_ops_per_sec', 10),
@@ -502,7 +754,8 @@ class AssetController extends Controller
                     $summary['total_system_memory'] = round($total / 1024 / 1024, 2); // MB
                 }
             }
-            // Command statistics from last 10 points
+            
+            // Command statistics from last 10 points (sum them up)
             if (!empty($lastSlice)) {
                 $cmdGet = 0; $cmdSet = 0; $cmdHGet = 0; $cmdHSet = 0;
                 foreach ($lastSlice as $item) {
@@ -511,6 +764,12 @@ class AssetController extends Controller
                     $cmdSet += is_numeric($m['commandstats_set'] ?? null) ? (float)$m['commandstats_set'] : 0;
                     $cmdHGet += is_numeric($m['commandstats_hget'] ?? null) ? (float)$m['commandstats_hget'] : 0;
                     $cmdHSet += is_numeric($m['commandstats_hset'] ?? null) ? (float)$m['commandstats_hset'] : 0;
+                    
+                    // Also check for alternative naming
+                    $cmdGet += is_numeric($m['commandstats_get_calls'] ?? null) ? (float)$m['commandstats_get_calls'] : 0;
+                    $cmdSet += is_numeric($m['commandstats_set_calls'] ?? null) ? (float)$m['commandstats_set_calls'] : 0;
+                    $cmdHGet += is_numeric($m['commandstats_hget_calls'] ?? null) ? (float)$m['commandstats_hget_calls'] : 0;
+                    $cmdHSet += is_numeric($m['commandstats_hset_calls'] ?? null) ? (float)$m['commandstats_hset_calls'] : 0;
                 }
                 $summary['commandstats_get'] = $cmdGet;
                 $summary['commandstats_set'] = $cmdSet;

@@ -92,6 +92,15 @@
             </button>
         </div>
         <div id="redisOpsPerSecond" class="h-60 w-full"></div>
+        <div class="w-full flex justify-between px-4 text-xs mt-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded bg-[rgb(var(--color-primary))]"></span>
+                <div>
+                    <div class="font-medium text-gray-700">Ops / Second</div>
+                    <div id="opsSummary" class="text-gray-500">Latest: --, Avg: --</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Memory Usage -->
@@ -137,6 +146,22 @@
             </button>
         </div>
         <div id="redisCommandsChart" class="h-60 w-full"></div>
+        <div class="w-full flex justify-between px-4 text-xs mt-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded bg-[rgb(var(--color-primary))]"></span>
+                <div>
+                    <div class="font-medium text-gray-700">Ops / Second</div>
+                    <div id="commandsOpsSummary" class="text-gray-500">Latest: --, Avg: --</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded" style="background-color: rgb(37, 99, 235)"></span>
+                <div>
+                    <div class="font-medium text-gray-700">Memory (MB)</div>
+                    <div id="commandsMemSummary" class="text-gray-500">Latest: --, Avg: --</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -153,41 +178,45 @@
             </button>
         </div>
         
-        <div class="flex gap-2 mb-4">
-            <span class="px-3 py-1 text-xs font-bold text-white bg-[rgb(var(--color-primary))] rounded-sm">GET</span>
-            <span class="px-3 py-1 text-xs font-bold text-white bg-green-500 rounded-sm">SET</span>
-            <span class="px-3 py-1 text-xs font-bold text-white bg-blue-500 rounded-sm">HGET</span>
-            <span class="px-3 py-1 text-xs font-bold text-white bg-yellow-500 rounded-sm">HSET</span>
-        </div>
+        <div id="commandProgressBar" class="w-full h-6 rounded-md overflow-hidden bg-gray-100 mb-4 flex"></div>
 
         <div class="space-y-3">
             <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                 <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     GET Commands
                 </span>
                 <span id="getCommands" class="font-medium text-gray-800">0</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                 <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     SET Commands
                 </span>
                 <span id="setCommands" class="font-medium text-gray-800">0</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                 <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     HGET Commands
                 </span>
                 <span id="hgetCommands" class="font-medium text-gray-800">0</span>
             </div>
             <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
                 <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                     HSET Commands
                 </span>
                 <span id="hsetCommands" class="font-medium text-gray-800">0</span>
+            </div>
+            <!-- Additional commands - dynamically shown if data exists -->
+            <div id="additionalCommands"></div>
+        </div>
+        
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>Total Commands: <span id="totalCommands">0</span></span>
+                <span>Updated: <span id="commandsUpdated">Just now</span></span>
             </div>
         </div>
     </div>
@@ -237,26 +266,29 @@
         
         <div id="redisNetworkTraffic" class="h-36 w-full mb-6"></div>
 
-        <div class="flex justify-between items-end mt-auto">
-            <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-8 h-8 rounded bg-purple-100"></span>
-                            <div>
-                                <div class="text-xs text-gray-500">Input MB/s</div>
-                                <div id="networkInput" class="text-lg font-medium text-gray-800">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="w-8 h-8 rounded bg-blue-100"></span>
-                            <div>
-                                <div class="text-xs text-gray-500">Output MB/s</div>
-                                <div id="networkOutput" class="text-lg font-medium text-gray-800">0</div>
-                            </div>
+        <div class="flex flex-col mt-auto">
+            <div class="text-sm text-gray-600 mb-2">Current Speed</div>
+            <div class="flex justify-between items-end">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-3 h-3 rounded bg-purple-500"></span>
+                        <div>
+                            <div class="text-xs text-gray-500">Input KB/s</div>
+                            <div id="currentNetworkInput" class="text-lg font-medium text-gray-800">0</div>
                         </div>
                     </div>
                 </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-3 h-3 rounded bg-blue-500"></span>
+                        <div>
+                            <div class="text-xs text-gray-500">Output KB/s</div>
+                            <div id="currentNetworkOutput" class="text-lg font-medium text-gray-800">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -319,13 +351,7 @@
     </div>
 </div>
 
-<!-- Loading Overlay -->
-<div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-30 pointer-events-none z-50 flex items-center justify-center hidden">
-    <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--color-primary))]"></div>
-        <p class="mt-4 text-gray-600">Loading Redis data...</p>
-    </div>
-</div>
+<!-- Loading overlay removed: data loads in background with toast + header dot -->
 
 @endsection
 
@@ -345,6 +371,11 @@
     const themeFill = `rgba(${themeRgb}, 0.15)`;
     const accentBlue = 'rgb(59, 130, 246)';
     const accentBlueFill = 'rgba(59, 130, 246, 0.15)';
+    const accentGreen = 'rgb(16, 185, 129)';
+    const accentGreenFill = 'rgba(16, 185, 129, 0.15)';
+    let netLabels = [];
+    let netInputRates = [];
+    let netOutputRates = [];
     serverId = {{ $server->id }};
     serverIp = @json($server->ip);
 
@@ -368,25 +399,7 @@
         if (el) el.textContent = value;
     }
 
-    function setChartLoading(containerId, isLoading) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        let loader = container.querySelector('.chart-loader');
-        if (!loader && isLoading) {
-            loader = document.createElement('div');
-            loader.className = 'chart-loader flex items-center justify-center text-sm text-gray-600';
-            loader.style.position = 'absolute';
-            loader.style.inset = '0';
-            loader.style.background = 'rgba(255,255,255,0.6)';
-            loader.style.zIndex = '10';
-            loader.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[rgb(var(--color-primary))] mr-2"></div>Loading...';
-            container.style.position = 'relative';
-            container.appendChild(loader);
-        }
-        if (loader) {
-            loader.classList.toggle('hidden', !isLoading);
-        }
-    }
+    function setChartLoading(containerId, isLoading) { return; }
 
     function setGaugeCenter(containerId, percent, label) {
         const container = document.getElementById(containerId);
@@ -430,6 +443,71 @@
         document.getElementById('lastUpdated').textContent = formatted;
     }
 
+    function addNetworkSample(inputKBps, outputKBps) {
+        const label = new Date().toLocaleTimeString('en-US', { 
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        
+        netLabels.push(label);
+        netInputRates.push(Math.round(inputKBps || 0));
+        netOutputRates.push(Math.round(outputKBps || 0));
+        
+        // Keep only last 10 data points
+        if (netLabels.length > 10) netLabels = netLabels.slice(-10);
+        if (netInputRates.length > 10) netInputRates = netInputRates.slice(-10);
+        if (netOutputRates.length > 10) netOutputRates = netOutputRates.slice(-10);
+    }
+
+    function renderCommandProgress(stats) {
+        const el = document.getElementById('commandProgressBar');
+        if (!el) return;
+        
+        // Extract only the main commands for the progress bar
+        const get = Number(stats?.GET) || 0;
+        const set = Number(stats?.SET) || 0;
+        const hget = Number(stats?.HGET) || 0;
+        const hset = Number(stats?.HSET) || 0;
+        
+        const total = get + set + hget + hset;
+        const toPct = v => total > 0 ? (v / total * 100) : 0;
+        
+        const items = [
+            { label: 'GET', pct: toPct(get), color: 'bg-purple-500', value: get },
+            { label: 'SET', pct: toPct(set), color: 'bg-green-500', value: set },
+            { label: 'HGET', pct: toPct(hget), color: 'bg-blue-500', value: hget },
+            { label: 'HSET', pct: toPct(hset), color: 'bg-yellow-500', value: hset }
+        ];
+        
+        el.innerHTML = '';
+        items.forEach(i => {
+            const seg = document.createElement('div');
+            seg.className = `h-full ${i.color} text-white text-[10px] leading-6 px-2 flex-none overflow-hidden`;
+            seg.style.width = `${i.pct}%`;
+            seg.textContent = `${i.label} ${i.pct.toFixed(1)}%`;
+            seg.title = `${i.label}: ${i.value.toLocaleString()} calls`;
+            el.appendChild(seg);
+        });
+        
+        // If no data, show placeholder
+        if (total === 0) {
+            el.innerHTML = '<div class="h-full w-full bg-gray-200 text-gray-500 text-[10px] leading-6 px-2 flex items-center justify-center">No command data available</div>';
+        }
+    }
+
+    // Add this function to format command counts
+    function formatCommandCount(count) {
+        if (count >= 1000000) {
+            return (count / 1000000).toFixed(1) + 'M';
+        }
+        if (count >= 1000) {
+            return (count / 1000).toFixed(1) + 'K';
+        }
+        return count.toString();
+    }
+
     function showToast(type, message) {
         let container = document.getElementById('toastContainer');
         if (!container) {
@@ -463,22 +541,7 @@
         showToast(connected ? 'success' : 'error', connected ? 'Connected' : (message || 'Connection failed'));
     }
 
-    function showLoading(show) {
-        const overlay = document.getElementById('loadingOverlay');
-        if (!overlay) return;
-        if (show) {
-            const hasOpsData = charts.ops?.data?.datasets?.[0]?.data?.length > 0;
-            const hasNetworkData = charts.network?.data?.datasets?.[0]?.data?.length > 0 || charts.network?.data?.datasets?.[1]?.data?.length > 0;
-            const hasCommandsData = charts.commands?.data?.datasets?.[0]?.data?.some(v => (v || 0) > 0);
-            const hasAnyData = hasOpsData || hasNetworkData || hasCommandsData;
-            if (hasAnyData) {
-                return;
-            }
-            overlay.classList.remove('hidden');
-        } else {
-            overlay.classList.add('hidden');
-        }
-    }
+    function showLoading(show) { return; }
 
     // Chart initialization
     function initializeCharts() {
@@ -499,23 +562,22 @@
                         tension: 0.4
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Operations Per Second' }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: {
+                        legend: { display: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { 
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' }
+                            }
                         }
                     }
-                }
-            });
+                });
             charts.ops = chart;
             setChartLoading('redisOpsPerSecond', true);
         }
@@ -532,78 +594,67 @@
                         borderWidth: 0
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false },
-                        title: { display: true, text: 'Memory Usage' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false },
+                        tooltip: { enabled: false }
+                        }
                     }
-                }
-            });
-            charts.memory = chart;
-            setChartLoading('redisMemoryUsage', true);
-            setGaugeCenter('redisMemoryUsage', 0, 'Usage');
+                });
+                charts.memory = chart;
+                setChartLoading('redisMemoryUsage', true);
+                setGaugeCenter('redisMemoryUsage', 0, 'Usage');
         }
 
         const commandsCtx = createChartCanvas('redisCommandsChart');
         if (commandsCtx) {
             const chart = new Chart(commandsCtx, {
-                type: 'bar',
+                type: 'line',
                 devicePixelRatio: 1,
                 data: {
                     labels: [],
-                    datasets: [{
-                        type: 'bar',
-                        label: 'Ops / Second',
-                        data: [],
-                        backgroundColor: themeColor,
-                        borderWidth: 0,
-                        borderRadius: 4,
-                        yAxisID: 'yOps'
-                    },
-                    {
-                        type: 'line',
-                        label: 'Memory (MB)',
-                        data: [],
-                        borderColor: accentBlue,
-                        backgroundColor: accentBlueFill,
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        yAxisID: 'yMem'
-                    }]
+                    datasets: [
+                        {
+                            label: 'Ops/Second',
+                            data: [],
+                            borderColor: accentGreen,
+                            backgroundColor: accentGreenFill,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Memory (Scaled)',
+                            data: [],
+                            borderColor: accentBlue,
+                            backgroundColor: accentBlueFill,
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
                     plugins: {
-                        legend: { position: 'bottom' },
-                        title: { display: true, text: 'Commands vs Memory' }
+                        legend: { position: 'bottom' }
                     },
                     scales: {
                         x: { 
-                            grid: { display: false },
+                            grid: { display: true, color: 'rgba(0,0,0,0.06)' },
                             title: { display: true, text: 'Time' }
                         },
-                        yOps: { 
-                            type: 'linear',
-                            position: 'left',
+                        y: { 
                             beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            title: { display: true, text: 'Ops / Second' },
+                            grid: { color: 'rgba(0,0,0,0.06)' },
+                            title: { display: true, text: 'Combined Metric' },
                             ticks: { precision: 0 }
-                        },
-                        yMem: {
-                            type: 'linear',
-                            position: 'right',
-                            beginAtZero: false,
-                            grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Memory (MB)' }
                         }
                     }
                 }
@@ -624,21 +675,20 @@
                         borderWidth: 0
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false },
-                        title: { display: true, text: 'Cache Hit Ratio' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false },
+                        tooltip: { enabled: false }
+                        }
                     }
-                }
-            });
-            charts.cache = chart;
-            setChartLoading('redisCacheHitRatio', true);
-            setGaugeCenter('redisCacheHitRatio', 0, 'Hit Ratio');
+                });
+                charts.cache = chart;
+                setChartLoading('redisCacheHitRatio', true);
+                setGaugeCenter('redisCacheHitRatio', 0, 'Hit Ratio');
         }
 
         const networkCtx = createChartCanvas('redisNetworkTraffic');
@@ -650,43 +700,43 @@
                     labels: [],
                     datasets: [
                         {
-                            label: 'Input',
+                            label: 'Input KB/s',
                             data: [],
-                            borderColor: themeColor,
-                            backgroundColor: themeFill,
+                            borderColor: 'rgb(147, 51, 234)', // Purple color
+                            backgroundColor: 'rgba(147, 51, 234, 0.15)',
                             borderWidth: 2,
                             fill: true,
                             tension: 0.4
                         },
                         {
-                            label: 'Output',
+                            label: 'Output KB/s',
                             data: [],
-                            borderColor: themeColor,
-                            backgroundColor: themeFill,
+                            borderColor: 'rgb(59, 130, 246)', // Blue color
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
                             borderWidth: 2,
                             fill: true,
                             tension: 0.4
                         }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Network Traffic (MB/s)' }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: {
+                        legend: { display: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { 
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                title: { display: true, text: 'KB/s' }
+                            }
                         }
                     }
-                }
-            });
-            charts.network = chart;
+                });
+                charts.network = chart;
             setChartLoading('redisNetworkTraffic', true);
         }
     }
@@ -702,6 +752,9 @@
             charts.ops.data.datasets[0].data = values.slice(values.length - len);
             charts.ops.update();
             if (len > 0) setChartLoading('redisOpsPerSecond', false);
+            const latest = len ? values[values.length - 1] : 0;
+            const avg = len ? (values.reduce((a, b) => a + (Number(b) || 0), 0) / len) : 0;
+            setText('opsSummary', 'Latest: ' + (Number(latest).toFixed(0)) + ', Avg: ' + (avg.toFixed(1)));
         }
 
         // Update Memory usage gauge
@@ -718,11 +771,23 @@
             const ops = (data.opsData.values || []).slice(-10);
             const mem = (data.memoryData.values || []).slice(-10);
             const len = Math.min(labels.length, ops.length, mem.length);
+            const opsWindow = ops.slice(ops.length - len).map(v => Number(v) || 0);
+            const memWindow = mem.slice(mem.length - len).map(v => Number(v) || 0);
+            const opsMax = Math.max(1, ...opsWindow);
+            const memMax = Math.max(1, ...memWindow);
+            const scale = memMax > 0 ? (opsMax / memMax) : 1;
+            const memScaled = memWindow.map(v => Number((v * scale).toFixed(2)));
             charts.commands.data.labels = labels.slice(labels.length - len);
-            charts.commands.data.datasets[0].data = ops.slice(ops.length - len);
-            charts.commands.data.datasets[1].data = mem.slice(mem.length - len);
+            charts.commands.data.datasets[0].data = opsWindow;
+            charts.commands.data.datasets[1].data = memScaled;
             charts.commands.update();
             if (len > 0) setChartLoading('redisCommandsChart', false);
+            const latestOps = len ? ops[ops.length - 1] : 0;
+            const avgOps = len ? (ops.reduce((a, b) => a + (Number(b) || 0), 0) / len) : 0;
+            const latestMem = len ? mem[mem.length - 1] : 0;
+            const avgMem = len ? (mem.reduce((a, b) => a + (Number(b) || 0), 0) / len) : 0;
+            setText('commandsOpsSummary', 'Latest: ' + (Number(latestOps).toFixed(0)) + ', Avg: ' + (avgOps.toFixed(1)));
+            setText('commandsMemSummary', 'Latest: ' + (Number(latestMem).toFixed(2)) + ' MB, Avg: ' + (avgMem.toFixed(2)) + ' MB');
         }
 
         // Update Cache hit ratio gauge
@@ -734,16 +799,12 @@
         }
 
         // Update Network traffic chart
-        if (charts.network && data.networkData) {
-            const labels = (data.networkData.labels || []).slice(-10);
-            const input = (data.networkData.input || []).slice(-10);
-            const output = (data.networkData.output || []).slice(-10);
-            const len = Math.min(labels.length, input.length, output.length);
-            charts.network.data.labels = labels.slice(labels.length - len);
-            charts.network.data.datasets[0].data = input.slice(input.length - len);
-            charts.network.data.datasets[1].data = output.slice(output.length - len);
+        if (charts.network) {
+            charts.network.data.labels = netLabels;
+            charts.network.data.datasets[0].data = netInputRates;
+            charts.network.data.datasets[1].data = netOutputRates;
             charts.network.update();
-            if (len > 0) setChartLoading('redisNetworkTraffic', false);
+            if (netLabels.length > 0) setChartLoading('redisNetworkTraffic', false);
         }
     }
 
@@ -759,18 +820,26 @@
         setText('usedMemoryValue', formatBytes(data.used_memory || 0));
         setText('totalMemoryValue', formatBytes(data.total_system_memory || 0));
 
-        // Update command statistics
-        setText('getCommands', data.commandStats?.GET || '0');
-        setText('setCommands', data.commandStats?.SET || '0');
-        setText('hgetCommands', data.commandStats?.HGET || '0');
-        setText('hsetCommands', data.commandStats?.HSET || '0');
+        // Update command statistics - with fallback values
+        const commandStats = data.commandStats || {};
+        setText('getCommands', formatNumber(commandStats.GET || 0));
+        setText('setCommands', formatNumber(commandStats.SET || 0));
+        setText('hgetCommands', formatNumber(commandStats.HGET || 0));
+        setText('hsetCommands', formatNumber(commandStats.HSET || 0));
+        
+        // Render command progress with actual data
+        renderCommandProgress(commandStats);
+        
+        // Render additional commands
+        renderAdditionalCommands(commandStats);
 
         // Update cache stats
         setText('keyHits', data.keyspace_hits || '0');
         setText('keyMisses', data.keyspace_misses || '0');
 
-        setText('networkInput', ((data.network_input || 0)).toFixed(2));
-        setText('networkOutput', ((data.network_output || 0)).toFixed(2));
+        // Update network speeds - using instantaneous_kbps from Redis metrics
+        setText('currentNetworkInput', data.instantaneous_input_kbps?.toFixed(2) || '0.00');
+        setText('currentNetworkOutput', data.instantaneous_output_kbps?.toFixed(2) || '0.00');
 
         // Update bottom metrics
         setText('connectedSlaves', data.connected_slaves || '0');
@@ -784,6 +853,88 @@
         setText('redisVersion', data.redis_version || '--');
     }
 
+    // Function to display additional commands
+    function renderAdditionalCommands(commandStats) {
+        const container = document.getElementById('additionalCommands');
+        if (!container) return;
+        
+        // Filter out the main 4 commands we already display
+        const mainCommands = ['GET', 'SET', 'HGET', 'HSET'];
+        const additionalCommands = {};
+        
+        // Extract additional commands with significant usage
+        for (const [cmd, value] of Object.entries(commandStats)) {
+            const cmdUpper = cmd.toUpperCase();
+            if (!mainCommands.includes(cmdUpper) && value > 0) {
+                additionalCommands[cmdUpper] = value;
+            }
+        }
+        
+        // Sort by value (descending)
+        const sortedCommands = Object.entries(additionalCommands)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3); // Show top 3 additional commands
+        
+        if (sortedCommands.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        sortedCommands.forEach(([cmd, value]) => {
+            const iconColor = getCommandColor(cmd);
+            const icon = getCommandIcon(cmd);
+            
+            html += `
+                <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                    <span class="text-gray-600 flex items-center gap-2">
+                        ${icon}
+                        ${cmd} Commands
+                    </span>
+                    <span class="font-medium text-gray-800">${formatNumber(value)}</span>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Update total commands
+        const total = Object.values(commandStats).reduce((sum, val) => sum + val, 0);
+        setText('totalCommands', formatNumber(total));
+        setText('commandsUpdated', new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+    }
+
+    // Helper function to get command color
+    function getCommandColor(command) {
+        const colors = {
+            'DEL': 'text-red-500',
+            'INCR': 'text-indigo-500',
+            'DECR': 'text-indigo-400',
+            'LPUSH': 'text-pink-500',
+            'RPUSH': 'text-pink-400',
+            'LLEN': 'text-teal-500',
+            'SADD': 'text-orange-500',
+            'ZADD': 'text-amber-500',
+            'EXPIRE': 'text-gray-500',
+            'TTL': 'text-gray-400'
+        };
+        return colors[command] || 'text-gray-400';
+    }
+
+    // Helper function to get command icon
+    function getCommandIcon(command) {
+        const icons = {
+            'DEL': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>',
+            'INCR': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>',
+            'DECR': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" /></svg>',
+            'LPUSH': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>',
+            'RPUSH': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8V20m0 0l4-4m-4 4l-4-4M7 4v16" /></svg>',
+            'LLEN': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>',
+            'SADD': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
+            'ZADD': '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>'
+        };
+        return icons[command] || '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+    }
     // Fetch data from Laravel backend
     async function fetchRedisData() {
         try {
@@ -809,6 +960,7 @@
             if (!result.ok) {
                 updateApiStatus(false, result.message || 'API error');
                 showLoading(false);
+                renderCommandProgress({ GET: 0, SET: 0, HGET: 0, HSET: 0 });
                 return;
             }
 
@@ -834,16 +986,28 @@
                 blocked_clients: redisData.blocked_clients || 0,
                 expired_keys: redisData.expired_keys || 0,
                 evicted_keys: redisData.evicted_keys || 0,
+                // Network speeds in KB/s (from instantaneous_kbps in Redis metrics)
+                instantaneous_input_kbps: redisData.instantaneous_input_kbps || 0,
+                instantaneous_output_kbps: redisData.instantaneous_output_kbps || 0,
                 network_input: redisData.network_input || 0,
                 network_output: redisData.network_output || 0,
                 uptime: redisData.uptime_in_seconds ? 
                     Math.floor(redisData.uptime_in_seconds / 86400) + ' days' : '--',
                 redis_version: redisData.redis_version || '--',
+                // Command statistics - directly from summary
                 commandStats: {
-                    GET: redisData.commandstats_get || 0,
-                    SET: redisData.commandstats_set || 0,
-                    HGET: redisData.commandstats_hget || 0,
-                    HSET: redisData.commandstats_hset || 0
+                    GET: redisData.commandstats_get || redisData.commandstats_get_calls || 0,
+                    SET: redisData.commandstats_set || redisData.commandstats_set_calls || 0,
+                    HGET: redisData.commandstats_hget || redisData.commandstats_hget_calls || 0,
+                    HSET: redisData.commandstats_hset || redisData.commandstats_hset_calls || 0,
+                    // Add other common commands for better overview
+                    DEL: redisData.commandstats_del || redisData.commandstats_del_calls || 0,
+                    INCR: redisData.commandstats_incr || redisData.commandstats_incr_calls || 0,
+                    LPUSH: redisData.commandstats_lpush || redisData.commandstats_lpush_calls || 0,
+                    RPUSH: redisData.commandstats_rpush || redisData.commandstats_rpush_calls || 0,
+                    LLEN: redisData.commandstats_llen || redisData.commandstats_llen_calls || 0,
+                    SADD: redisData.commandstats_sadd || redisData.commandstats_sadd_calls || 0,
+                    ZADD: redisData.commandstats_zadd || redisData.commandstats_zadd_calls || 0
                 }
             };
 
@@ -880,6 +1044,8 @@
 
             // Update UI and charts
             updateUI(uiData);
+            // Add network samples using current KB/s speeds
+            addNetworkSample(uiData.instantaneous_input_kbps, uiData.instantaneous_output_kbps);
             updateCharts(chartUpdateData);
             updateLastUpdated();
 
@@ -893,6 +1059,7 @@
                     el.textContent = 'Error';
                 }
             });
+            renderCommandProgress({ GET: 0, SET: 0, HGET: 0, HSET: 0 });
             
         } finally {
             showLoading(false);
@@ -926,6 +1093,7 @@
         });
         
         // Initial data fetch
+        renderCommandProgress({ GET: 0, SET: 0, HGET: 0, HSET: 0 });
         fetchRedisData();
         
         // Start auto-refresh every 30 seconds

@@ -47,6 +47,7 @@ Route::prefix('user')->group(function () {
 });
 
 // all admin routes
+Route::redirect('/admin', '/admin/login');
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminController::class, 'loginForm'])->name('admin.login');
     Route::post('/login', [AdminController::class, 'login']);
@@ -77,6 +78,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/server/{id}/linux-data', [AdminAssetController::class, 'linux_data'])->middleware('admin')->name('admin.server.linux.data');
     Route::get('/server/{id}/mysql', [AdminAssetController::class, 'mysql'])->middleware('admin')->name('admin.server.mysql');
     Route::get('/server/{id}/mysql-data', [AdminAssetController::class, 'mysql_data'])->middleware('admin')->name('admin.assets.mysql.data');
+    Route::get('/server/{id}/mysql-slow-queries', [AdminAssetController::class, 'mysql_slow_queries'])->middleware('admin')->name('admin.assets.mysql.slow_queries');
+    Route::get('/server/{id}/test_slow_queries_api', [AdminAssetController::class, 'test_slow_queries_api'])->middleware('admin')->name('admin.assets.test_slow_queries_api');
+    Route::get('/server/{id}/mysql-warnings', [AdminAssetController::class, 'mysql_warnings'])->middleware('admin')->name('admin.assets.mysql_warnings');
+    Route::get('/server/{id}/mysql-errors', [AdminAssetController::class, 'mysql_errors'])->middleware('admin')->name('admin.assets.mysql_errors');
     Route::get('/server/{id}/mongodb', [AdminAssetController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
     Route::get('/server/{id}/mongodb-data', [AdminAssetController::class, 'mongodb_data'])->middleware('admin')->name('admin.assets.mongodb.data');
     Route::get('/server/{id}/redis', [AdminAssetController::class, 'redis'])->middleware('admin')->name('admin.server.redis');

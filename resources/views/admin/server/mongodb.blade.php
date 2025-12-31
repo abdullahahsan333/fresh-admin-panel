@@ -279,7 +279,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    plugins: { legend: { display: false }, title: { display: true, text: 'Operations Per Second' } },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: { grid: { display: false } },
                         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
@@ -308,7 +308,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    plugins: { legend: { display: false }, title: { display: true, text: 'Memory Usage' } },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: { grid: { display: false } },
                         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
@@ -333,7 +333,7 @@
                     maintainAspectRatio: false,
                     animation: false,
                     cutout: '70%',
-                    plugins: { legend: { display: false }, tooltip: { enabled: false }, title: { display: true, text: 'Connection Usage' } }
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
                 }
             });
             setGaugeCenter('mongoConnectionUsage', 0, 'Usage');
@@ -370,7 +370,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    plugins: { legend: { position: 'top' }, title: { display: true, text: 'Network Traffic' } },
+                    plugins: { legend: { position: 'top' } },
                     scales: {
                         x: { grid: { display: false } },
                         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }

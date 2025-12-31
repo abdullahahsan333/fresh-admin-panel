@@ -43,8 +43,8 @@
                         'unknown' => 'Unknown'
                     ];
                 @endphp
-                <span class="{{ $statusColors[$serverStatus]['text'] }} font-medium">{{ $statusTexts[$serverStatus] }}</span>
-                <span class="h-3 w-3 rounded-full {{ $statusColors[$serverStatus]['bg'] }}"></span>
+                <span id="serverStatusText" class="{{ $statusColors[$serverStatus]['text'] }} font-medium">{{ $statusTexts[$serverStatus] }}</span>
+                <span id="serverStatusDot" class="h-3 w-3 rounded-full {{ $statusColors[$serverStatus]['bg'] }}"></span>
             </div>
             
             @php
@@ -112,7 +112,7 @@
                     </svg>
                 </div>
                 <span class="text-xs text-gray-500">Load Avg</span>
-                <span class="text-sm font-medium">{{ $linuxSummary['load_avg_1'] ?? '--' }}</span>
+                <span id="loadAvgText" class="text-sm font-medium">{{ ($linuxSummary['load_avg_1'] ?? '--') }}, {{ ($linuxSummary['load_avg_5'] ?? '--') }}, {{ ($linuxSummary['load_avg_15'] ?? '--') }}</span>
             </div>
         </div>
     </div>
@@ -120,10 +120,36 @@
 
 <!-- Usage Cards -->
 @php
+    $diskLabels = [];
+    $diskSeries = [];
+    if (!empty($linuxData)) {
+        $slice = array_slice($linuxData, -6);
+        foreach ($slice as $point) {
+            $timestamp = $point['timestamp'] ?? '';
+            $metrics = $point['metrics'] ?? [];
+            $used = (float)($metrics['disk_used_gb'] ?? 0);
+            $total = (float)($metrics['disk_total_gb'] ?? 0);
+            $pct = $total > 0 ? round(($used / $total) * 100, 2) : 0.0;
+            if ($timestamp) {
+                try {
+                    $date = new \DateTime($timestamp);
+                    $diskLabels[] = $date->format('H:i');
+                } catch (\Exception $e) {
+                    $diskLabels[] = $timestamp;
+                }
+            } else {
+                $diskLabels[] = '';
+            }
+            $diskSeries[] = $pct;
+        }
+    }
     $chartData = [
         'cpu' => processLatestChartData($linuxData, 'cpu_usage_percent', 6),
         'memory' => processLatestChartData($linuxData, 'memory_used_percent', 6),
-        'disk' => processLatestChartData($linuxData, 'disk_usage_percent', 6),
+        'disk' => [
+            'labels' => $diskLabels,
+            'data' => $diskSeries,
+        ],
         'network' => [
             'labels' => processLatestChartData($linuxData, 'net_input_mb', 6)['labels'] ?? [],
             'input' => processLatestChartData($linuxData, 'net_input_mb', 6)['data'] ?? [],
@@ -136,6 +162,7 @@
     <!-- CPU Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
+            <h3 class="text-gray-700 font-medium mb-2">CPU Usage</h3>
             <div id="cpu-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['cpu_usage'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest CPU Usage</span>
@@ -145,6 +172,7 @@
     <!-- RAM Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
+            <h3 class="text-gray-700 font-medium mb-2">RAM Usage</h3>
             <div id="ram-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['memory_percent'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest RAM Usage</span>
@@ -154,6 +182,7 @@
     <!-- Disk Usage -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
         <div class="py-4">
+            <h3 class="text-gray-700 font-medium mb-2">Disk Usage</h3>
             <div id="disk-usage-chart" class="h-52"></div>
             <span class="text-2xl font-semibold text-gray-800">{{ $linuxSummary['disk_percent'] ?? '--' }}%</span>
             <span class="text-sm text-gray-500 ml-2">Latest Disk Usage</span>
@@ -206,8 +235,8 @@
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-2">
                                     @php $memVal = (float)($process['mem'] ?? 0); @endphp
-                                    <span class="px-2 py-0.5 rounded text-xs font-medium {{ $memVal < 200 ? 'bg-green-100 text-green-800' : ($memVal < 500 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ isset($process['mem']) ? ($memVal . ' MB') : '-' }}
+                                    <span class="px-2 py-0.5 rounded text-xs font-medium {{ $memVal < 50 ? 'bg-green-100 text-green-800' : ($memVal < 80 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ isset($process['mem']) ? ($memVal . '%') : '-' }}
                                     </span>
                                 </td>
                             </tr>
@@ -218,16 +247,39 @@
         </div>
     </div>
 
+    {{-- Logs section --}}
+    <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+        <div class="px-2 pt-2">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-gray-700 font-medium">System logs</h3>
+                <button class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="max-h-96 overflow-x-auto">
+            <pre class="text-xs text-gray-600"></pre>
+        </div>
+    </div>
+
     <!-- Traffic -->
     <div class="lg:col-span-1 space-y-6">
         <!-- Input Traffic -->
         <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="inputTrafficChart" class="h-52"></div>
+            <div class="px-2 pt-2">
+                <div class="text-xs text-gray-600 mb-1">Network Input (MB)</div>
+            </div>
+            <div id="inputTrafficChart" class="h-44"></div>
         </div>
 
         <!-- Output Traffic -->
         <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
-            <div id="outputTrafficChart" class="h-52"></div>
+            <div class="px-2 pt-2">
+                <div class="text-xs text-gray-600 mb-1">Network Output (MB)</div>
+            </div>
+            <div id="outputTrafficChart" class="h-44"></div>
         </div>
     </div>
 </div>
@@ -240,6 +292,9 @@
     const serverIp = @json($server->ip);
     const dataUrl = "{{ route('admin.server.linux.data', $server->id) }}";
     let charts = {};
+    let netLabels = [];
+    let netInput = [];
+    let netOutput = [];
     function q(sel) { try { return document.querySelector(sel); } catch(e) { return null; } }
     function setText(target, value) {
         const el = (target.startsWith('#') || target.startsWith('.')) ? q(target) : document.getElementById(target);
@@ -305,8 +360,7 @@
                 maintainAspectRatio: false,
                 animation: false,
                 plugins: { 
-                    legend: { display: false },
-                    title: { display: !!titleText, text: titleText }
+                    legend: { display: false }
                 },
                 scales: {
                     x: { grid: { display: false }, title: { display: true, text: 'Time' } },
@@ -314,6 +368,15 @@
                 }
             }
         });
+    }
+    function pushNetSample(inMB, outMB) {
+        const label = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        netLabels.push(label);
+        netInput.push(Number(inMB || 0));
+        netOutput.push(Number(outMB || 0));
+        if (netLabels.length > 12) netLabels = netLabels.slice(-12);
+        if (netInput.length > 12) netInput = netInput.slice(-12);
+        if (netOutput.length > 12) netOutput = netOutput.slice(-12);
     }
     document.addEventListener('DOMContentLoaded', function() {
         const cpuCtx = createChartCanvas('cpu-usage-chart');
@@ -341,13 +404,35 @@
                     if (charts.cpu) { charts.cpu.data.labels = data.chartData.cpu.labels || []; charts.cpu.data.datasets[0].data = data.chartData.cpu.data || []; charts.cpu.update(); }
                     if (charts.ram) { charts.ram.data.labels = data.chartData.memory.labels || []; charts.ram.data.datasets[0].data = data.chartData.memory.data || []; charts.ram.update(); }
                     if (charts.disk) { charts.disk.data.labels = data.chartData.disk.labels || []; charts.disk.data.datasets[0].data = data.chartData.disk.data || []; charts.disk.update(); }
-                    if (data.chartData.network) {
-                        if (charts.netIn) { charts.netIn.data.labels = data.chartData.network.labels || []; charts.netIn.data.datasets[0].data = data.chartData.network.input || []; charts.netIn.update(); }
-                        if (charts.netOut) { charts.netOut.data.labels = data.chartData.network.labels || []; charts.netOut.data.datasets[0].data = data.chartData.network.output || []; charts.netOut.update(); }
+                    pushNetSample(data.summary.network_in, data.summary.network_out);
+                    if (charts.netIn) { charts.netIn.data.labels = netLabels; charts.netIn.data.datasets[0].data = netInput; charts.netIn.update(); }
+                    if (charts.netOut) { charts.netOut.data.labels = netLabels; charts.netOut.data.datasets[0].data = netOutput; charts.netOut.update(); }
+                    const summary = data.summary || {};
+                    let status = 'healthy';
+                    const cpu = Number(summary.cpu_usage || 0);
+                    const mem = Number(summary.memory_percent || 0);
+                    const load1 = Number(summary.load_avg_1 || 0);
+                    if (cpu > 90 || mem > 90 || load1 > 4) status = 'critical';
+                    else if (cpu > 70 || mem > 70 || load1 > 2) status = 'warning';
+                    const statusTextEl = document.getElementById('serverStatusText');
+                    const statusDotEl = document.getElementById('serverStatusDot');
+                    if (statusTextEl) {
+                        const textClasses = { healthy: 'text-green-600', warning: 'text-yellow-600', critical: 'text-red-600', unknown: 'text-gray-600' };
+                        const textMap = { healthy: 'Running', warning: 'Warning', critical: 'Critical', unknown: 'Unknown' };
+                        statusTextEl.className = `${textClasses[status]} font-medium`;
+                        statusTextEl.textContent = textMap[status];
+                    }
+                    if (statusDotEl) {
+                        const bgClasses = { healthy: 'bg-green-500', warning: 'bg-yellow-500', critical: 'bg-red-500', unknown: 'bg-gray-500' };
+                        statusDotEl.className = `h-3 w-3 rounded-full ${bgClasses[status]}`;
                     }
                     setText('[data-cpu]', (data.summary.cpu_usage ?? '--') + '%');
                     setText('[data-memory]', (data.summary.memory_percent ?? '--') + '%');
                     setText('[data-disk]', (data.summary.disk_percent ?? '--') + '%');
+                    setText('loadAvgText', 
+                        (summary.load_avg_1 ?? '--') + ', ' + 
+                        (summary.load_avg_5 ?? '--') + ', ' + 
+                        (summary.load_avg_15 ?? '--'));
                     const now = new Date();
                     setText('last-updated-time',
                         now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +

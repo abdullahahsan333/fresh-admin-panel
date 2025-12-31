@@ -610,16 +610,284 @@ function fetchMySQLData($serverIp, $appName = 'livo', $minutes = 60)
 }
 
 /**
- * Fetch MySQL slow queries
+ * Fetch MySQL slow queries directly from API
+ */
+function fetchMySQLSlowQueriesDirect($serverIp, $appName = 'livo', $minutes = 15)
+{
+    try {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end12 = $now->format('h:i:sA');
+        
+        // Start time: X minutes ago
+        $startTime = clone $now;
+        $startTime->modify("-{$minutes} minutes");
+        $start12 = $startTime->format('h:i:sA');
+        
+        $dateStr = $now->format('Y-m-d');
+        $formattedIp = str_replace('.', '_', $serverIp);
+        
+        $apiUrl12 = API_BASE_URL . "/{$appName}/{$formattedIp}/slowquery/metrics?date={$dateStr}&start={$start12}&end={$end12}";
+        
+        $debugEnabled = class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled();
+        $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
+        $t0 = microtime(true);
+        $response = $client->get($apiUrl12);
+        
+        if ($debugEnabled) {
+            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
+                'service' => 'mysql_slow_queries',
+                'method' => 'GET',
+                'url' => $apiUrl12,
+                'format' => '12h',
+                'status' => $response->status(),
+                'ok' => $response->ok(),
+                'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
+            ], 'external_api');
+        }
+        
+        logExternalApiRequest([
+            'service' => 'mysql_slow_queries',
+            'method' => 'GET',
+            'url' => $apiUrl12,
+            'format' => '12h',
+            'status' => $response->status(),
+            'ok' => $response->ok(),
+            'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
+        ]);
+        
+        if (!$response->ok()) {
+            $status = $response->status();
+            $body = $response->body();
+            $snippet = is_string($body) ? mb_substr($body, 0, 500) : '';
+            Log::warning("Slow queries fetch failed: HTTP {$status} {$snippet}");
+            
+            return [];
+        }
+        
+        $data = null;
+        try {
+            $data = $response->json();
+        } catch (\Throwable $e) {
+            Log::error("Slow queries JSON decode failed: " . $e->getMessage());
+            return [];
+        }
+        
+        // Process the data - extract slow queries from each entry
+        $slowQueries = [];
+        
+        if (is_array($data)) {
+            foreach ($data as $entry) {
+                if (isset($entry['metrics']['mysql_slow_queries']) && is_array($entry['metrics']['mysql_slow_queries'])) {
+                    foreach ($entry['metrics']['mysql_slow_queries'] as $query) {
+                        if (is_array($query)) {
+                            $slowQueries[] = [
+                                'start_time' => $query['start_time'] ?? null,
+                                'user_host' => $query['user_host'] ?? null,
+                                'query_time' => $query['query_time'] ?? null,
+                                'sql_text' => $query['sql_text'] ?? null,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Remove duplicates and sort by start_time descending
+        $uniqueQueries = [];
+        $seenQueries = [];
+        
+        foreach ($slowQueries as $query) {
+            $key = md5(($query['sql_text'] ?? '') . ($query['start_time'] ?? ''));
+            if (!isset($seenQueries[$key])) {
+                $uniqueQueries[] = $query;
+                $seenQueries[$key] = true;
+            }
+        }
+        
+        // Sort by start_time descending (newest first)
+        usort($uniqueQueries, function($a, $b) {
+            $timeA = strtotime($a['start_time'] ?? '0');
+            $timeB = strtotime($b['start_time'] ?? '0');
+            return $timeB - $timeA;
+        });
+        
+        return array_slice($uniqueQueries, 0, 50); // Limit to 50 queries
+        
+    } catch (\Exception $e) {
+        Log::error("Failed to fetch slow queries: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Add to APIHelper.php after other MySQL functions
+
+/**
+ * Detect MySQL warnings from metrics
+ */
+function detectMySQLWarnings($mysqlData)
+{
+    if (empty($mysqlData)) {
+        return [];
+    }
+    
+    $latest = end($mysqlData);
+    $metrics = $latest['metrics'] ?? [];
+    $warnings = [];
+    
+    // Connection usage warning
+    $maxConnections = $metrics['max_connections'] ?? 151;
+    $currentConnections = $metrics['current_connections'] ?? $metrics['threads_connected'] ?? 0;
+    $connectionPercent = $maxConnections > 0 ? ($currentConnections / $maxConnections * 100) : 0;
+    
+    if ($connectionPercent > 80) {
+        $warnings[] = [
+            'type' => 'Connection Usage',
+            'severity' => $connectionPercent > 90 ? 'high' : 'medium',
+            'message' => sprintf('High connection usage: %.1f%% of max connections (%d/%d)', 
+                $connectionPercent, $currentConnections, $maxConnections),
+            'suggestion' => 'Consider increasing max_connections or optimizing connection pooling'
+        ];
+    }
+    
+    // Slow queries warning
+    $slowQueries = $metrics['slow_queries'] ?? 0;
+    if ($slowQueries > 10) {
+        $warnings[] = [
+            'type' => 'Slow Queries',
+            'severity' => $slowQueries > 50 ? 'high' : 'medium',
+            'message' => sprintf('%d slow queries detected', $slowQueries),
+            'suggestion' => 'Review and optimize slow queries, check indexes and query performance'
+        ];
+    }
+    
+    // Buffer pool efficiency warning
+    $reads = $metrics['innodb_buffer_pool_reads'] ?? 0;
+    $requests = $metrics['innodb_buffer_pool_read_requests'] ?? 1;
+    $hitRate = ($requests > 0) ? (1 - ($reads / $requests)) * 100 : 0;
+    
+    if ($hitRate < 95) {
+        $warnings[] = [
+            'type' => 'Buffer Pool Efficiency',
+            'severity' => $hitRate < 85 ? 'high' : ($hitRate < 90 ? 'medium' : 'low'),
+            'message' => sprintf('Buffer pool hit rate is %.1f%%', $hitRate),
+            'suggestion' => 'Consider increasing innodb_buffer_pool_size'
+        ];
+    }
+    
+    // Table locks warning
+    $tableLocks = $metrics['table_locks_waited'] ?? 0;
+    if ($tableLocks > 5) {
+        $warnings[] = [
+            'type' => 'Table Locks',
+            'severity' => $tableLocks > 20 ? 'high' : 'medium',
+            'message' => sprintf('%d table locks waited', $tableLocks),
+            'suggestion' => 'Check for long-running queries or optimize table schema'
+        ];
+    }
+    
+    // Threads running warning
+    $threadsRunning = $metrics['threads_running'] ?? 0;
+    if ($threadsRunning > 30) {
+        $warnings[] = [
+            'type' => 'High Thread Count',
+            'severity' => $threadsRunning > 50 ? 'high' : 'medium',
+            'message' => sprintf('%d threads running (high load)', $threadsRunning),
+            'suggestion' => 'Investigate long-running queries and optimize'
+        ];
+    }
+    
+    return $warnings;
+}
+
+/**
+ * Detect MySQL errors from metrics
+ */
+function detectMySQLErrors($mysqlData)
+{
+    if (empty($mysqlData)) {
+        return [];
+    }
+    
+    $latest = end($mysqlData);
+    $metrics = $latest['metrics'] ?? [];
+    $errors = [];
+    
+    // Connection limit error
+    $maxConnections = $metrics['max_connections'] ?? 151;
+    $currentConnections = $metrics['current_connections'] ?? $metrics['threads_connected'] ?? 0;
+    $connectionPercent = $maxConnections > 0 ? ($currentConnections / $maxConnections * 100) : 0;
+    
+    if ($connectionPercent >= 100) {
+        $errors[] = [
+            'type' => 'Connection Limit Reached',
+            'severity' => 'critical',
+            'message' => 'MySQL has reached maximum connection limit',
+            'action' => 'Immediately increase max_connections or kill idle connections'
+        ];
+    }
+    
+    // Very poor buffer pool performance
+    $reads = $metrics['innodb_buffer_pool_reads'] ?? 0;
+    $requests = $metrics['innodb_buffer_pool_read_requests'] ?? 1;
+    $hitRate = ($requests > 0) ? (1 - ($reads / $requests)) * 100 : 0;
+    
+    if ($hitRate < 80) {
+        $errors[] = [
+            'type' => 'Poor Buffer Pool Performance',
+            'severity' => 'high',
+            'message' => sprintf('Buffer pool hit rate is only %.1f%%', $hitRate),
+            'action' => 'Increase innodb_buffer_pool_size immediately'
+        ];
+    }
+    
+    // Aborted connections error
+    $abortedConnects = $metrics['aborted_connects'] ?? 0;
+    if ($abortedConnects > 10) {
+        $errors[] = [
+            'type' => 'Aborted Connections',
+            'severity' => 'medium',
+            'message' => sprintf('%d aborted connections', $abortedConnects),
+            'action' => 'Check connection settings and network stability'
+        ];
+    }
+    
+    // Very high threads running
+    $threadsRunning = $metrics['threads_running'] ?? 0;
+    if ($threadsRunning > 70) {
+        $errors[] = [
+            'type' => 'Excessive Threads Running',
+            'severity' => 'high',
+            'message' => sprintf('%d threads running (very high load)', $threadsRunning),
+            'action' => 'Investigate immediately - may indicate query performance issues'
+        ];
+    }
+    
+    return $errors;
+}
+
+/**
+ * Fetch MySQL slow queries (updated)
  */
 function fetchMySQLSlowQueries($serverIp, $appName = 'livo', $minutes = 15)
 {
+    // Try the new direct method first
+    $queries = fetchMySQLSlowQueriesDirect($serverIp, $appName, $minutes);
+    
+    if (!empty($queries)) {
+        return $queries;
+    }
+    
+    // Fallback to old method for backward compatibility
     $data = fetchFromAPI($serverIp, 'slow_queries', $appName, $minutes);
     $queries = [];
+    
     foreach ($data as $item) {
         if (!is_array($item)) continue;
         $metrics = $item['metrics'] ?? [];
-        $list = $metrics['mysql_slow_queries'] ?? [];
+        
+        // Check both possible field names
+        $list = $metrics['mysql_slow_queries'] ?? $metrics['slow_queries'] ?? [];
+        
         if (is_array($list)) {
             foreach ($list as $q) {
                 if (!is_array($q)) continue;
@@ -632,7 +900,27 @@ function fetchMySQLSlowQueries($serverIp, $appName = 'livo', $minutes = 15)
             }
         }
     }
-    return $queries;
+    
+    // Remove duplicates
+    $uniqueQueries = [];
+    $seenQueries = [];
+    
+    foreach ($queries as $query) {
+        $key = md5(($query['sql_text'] ?? '') . ($query['start_time'] ?? ''));
+        if (!isset($seenQueries[$key])) {
+            $uniqueQueries[] = $query;
+            $seenQueries[$key] = true;
+        }
+    }
+    
+    // Sort by start_time descending
+    usort($uniqueQueries, function($a, $b) {
+        $timeA = strtotime($a['start_time'] ?? '0');
+        $timeB = strtotime($b['start_time'] ?? '0');
+        return $timeB - $timeA;
+    });
+    
+    return array_slice($uniqueQueries, 0, 50);
 }
 
 /**
@@ -861,6 +1149,10 @@ function calculateRedisSummary($redisData)
             'commandstats_set' => 0,
             'commandstats_hget' => 0,
             'commandstats_hset' => 0,
+            'instantaneous_input_kbps' => 0,
+            'instantaneous_output_kbps' => 0,
+            'total_net_input_bytes' => 0,
+            'total_net_output_bytes' => 0,
         ];
     }
     
@@ -896,6 +1188,10 @@ function calculateRedisSummary($redisData)
         'commandstats_set' => $metrics['commandstats_set'] ?? 0,
         'commandstats_hget' => $metrics['commandstats_hget'] ?? 0,
         'commandstats_hset' => $metrics['commandstats_hset'] ?? 0,
+        'instantaneous_input_kbps' => $metrics['instantaneous_input_kbps'] ?? 0,
+        'instantaneous_output_kbps' => $metrics['instantaneous_output_kbps'] ?? 0,
+        'total_net_input_bytes' => $metrics['total_net_input_bytes'] ?? 0,
+        'total_net_output_bytes' => $metrics['total_net_output_bytes'] ?? 0,
     ];
 }
 
