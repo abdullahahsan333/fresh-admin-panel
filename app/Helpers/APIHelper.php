@@ -719,8 +719,6 @@ function fetchMySQLSlowQueriesDirect($serverIp, $appName = 'livo', $minutes = 15
     }
 }
 
-// Add to APIHelper.php after other MySQL functions
-
 /**
  * Detect MySQL warnings from metrics
  */
@@ -746,53 +744,6 @@ function detectMySQLWarnings($mysqlData)
             'message' => sprintf('High connection usage: %.1f%% of max connections (%d/%d)', 
                 $connectionPercent, $currentConnections, $maxConnections),
             'suggestion' => 'Consider increasing max_connections or optimizing connection pooling'
-        ];
-    }
-    
-    // Slow queries warning
-    $slowQueries = $metrics['slow_queries'] ?? 0;
-    if ($slowQueries > 10) {
-        $warnings[] = [
-            'type' => 'Slow Queries',
-            'severity' => $slowQueries > 50 ? 'high' : 'medium',
-            'message' => sprintf('%d slow queries detected', $slowQueries),
-            'suggestion' => 'Review and optimize slow queries, check indexes and query performance'
-        ];
-    }
-    
-    // Buffer pool efficiency warning
-    $reads = $metrics['innodb_buffer_pool_reads'] ?? 0;
-    $requests = $metrics['innodb_buffer_pool_read_requests'] ?? 1;
-    $hitRate = ($requests > 0) ? (1 - ($reads / $requests)) * 100 : 0;
-    
-    if ($hitRate < 95) {
-        $warnings[] = [
-            'type' => 'Buffer Pool Efficiency',
-            'severity' => $hitRate < 85 ? 'high' : ($hitRate < 90 ? 'medium' : 'low'),
-            'message' => sprintf('Buffer pool hit rate is %.1f%%', $hitRate),
-            'suggestion' => 'Consider increasing innodb_buffer_pool_size'
-        ];
-    }
-    
-    // Table locks warning
-    $tableLocks = $metrics['table_locks_waited'] ?? 0;
-    if ($tableLocks > 5) {
-        $warnings[] = [
-            'type' => 'Table Locks',
-            'severity' => $tableLocks > 20 ? 'high' : 'medium',
-            'message' => sprintf('%d table locks waited', $tableLocks),
-            'suggestion' => 'Check for long-running queries or optimize table schema'
-        ];
-    }
-    
-    // Threads running warning
-    $threadsRunning = $metrics['threads_running'] ?? 0;
-    if ($threadsRunning > 30) {
-        $warnings[] = [
-            'type' => 'High Thread Count',
-            'severity' => $threadsRunning > 50 ? 'high' : 'medium',
-            'message' => sprintf('%d threads running (high load)', $threadsRunning),
-            'suggestion' => 'Investigate long-running queries and optimize'
         ];
     }
     
@@ -823,42 +774,6 @@ function detectMySQLErrors($mysqlData)
             'severity' => 'critical',
             'message' => 'MySQL has reached maximum connection limit',
             'action' => 'Immediately increase max_connections or kill idle connections'
-        ];
-    }
-    
-    // Very poor buffer pool performance
-    $reads = $metrics['innodb_buffer_pool_reads'] ?? 0;
-    $requests = $metrics['innodb_buffer_pool_read_requests'] ?? 1;
-    $hitRate = ($requests > 0) ? (1 - ($reads / $requests)) * 100 : 0;
-    
-    if ($hitRate < 80) {
-        $errors[] = [
-            'type' => 'Poor Buffer Pool Performance',
-            'severity' => 'high',
-            'message' => sprintf('Buffer pool hit rate is only %.1f%%', $hitRate),
-            'action' => 'Increase innodb_buffer_pool_size immediately'
-        ];
-    }
-    
-    // Aborted connections error
-    $abortedConnects = $metrics['aborted_connects'] ?? 0;
-    if ($abortedConnects > 10) {
-        $errors[] = [
-            'type' => 'Aborted Connections',
-            'severity' => 'medium',
-            'message' => sprintf('%d aborted connections', $abortedConnects),
-            'action' => 'Check connection settings and network stability'
-        ];
-    }
-    
-    // Very high threads running
-    $threadsRunning = $metrics['threads_running'] ?? 0;
-    if ($threadsRunning > 70) {
-        $errors[] = [
-            'type' => 'Excessive Threads Running',
-            'severity' => 'high',
-            'message' => sprintf('%d threads running (very high load)', $threadsRunning),
-            'action' => 'Investigate immediately - may indicate query performance issues'
         ];
     }
     

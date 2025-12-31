@@ -217,18 +217,20 @@
                 <p class="text-gray-600">Loading slow queries...</p>
             </div>
         </div>
-        
+
         <!-- Warnings Tab Content -->
         <div id="concernWarningsContent" class="space-y-4 hidden">
             <div class="text-center py-8 text-gray-500">
-                Loading warnings...
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-600">Loading warnings...</p>
             </div>
         </div>
-        
+
         <!-- Errors Tab Content -->
         <div id="concernErrorsContent" class="space-y-4 hidden">
             <div class="text-center py-8 text-gray-500">
-                Loading errors...
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-600">Loading errors...</p>
             </div>
         </div>
     </div>
@@ -520,12 +522,12 @@ async function loadConcernTabContent(tabName) {
         `;
         
         try {
-            // Fetch MySQL data which includes warnings
-            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-data`);
+            // Fetch MySQL warnings from dedicated endpoint
+            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-warnings`);
             const data = await response.json();
             
-            if (data.ok && data.summary) {
-                renderWarningsTab(contentEl, data.summary);
+            if (data.ok && Array.isArray(data.warnings)) {
+                renderWarningsTab(contentEl, data.warnings);
             } else {
                 renderDefaultWarnings(contentEl, data.message || 'Unable to load warnings');
             }
@@ -543,12 +545,12 @@ async function loadConcernTabContent(tabName) {
         `;
         
         try {
-            // Fetch MySQL data which might include error indicators
-            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-data`);
+            // Fetch MySQL errors from dedicated endpoint
+            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-errors`);
             const data = await response.json();
             
-            if (data.ok && data.summary) {
-                renderErrorsTab(contentEl, data.summary);
+            if (data.ok && Array.isArray(data.errors)) {
+                renderErrorsTab(contentEl, data.errors);
             } else {
                 renderDefaultErrors(contentEl, data.message || 'Unable to load errors');
             }
@@ -559,47 +561,8 @@ async function loadConcernTabContent(tabName) {
     }
 }
 
-function renderWarningsTab(containerEl, summary) {
-    const warnings = [];
-    
-    // Check for potential warnings based on metrics
-    if (summary.connections_percent > 80) {
-        warnings.push({
-            type: 'Connection Usage',
-            severity: 'high',
-            message: `High connection usage: ${summary.connections_percent}% of max connections`,
-            suggestion: 'Consider increasing max_connections or optimizing connection pooling'
-        });
-    }
-    
-    if (summary.slow_queries > 10) {
-        warnings.push({
-            type: 'Slow Queries',
-            severity: 'medium',
-            message: `${summary.slow_queries} slow queries detected`,
-            suggestion: 'Review and optimize slow queries, check indexes'
-        });
-    }
-    
-    if (summary.innodb_buffer_pool_hit < 95) {
-        warnings.push({
-            type: 'Buffer Pool Efficiency',
-            severity: 'low',
-            message: `Buffer pool hit rate is ${summary.innodb_buffer_pool_hit.toFixed(1)}%`,
-            suggestion: 'Consider increasing innodb_buffer_pool_size'
-        });
-    }
-    
-    if (summary.table_locks > 5) {
-        warnings.push({
-            type: 'Table Locks',
-            severity: 'medium',
-            message: `${summary.table_locks} table locks waited`,
-            suggestion: 'Check for long-running queries or optimize table schema'
-        });
-    }
-    
-    if (warnings.length === 0) {
+function renderWarningsTab(containerEl, warnings) {
+    if (!warnings || warnings.length === 0) {
         containerEl.innerHTML = `
             <div class="space-y-4">
                 <div class="bg-green-50 border border-green-100 rounded-lg p-6">
@@ -685,45 +648,15 @@ function renderDefaultWarnings(containerEl, message) {
     `;
 }
 
-function renderErrorsTab(containerEl, summary) {
-    const errors = [];
-    
-    // Check for potential errors based on metrics
-    if (summary.connections_percent >= 100) {
-        errors.push({
-            type: 'Connection Limit Reached',
-            severity: 'critical',
-            message: 'MySQL has reached maximum connection limit',
-            action: 'Immediately increase max_connections or kill idle connections'
-        });
-    }
-    
-    if (summary.threads_running > 50) {
-        errors.push({
-            type: 'High Thread Count',
-            severity: 'high',
-            message: `${summary.threads_running} threads running (high load)`,
-            action: 'Investigate long-running queries and optimize'
-        });
-    }
-    
-    if (summary.innodb_buffer_pool_hit < 80) {
-        errors.push({
-            type: 'Poor Buffer Pool Performance',
-            severity: 'medium',
-            message: `Buffer pool hit rate is only ${summary.innodb_buffer_pool_hit.toFixed(1)}%`,
-            action: 'Increase innodb_buffer_pool_size immediately'
-        });
-    }
-    
-    if (errors.length === 0) {
+function renderErrorsTab(containerEl, errors) {
+    if (!errors || errors.length === 0) {
         containerEl.innerHTML = `
             <div class="space-y-4">
                 <div class="bg-green-50 border border-green-100 rounded-lg p-6">
                     <div class="flex items-start">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                            </svg>
                         <div>
                             <h4 class="text-lg font-semibold text-green-800 mb-2">No Critical Errors</h4>
                             <p class="text-green-700">MySQL database is operating without critical errors.</p>
@@ -772,7 +705,7 @@ function renderErrorsTab(containerEl, summary) {
                         </div>
                         <p class="mt-2 text-sm text-gray-700">${error.message}</p>
                         <div class="mt-2 p-2 bg-white rounded border border-red-100 text-sm">
-                            <span class="font-medium text-gray-700">Recommended Action:</span> ${error.action}
+                            <span class="font-medium text-gray-700">Recommended Action:</span> ${error.action || error.suggestion}
                         </div>
                     </div>
                 </div>

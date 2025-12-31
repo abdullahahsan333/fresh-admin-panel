@@ -163,78 +163,6 @@ class AssetController extends Controller
             return response()->json(['ok' => false, 'message' => 'Failed to load server details', 'error' => $e->getMessage()], 500);
         }
     }
-    // Add to AssetController.php after mysql_data method
-    public function mysql_warnings(Request $request, $id)
-    {
-        if (!Auth::guard('admin')->check()) {
-            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
-        }
-
-        $server = Server::findOrFail($id);
-        $project = Project::find($server->project_id);
-        
-        if ($project->admin_id !== Auth::guard('admin')->id()) {
-            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
-        }
-
-        try {
-            $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
-            $warnings = detectMySQLWarnings($mysqlData);
-            
-            return response()->json([
-                'ok' => true,
-                'server_id' => $server->id,
-                'ip' => $server->ip,
-                'warnings' => $warnings,
-                'count' => count($warnings),
-                'message' => count($warnings) > 0 ? 'Warnings detected' : 'No warnings'
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('MySQL warnings fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
-            return response()->json([
-                'ok' => false,
-                'message' => 'Failed to fetch warnings',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function mysql_errors(Request $request, $id)
-    {
-        if (!Auth::guard('admin')->check()) {
-            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
-        }
-
-        $server = Server::findOrFail($id);
-        $project = Project::find($server->project_id);
-        
-        if ($project->admin_id !== Auth::guard('admin')->id()) {
-            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
-        }
-
-        try {
-            $mysqlData = fetchMySQLData($server->ip, $project->name, 60);
-            $errors = detectMySQLErrors($mysqlData);
-            
-            return response()->json([
-                'ok' => true,
-                'server_id' => $server->id,
-                'ip' => $server->ip,
-                'errors' => $errors,
-                'count' => count($errors),
-                'message' => count($errors) > 0 ? 'Errors detected' : 'No errors'
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('MySQL errors fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
-            return response()->json([
-                'ok' => false,
-                'message' => 'Failed to fetch errors',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
     
     public function mysql_slow_queries(Request $request, $id)
     {
@@ -281,7 +209,7 @@ class AssetController extends Controller
         }
     }
 
-    public function test_slow_queries_api(Request $request, $id)
+    public function mysql_warnings(Request $request, $id)
     {
         if (!Auth::guard('admin')->check()) {
             return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
@@ -295,57 +223,60 @@ class AssetController extends Controller
         }
 
         try {
-            $now = new \DateTime('now', new \DateTimeZone('UTC'));
-            $end12 = $now->format('h:i:sA');
-            $startTime = clone $now;
-            $startTime->modify("-15 minutes");
-            $start12 = $startTime->format('h:i:sA');
-            $dateStr = $now->format('Y-m-d');
-            $formattedIp = str_replace('.', '_', $server->ip);
-            
-            $url = API_BASE_URL . "/{$project->name}/{$formattedIp}/slowquery/metrics?date={$dateStr}&start={$start12}&end={$end12}";
-            
-            $response = Http::timeout(15)->get($url);
-            
-            $rawData = $response->body();
-            $jsonData = $response->json();
-            
-            // Check for slow queries in the response
-            $hasSlowQueries = false;
-            $foundQueries = [];
-            
-            if (is_array($jsonData)) {
-                // Handle array response (list of data points)
-                foreach ($jsonData as $entry) {
-                    if (isset($entry['metrics']['mysql_slow_queries']) && is_array($entry['metrics']['mysql_slow_queries']) && !empty($entry['metrics']['mysql_slow_queries'])) {
-                        $hasSlowQueries = true;
-                        $foundQueries = array_merge($foundQueries, $entry['metrics']['mysql_slow_queries']);
-                    }
-                    elseif (isset($entry['metrics']['slow_queries']) && is_array($entry['metrics']['slow_queries']) && !empty($entry['metrics']['slow_queries'])) {
-                        $hasSlowQueries = true;
-                        $foundQueries = array_merge($foundQueries, $entry['metrics']['slow_queries']);
-                    }
-                }
-            }
+            $mysqlData = fetchMySQLData($server->ip, $project->name, 15);
+            $warnings = detectMySQLWarnings($mysqlData);
             
             return response()->json([
-                'ok' => $response->ok(),
-                'status' => $response->status(),
-                'url' => $url,
-                'raw_data_sample' => substr($rawData, 0, 1000),
-                'json_data_sample' => is_array($jsonData) ? array_slice($jsonData, 0, 2) : $jsonData,
-                'data_count' => is_array($jsonData) ? count($jsonData) : 0,
-                'has_mysql_slow_queries' => $hasSlowQueries,
-                'found_queries_count' => count($foundQueries),
-                'found_queries_sample' => array_slice($foundQueries, 0, 5),
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'warnings' => $warnings,
+                'count' => count($warnings)
             ]);
             
         } catch (\Exception $e) {
+            Log::error('MySQL warnings fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            
             return response()->json([
                 'ok' => false,
-                'message' => 'Test failed',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'message' => 'Failed to fetch MySQL warnings',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function mysql_errors(Request $request, $id)
+    {
+        if (!Auth::guard('admin')->check()) {
+            return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $server = Server::findOrFail($id);
+        $project = Project::find($server->project_id);
+        
+        if ($project->admin_id !== Auth::guard('admin')->id()) {
+            return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        try {
+            $mysqlData = fetchMySQLData($server->ip, $project->name, 15);
+            $errors = detectMySQLErrors($mysqlData);
+            
+            return response()->json([
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'errors' => $errors,
+                'count' => count($errors)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('MySQL errors fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to fetch MySQL errors',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
