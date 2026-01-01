@@ -461,7 +461,9 @@ class AssetController extends Controller
                 'buffer_hit' => [
                     'labels' => processLatestChartData($mysqlData, 'current_connections', 12)['labels'] ?? [],
                     'data' => [], // We'll calculate this below
-                ]
+                ],
+                'network' => processNetworkSpeedChartData($mysqlData, 12),
+                'avg_query_time_ms' => processLatestChartData($mysqlData, 'avg_query_time_ms', 12),
             ];
             
             // Calculate buffer hit rate for each data point
@@ -621,8 +623,6 @@ class AssetController extends Controller
             // Use the helper function from APIHelper.php
             $redisData = fetchRedisData($server->ip, 'livo', 60);
             $summary = calculateRedisSummary($redisData);
-            // Limit window to last 10 data points for charts and stats
-            $lastSlice = is_array($redisData) ? array_slice($redisData, -10) : [];
             
             // Extract command statistics from raw Redis data
             $commandStats = [];
@@ -631,81 +631,49 @@ class AssetController extends Controller
                 $latest = end($redisData);
                 $metrics = $latest['metrics'] ?? [];
                 
-                // Extract all commandstats from metrics (they start with 'commandstats_')
+                // Extract commandstats from metrics
                 foreach ($metrics as $key => $value) {
                     if (strpos($key, 'commandstats_') === 0) {
-                        $commandName = str_replace('commandstats_', '', $key);
                         // Handle different formats: commandstats_get, commandstats_get_calls, etc.
-                        $commandStats[$commandName] = $value;
+                        $cleanKey = str_replace('commandstats_', '', $key);
+                        // Remove suffix like _calls if present
+                        $cleanKey = str_replace('_calls', '', $cleanKey);
+                        $commandStats[strtoupper($cleanKey)] = (int)$value;
                     }
                 }
                 
-                // Also add network speed metrics
+                // Add network speed metrics
                 $summary['instantaneous_input_kbps'] = $metrics['instantaneous_input_kbps'] ?? 0;
                 $summary['instantaneous_output_kbps'] = $metrics['instantaneous_output_kbps'] ?? 0;
                 $summary['total_net_input_bytes'] = $metrics['total_net_input_bytes'] ?? 0;
                 $summary['total_net_output_bytes'] = $metrics['total_net_output_bytes'] ?? 0;
                 
                 // Add command stats to summary
-                foreach ($commandStats as $cmd => $value) {
-                    $summary['commandstats_' . $cmd] = $value;
-                }
+                $summary['commandStats'] = $commandStats;
+                
+                // Ensure main commands exist
+                $summary['commandstats_get'] = $commandStats['GET'] ?? 0;
+                $summary['commandstats_set'] = $commandStats['SET'] ?? 0;
+                $summary['commandstats_hget'] = $commandStats['HGET'] ?? 0;
+                $summary['commandstats_hset'] = $commandStats['HSET'] ?? 0;
             }
             
             // Process chart data
             $chartData = [
-                'ops' => processLatestChartData($lastSlice ?: $redisData, 'instantaneous_ops_per_sec', 10),
-                'memory' => processLatestChartData($lastSlice ?: $redisData, 'used_memory', 10),
+                'ops' => processLatestChartData($redisData, 'instantaneous_ops_per_sec', 10),
+                'memory' => processLatestChartData($redisData, 'used_memory', 10),
                 'network' => [
-                    'labels' => processLatestChartData($lastSlice ?: $redisData, 'instantaneous_ops_per_sec', 10)['labels'] ?? [],
-                    'input' => processLatestChartData($lastSlice ?: $redisData, 'total_net_input_bytes', 10)['data'] ?? [],
-                    'output' => processLatestChartData($lastSlice ?: $redisData, 'total_net_output_bytes', 10)['data'] ?? []
+                    'labels' => processLatestChartData($redisData, 'instantaneous_ops_per_sec', 10)['labels'] ?? [],
+                    'input' => processLatestChartData($redisData, 'total_net_input_bytes', 10)['data'] ?? [],
+                    'output' => processLatestChartData($redisData, 'total_net_output_bytes', 10)['data'] ?? []
                 ]
             ];
+            
             // Convert memory bytes to MB for chart
             if (!empty($chartData['memory']['data'])) {
-                $chartData['memory']['data'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['memory']['data']);
-            }
-            // Convert network bytes to MB for chart
-            if (!empty($chartData['network']['input'])) {
-                $chartData['network']['input'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['network']['input']);
-            }
-            if (!empty($chartData['network']['output'])) {
-                $chartData['network']['output'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['network']['output']);
-            }
-            
-            // Add memory_percent to summary if available
-            if (!empty($redisData)) {
-                $latest = end($redisData);
-                $m = $latest['metrics'] ?? [];
-                $used = $m['used_memory'] ?? null;
-                $total = $m['total_system_memory'] ?? null;
-                if (is_numeric($used) && is_numeric($total) && $total > 0) {
-                    $summary['memory_percent'] = round(($used / $total) * 100, 1);
-                    $summary['total_system_memory'] = round($total / 1024 / 1024, 2); // MB
-                }
-            }
-            
-            // Command statistics from last 10 points (sum them up)
-            if (!empty($lastSlice)) {
-                $cmdGet = 0; $cmdSet = 0; $cmdHGet = 0; $cmdHSet = 0;
-                foreach ($lastSlice as $item) {
-                    $m = $item['metrics'] ?? [];
-                    $cmdGet += is_numeric($m['commandstats_get'] ?? null) ? (float)$m['commandstats_get'] : 0;
-                    $cmdSet += is_numeric($m['commandstats_set'] ?? null) ? (float)$m['commandstats_set'] : 0;
-                    $cmdHGet += is_numeric($m['commandstats_hget'] ?? null) ? (float)$m['commandstats_hget'] : 0;
-                    $cmdHSet += is_numeric($m['commandstats_hset'] ?? null) ? (float)$m['commandstats_hset'] : 0;
-                    
-                    // Also check for alternative naming
-                    $cmdGet += is_numeric($m['commandstats_get_calls'] ?? null) ? (float)$m['commandstats_get_calls'] : 0;
-                    $cmdSet += is_numeric($m['commandstats_set_calls'] ?? null) ? (float)$m['commandstats_set_calls'] : 0;
-                    $cmdHGet += is_numeric($m['commandstats_hget_calls'] ?? null) ? (float)$m['commandstats_hget_calls'] : 0;
-                    $cmdHSet += is_numeric($m['commandstats_hset_calls'] ?? null) ? (float)$m['commandstats_hset_calls'] : 0;
-                }
-                $summary['commandstats_get'] = $cmdGet;
-                $summary['commandstats_set'] = $cmdSet;
-                $summary['commandstats_hget'] = $cmdHGet;
-                $summary['commandstats_hset'] = $cmdHSet;
+                $chartData['memory']['data'] = array_map(function($v){ 
+                    return round(($v ?? 0) / 1024 / 1024, 2); 
+                }, $chartData['memory']['data']);
             }
             
             $apiStatus = getAPIServerStatus($server->ip);
@@ -730,7 +698,7 @@ class AssetController extends Controller
             ], 500);
         }
     }
-
+    
     public function api_log(Request $request, $id)
     {
         if (!Auth::guard('admin')->check()) {
@@ -757,7 +725,6 @@ class AssetController extends Controller
         $apiLogs = fetchApiLogs($server->ip, 'livo', 15);
         $summary = calculateApiSummary($apiLogs);
         $groupedLogs = groupApiLogs($apiLogs);
-        
         $data['summary'] = $summary;
         $data['logs'] = $apiLogs;
         $data['groupedLogs'] = $groupedLogs;
@@ -777,9 +744,7 @@ class AssetController extends Controller
         if ($project->admin_id !== Auth::guard('admin')->id()) {
             return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
         }
-
-        $httpMethod = strtoupper($request->query('method', 'GET'));
-        $logs = fetchApiLogs($server->ip, 'livo', 15, $httpMethod);
+        $logs = fetchApiLogs($server->ip, 'livo', 15);
         $summary = calculateApiSummary($logs);
         $grouped = groupApiLogs($logs);
         $firstLog = !empty($logs) ? reset($logs) : null;
@@ -796,7 +761,6 @@ class AssetController extends Controller
             'ok' => $ok,
             'server_id' => $server->id,
             'ip' => $server->ip,
-            'method' => $httpMethod,
             'summary' => $summary,
             'logs' => $logs,
             'groupedLogs' => $grouped,

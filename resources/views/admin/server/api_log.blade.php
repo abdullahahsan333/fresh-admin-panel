@@ -4,12 +4,18 @@
 <!-- Header Section -->
 <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 sticky top-0 mb-6">
     <div>
-        <h2 class="text-lg font-bold text-gray-900">API Log</h2>
+        <div class="flex items-center gap-3">
+            <h2 class="text-lg font-bold text-gray-900">API Log</h2>
+            <div id="apiStatusDot" class="hidden">
+                <span class="inline-block w-2 h-2 rounded-full"></span>
+            </div>
+        </div>
         <p class="text-sm text-gray-600 mt-1">Server: {{ $server->ip }} • Last updated: <span id="last-updated">{{ now()->format('M d, H:i') }}</span></p>
     </div>
-    <button id="refresh-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
-        <i class="ri-refresh-line"></i>
-        Refresh
+    <button id="refresh-btn" class="px-4 py-2 text-blue-600 rounded-lg flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
     </button>
 </header>
 
@@ -109,17 +115,7 @@
 
                 <!-- Endpoints List -->
                 <div class="overflow-y-auto h-100 p-4" id="api-endpoint-list">
-                    @if(empty($groupedLogs))
-                        <div class="text-center py-12">
-                            <i class="ri-inbox-line text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500">No logs available</p>
-                        </div>
-                    @else
-                        <!-- All method content will be dynamically loaded -->
-                        <div id="method-content-container">
-                            <!-- Content for each method will be loaded here -->
-                        </div>
-                    @endif
+                    <div id="method-content-container"></div>
                 </div>
             </div>
         </div>
@@ -390,13 +386,14 @@
                 <div class="flex items-center gap-2">
                     <i class="ri-time-line text-gray-400"></i>
                     <span class="text-sm font-medium text-gray-900">{time}</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-xs text-gray-600">{ip}</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-xs text-gray-500 font-mono">{logId}</span>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{ip}</p>
             </div>
             <div class="text-right">
-                <span class="inline-block px-2 py-1 rounded text-xs font-bold {statusClass}">
-                    {status}
-                </span>
+                <span class="text-sm font-bold text-gray-800">{status}</span>
                 <p class="text-xs text-gray-500 mt-1">{responseTime}ms</p>
             </div>
         </div>
@@ -410,13 +407,13 @@
         <p class="text-gray-500">Select an API endpoint to view details</p>
     </div>
 </template>
+
 @endsection
 
-@push('scripts')
+@push('footer_scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const dataUrl = "{{ route('admin.server.api_log.data', $server->id) }}";
-        
         // State
         let currentLog = @json($firstLog ?: null);
         let activeTab = 'request';
@@ -431,9 +428,8 @@
         initLogSelection();
         initCollapsible();
         
-        // Fetch data immediately and set up polling
+        // Load data once on initial page render; subsequent loads via Refresh button
         fetchData();
-        setInterval(fetchData, 30000); // Refresh every 30 seconds
 
         // Set first log as active if exists
         if (currentLog) {
@@ -451,22 +447,26 @@
 
         async function fetchData() {
             try {
-                console.log('Fetching API data from:', dataUrl);
                 const res = await fetch(dataUrl, { 
                     headers: { 
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
-                    } 
+                    },
+                    credentials: 'same-origin'
                 });
                 
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status} - ${res.statusText}`);
                 }
                 
+                const contentType = res.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error('Invalid content-type');
+                }
                 const json = await res.json();
-                console.log('API response:', json);
                 
                 if (!json.ok) {
+                    showApiStatus('error', json.message || 'Failed to load API logs');
                     showError(json.message || 'Failed to load API logs. API server may be unreachable.');
                     // Keep existing groupedLogs and UI if API fails
                     updateMethodTabs(groupedLogs);
@@ -474,35 +474,28 @@
                 }
                 
                 hideError();
+                showApiStatus('success', 'API connected successfully');
                 updateSummary(json.summary || {});
                 groupedLogs = json.groupedLogs || {};
                 
                 // Store all logs for search
                 allLogs = json.logs || [];
                 
-                // If no logs are available, show demo data
+                // If no logs are available, show empty state
                 if (Object.keys(groupedLogs).length === 0 && allLogs.length === 0) {
-                    showDemoData();
+                    showEmptyState();
                     return;
                 }
                 
-                // Update method tabs
+                // Update method tabs and load first method content for visibility
                 updateMethodTabs(groupedLogs);
-                
-                // Load first method content
-                if (Object.keys(groupedLogs).length > 0) {
-                    const firstMethod = Object.keys(groupedLogs)[0];
-                    activeMethod = firstMethod;
-                    loadMethodContent(firstMethod, groupedLogs[firstMethod]);
-                    
-                    // Update current log if first log exists
-                    if (json.firstLog) {
-                        currentLog = json.firstLog;
-                        updateRequestHeader(currentLog);
-                        updateAllDetailTabs(currentLog);
-                    }
-                } else {
+                const methods = Object.keys(groupedLogs);
+                if (methods.length === 0) {
                     showEmptyState();
+                } else {
+                    const firstMethod = methods[0];
+                    activeMethod = firstMethod;
+                    loadMethodContent(firstMethod, groupedLogs[firstMethod] || {});
                 }
                 
                 // Update last updated time
@@ -511,15 +504,17 @@
                         month: 'short', 
                         day: '2-digit', 
                         hour: '2-digit', 
-                        minute: '2-digit' 
+                        minute: '2-digit',
+                        hour12: true
                     });
             } catch(e) {
-                console.error('Fetch error:', e);
                 showError('Failed to load API logs. Please check API server connection.');
-                // Show demo data when API is unreachable
-                showDemoData();
+                showApiStatus('error', 'Network error - cannot connect to API');
+                showEmptyState();
             }
         }
+
+        // Removed unused fetchDataForMethod; all data loads via fetchData()
 
         function updateSummary(summary) {
             document.getElementById('request-count').textContent = summary.request_count || 0;
@@ -577,19 +572,11 @@
                     // Load method content
                     const method = this.dataset.method;
                     activeMethod = method;
-                    loadMethodContent(method, groupedData[method]);
-                    
-                    // Select first log in this method
-                    selectFirstLogInMethod(method, groupedData[method]);
+                    loadMethodContent(method, groupedData[method] || {});
                 });
             });
 
-            // Load first method content
-            if (methods.length > 0) {
-                const firstMethod = methods[0];
-                loadMethodContent(firstMethod, groupedData[firstMethod]);
-                selectFirstLogInMethod(firstMethod, groupedData[firstMethod]);
-            }
+            // Do not auto-load content; wait for user to click a method
         }
 
         function loadMethodContent(method, endpoints) {
@@ -608,17 +595,16 @@
                         <div class="logs-container ml-4 mt-2 space-y-2 hidden">
                 `;
                 
-                for (const logData of logs) {
-                    const log = logData.log || {};
-                    const logId = logData.id || '';
-                    const time = formatTime(log.date || '');
-                    const ip = log.ip || 'Unknown';
-                    const status = log.status || 0;
-                    const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
-                    const statusClass = getStatusClass(status);
-                    const logJson = encodeURIComponent(JSON.stringify(log));
-                    
-                    html += `
+                    for (const logData of logs) {
+                        const log = logData.log || {};
+                        const logId = logData.id || '';
+                        const time = formatTime(log.date || '');
+                        const ip = log.ip || 'Unknown';
+                        const status = log.status || 0;
+                        const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
+                        const logJson = encodeURIComponent(JSON.stringify(log));
+                        
+                        html += `
                             <div class="log-item p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
                                 data-log-id="${logId}"
                                 data-log-data="${logJson}">
@@ -627,13 +613,13 @@
                                         <div class="flex items-center gap-2">
                                             <i class="ri-time-line text-gray-400"></i>
                                             <span class="text-sm font-medium text-gray-900">${time}</span>
+                                            <span class="text-gray-300">|</span>
+                                            <span class="text-xs text-gray-600">${ip}</span>
+                                            ${logId ? `<span class="text-gray-300">|</span><span class="text-xs text-gray-500 font-mono">${logId}</span>` : ``}
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-1">${ip}</p>
                                     </div>
                                     <div class="text-right">
-                                        <span class="inline-block px-2 py-1 rounded text-xs font-bold ${statusClass}">
-                                            ${status}
-                                        </span>
+                                        <span class="text-sm font-bold text-gray-800">${status}</span>
                                         <p class="text-xs text-gray-500 mt-1">${responseTime}ms</p>
                                     </div>
                                 </div>
@@ -664,28 +650,7 @@
             }
         }
 
-        function selectFirstLogInMethod(method, endpoints) {
-            const firstEndpoint = Object.keys(endpoints)[0];
-            if (firstEndpoint) {
-                const firstLog = endpoints[firstEndpoint][0];
-                if (firstLog) {
-                    currentLog = firstLog.log;
-                    updateRequestHeader(currentLog);
-                    updateAllDetailTabs(currentLog);
-                    
-                    // Highlight first log
-                    setTimeout(() => {
-                        const firstLogElement = document.querySelector('.log-item');
-                        if (firstLogElement) {
-                            document.querySelectorAll('.log-item').forEach(item => {
-                                item.classList.remove('border-blue-300', 'bg-blue-50', 'ring-2', 'ring-blue-100');
-                            });
-                            firstLogElement.classList.add('border-blue-300', 'bg-blue-50', 'ring-2', 'ring-blue-100');
-                        }
-                    }, 100);
-                }
-            }
-        }
+        // Removed auto-select of first log; user clicks a log to view details
 
         // Initialize detail tabs
         function initDetailTabs() {
@@ -826,155 +791,44 @@
             });
         }
 
-        // Show demo data when API is not available
-        function showDemoData() {
-            console.log('Showing demo data');
-            
-            // Create demo data structure
-            const demoLogs = [
-                {
-                    id: 'demo-1',
-                    method: 'GET',
-                    url: '/api/user/profile',
-                    status: 200,
-                    response_time_ms: 45.2,
-                    ip: '192.168.1.100',
-                    date: new Date().toISOString(),
-                    body: { user_id: 12345, action: 'get_profile' },
-                    response: { success: true, data: { name: 'John Doe', email: 'john@example.com' } },
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Authorization': 'Bearer token123',
-                        'User-Agent': 'Mozilla/5.0'
-                    },
-                    metadata: { 
-                        timestamp: new Date().toISOString(),
-                        user_agent: 'Mozilla/5.0',
-                        request_id: 'req-123456'
-                    }
-                },
-                {
-                    id: 'demo-2',
-                    method: 'POST',
-                    url: '/api/user/update',
-                    status: 201,
-                    response_time_ms: 78.9,
-                    ip: '192.168.1.101',
-                    date: new Date(Date.now() - 300000).toISOString(),
-                    body: { name: 'Jane Smith', email: 'jane@example.com' },
-                    response: { success: true, message: 'User updated successfully' },
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer token456',
-                        'X-Request-ID': 'req-789012'
-                    },
-                    metadata: { 
-                        timestamp: new Date(Date.now() - 300000).toISOString(),
-                        user_agent: 'Postman/7.0',
-                        request_id: 'req-789012'
-                    }
-                },
-                {
-                    id: 'demo-3',
-                    method: 'GET',
-                    url: '/api/products/list',
-                    status: 200,
-                    response_time_ms: 32.1,
-                    ip: '192.168.1.102',
-                    date: new Date(Date.now() - 600000).toISOString(),
-                    body: { category: 'electronics', page: 1 },
-                    response: { 
-                        success: true, 
-                        data: [
-                            { id: 1, name: 'Laptop', price: 999.99 },
-                            { id: 2, name: 'Phone', price: 499.99 }
-                        ]
-                    },
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    metadata: { 
-                        timestamp: new Date(Date.now() - 600000).toISOString(),
-                        user_agent: 'curl/7.68.0',
-                        request_id: 'req-345678'
-                    }
-                }
-            ];
-            
-            // Create grouped logs structure
-            const demoGroupedLogs = {
-                'GET': {
-                    '/api/user/profile': [
-                        { id: 'demo-1', log: demoLogs[0] }
-                    ],
-                    '/api/products/list': [
-                        { id: 'demo-3', log: demoLogs[2] }
-                    ]
-                },
-                'POST': {
-                    '/api/user/update': [
-                        { id: 'demo-2', log: demoLogs[1] }
-                    ]
-                }
-            };
-            
-            // Update UI with demo data
-            updateSummary({
-                request_count: demoLogs.length,
-                requests_per_min: (demoLogs.length / 5).toFixed(1),
-                failed_requests: 0,
-                avg_response_time: ((45.2 + 78.9 + 32.1) / 3).toFixed(1),
-                min_response_time: 32.1,
-                max_response_time: 78.9,
-                success_rate: 100
-            });
-            
-            groupedLogs = demoGroupedLogs;
-            allLogs = demoLogs;
-            
-            // Update method tabs
-            updateMethodTabs(groupedLogs);
-            
-            // Load first method content
-            if (Object.keys(groupedLogs).length > 0) {
-                const firstMethod = Object.keys(groupedLogs)[0];
-                activeMethod = firstMethod;
-                loadMethodContent(firstMethod, groupedLogs[firstMethod]);
-                
-                // Set first log as active
-                currentLog = demoLogs[0];
-                updateRequestHeader(currentLog);
-                updateAllDetailTabs(currentLog);
-            }
-            
-            // Show demo indicator
-            const demoIndicator = document.createElement('div');
-            demoIndicator.className = 'bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded mb-4';
-            demoIndicator.innerHTML = '<i class="ri-information-line"></i> Showing demo data - API server returned no logs';
-            document.getElementById('error-banner').appendChild(demoIndicator);
-        }
 
         // Initialize collapsible sections
         function initCollapsible() {
-            // Endpoint headers
-            document.querySelectorAll('.endpoint-header').forEach(header => {
-                header.addEventListener('click', function(e) {
-                    if (e.target.closest('.log-item')) return;
-                    
-                    const container = this.closest('.endpoint-group').querySelector('.logs-container');
-                    const icon = this.querySelector('.toggle-icon');
-                    
-                    if (container.classList.contains('hidden')) {
-                        container.classList.remove('hidden');
+            const list = document.getElementById('method-content-container');
+            if (!list || list.dataset.collapsibleBound === '1') return;
+            list.dataset.collapsibleBound = '1';
+            list.addEventListener('click', function(e) {
+                const header = e.target.closest('.endpoint-header');
+                if (!header) return;
+                if (e.target.closest('.log-item')) return;
+                const container = header.closest('.endpoint-group').querySelector('.logs-container');
+                const icon = header.querySelector('.toggle-icon');
+                const parentMethodSection = header.closest('#method-content-container') || document.getElementById('method-content-container');
+                if (parentMethodSection) {
+                    parentMethodSection.querySelectorAll('.endpoint-group .logs-container:not(.hidden)').forEach(open => {
+                        if (open !== container) {
+                            open.classList.add('hidden');
+                            const hdr = open.closest('.endpoint-group')?.querySelector('.endpoint-header .toggle-icon');
+                            if (hdr) {
+                                hdr.classList.remove('ri-arrow-up-s-line');
+                                hdr.classList.add('ri-arrow-down-s-line');
+                            }
+                        }
+                    });
+                }
+                if (container.classList.contains('hidden')) {
+                    container.classList.remove('hidden');
+                    if (icon) {
                         icon.classList.remove('ri-arrow-down-s-line');
                         icon.classList.add('ri-arrow-up-s-line');
-                    } else {
-                        container.classList.add('hidden');
+                    }
+                } else {
+                    container.classList.add('hidden');
+                    if (icon) {
                         icon.classList.remove('ri-arrow-up-s-line');
                         icon.classList.add('ri-arrow-down-s-line');
                     }
-                });
+                }
             });
         }
 
@@ -1220,7 +1074,8 @@
                 return date.toLocaleTimeString([], { 
                     hour: '2-digit', 
                     minute: '2-digit', 
-                    second: '2-digit' 
+                    second: '2-digit',
+                    hour12: true 
                 });
             } catch {
                 return dateString;
@@ -1282,6 +1137,15 @@
 
         function hideError() {
             document.getElementById('error-banner').classList.add('hidden');
+        }
+        
+        function showApiStatus(type, message) {
+            const dotWrap = document.getElementById('apiStatusDot');
+            if (dotWrap) {
+                const dot = dotWrap.querySelector('span') || dotWrap;
+                dotWrap.classList.remove('hidden');
+                dot.className = `inline-block w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            }
         }
     });
 </script>

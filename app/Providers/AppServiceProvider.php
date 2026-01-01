@@ -13,11 +13,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if (class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class)) {
-            $this->app->singleton(\App\Debugbar\ApiRequestsCollector::class, function () {
-                return new \App\Debugbar\ApiRequestsCollector();
-            });
-        }
     }
 
     /**
@@ -30,9 +25,5 @@ class AppServiceProvider extends ServiceProvider
             $view->with('adminUser', Auth::guard('admin')->user());
             $view->with('webUser', Auth::guard('web')->user());
         });
-        
-        if (class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled()) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addCollector($this->app->make(\App\Debugbar\ApiRequestsCollector::class));
-        }
     }
 }

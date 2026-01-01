@@ -99,25 +99,39 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Queries Per Second Chart -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="flex justify-between items-center mb-6">
+            <div class="mb-6">
                 <h3 class="text-lg font-semibold text-gray-800">Queries Per Second</h3>
-                <div class="text-sm text-gray-600" id="qpsLatest">Latest: --</div>
             </div>
-            <div class="h-64">
+            <div class="h-64 mb-4">
                 <canvas id="queriesChart"></canvas>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-3xl font-bold text-gray-800 mr-2" id="qpsLatestBig">--</span>
+                <span class="text-sm text-gray-500">Queries / Second</span>
             </div>
         </div>
 
-        <!-- Connection Usage -->
+        <!-- Network Traffic -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-800">Connection Usage</h3>
-                <div class="text-sm text-gray-600" id="connectionStats">Max: --</div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Network Traffic</h3>
+                <div class="text-sm text-gray-600">Bytes per second</div>
             </div>
-            <div class="h-64">
-                <canvas id="connectionsChart"></canvas>
+            <div class="h-48 mb-4">
+                <canvas id="networkTrafficChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <div class="text-sm text-gray-600">Network Input (MB)</div>
+                    <div class="text-lg font-semibold" id="bytesReceived">-- MB</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600">Network Output (MB)</div>
+                    <div class="text-lg font-semibold" id="bytesSent">-- MB</div>
+                </div>
             </div>
         </div>
+        
     </div>
 
     <!-- Performance Metrics -->
@@ -128,8 +142,11 @@
                 <h3 class="text-lg font-semibold text-gray-800">InnoDB Buffer Pool</h3>
                 <div class="text-sm font-semibold" id="bufferPoolHitRate">--%</div>
             </div>
-            <div class="h-48 mb-4">
+            <div class="relative h-48 mb-4">
                 <canvas id="bufferPoolChart"></canvas>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-2xl font-bold text-gray-800" id="bufferPoolCenter">--%</span>
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-4 text-center">
                 <div>
@@ -139,6 +156,88 @@
                 <div>
                     <div class="text-sm text-gray-600">Requests</div>
                     <div class="text-lg font-semibold" id="bufferPoolRequests">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Usage -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="mb-2">
+                <h3 class="text-lg font-semibold text-gray-800">MySQL Connection Usage</h3>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="relative h-28 w-28 my-4">
+                    <canvas id="connectionsUsageChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-xl font-bold text-gray-800" id="connectionsUsageCenter">--% Usage</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-6 text-center">
+                <div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="inline-block w-5 h-5 rounded bg-green-100"></span>
+                        <div class="text-sm text-gray-600">Current Connections</div>
+                    </div>
+                    <div class="text-lg font-semibold" id="connCurrent">--</div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="inline-block w-5 h-5 rounded bg-blue-100"></span>
+                        <div class="text-sm text-gray-600">Max Connections</div>
+                    </div>
+                    <div class="text-lg font-semibold" id="connMax">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load vs Query Time -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="mb-2">
+                    <h3 class="text-lg font-semibold text-gray-800">Load vs Query Time</h3>
+                </div>
+                <div class="h-48">
+                    <canvas id="loadVsQueryChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-4 text-center">
+                    <div>
+                        <div class="text-sm text-gray-600">Queries / Second</div>
+                        <div class="text-lg font-semibold" id="loadQpsLatest">--</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Avg Query Time (ms)</div>
+                        <div class="text-lg font-semibold" id="loadAvgLatest">--</div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Table Open Cache -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="mb-2">
+                <h3 class="text-lg font-semibold text-gray-800">Table Open Cache</h3>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="relative h-28 w-28 my-4">
+                    <canvas id="tableOpenCacheChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-xl font-bold text-gray-800" id="tableOpenCacheCenter">--% Usage</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-6 text-center">
+                <div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="inline-block w-5 h-5 rounded bg-purple-100"></span>
+                        <div class="text-sm text-gray-600">Open Tables</div>
+                    </div>
+                    <div class="text-lg font-semibold" id="openTables">--</div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="inline-block w-5 h-5 rounded bg-blue-100"></span>
+                        <div class="text-sm text-gray-600">Table Open Cache</div>
+                    </div>
+                    <div class="text-lg font-semibold" id="tableOpenCache">--</div>
                 </div>
             </div>
         </div>
@@ -176,27 +275,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Network Traffic -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Network Traffic</h3>
-                <div class="text-sm text-gray-600">Bytes per second</div>
-            </div>
-            <div class="h-48 mb-4">
-                <canvas id="networkTrafficChart"></canvas>
-            </div>
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <div class="text-sm text-gray-600">Received</div>
-                    <div class="text-lg font-semibold" id="bytesReceived">-- MB</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Sent</div>
-                    <div class="text-lg font-semibold" id="bytesSent">-- MB</div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Performance Concerns - UPDATED SECTION -->
@@ -204,14 +282,14 @@
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-semibold text-gray-800">Performance Concerns</h3>
             <div class="flex space-x-2">
-                <button onclick="showConcernTab('slow')" id="tabConcernSlow" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Slow Queries</button>
+                <button onclick="showConcernTab('slow')" id="tabConcernSlow" class="px-4 py-2 btn-primary rounded-lg text-sm">Slow Queries</button>
                 <button onclick="showConcernTab('warnings')" id="tabConcernWarnings" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Warnings</button>
                 <button onclick="showConcernTab('errors')" id="tabConcernErrors" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Errors</button>
             </div>
         </div>
         
         <!-- Slow Queries Tab Content -->
-        <div id="concernSlowQueriesContent" class="space-y-4">
+        <div id="concernSlowContent" class="space-y-4">
             <div class="text-center py-8 text-gray-500">
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
                 <p class="text-gray-600">Loading slow queries...</p>
@@ -245,7 +323,7 @@ let mysqlData = null;
 let charts = {};
 let activeConcernTab = 'slow';
 const serverId = {{ ($activeServerId ?? ($server->id ?? null)) ?? 'null' }};
-const apiBaseUrl = '{{ url("/") }}';
+const apiBaseUrl = '';
 
 // Initialize charts
 function initializeCharts() {
@@ -289,39 +367,41 @@ function initializeCharts() {
         }
     });
 
-    // Connections Chart
-    const connectionsCtx = document.getElementById('connectionsChart').getContext('2d');
-    charts.connections = new Chart(connectionsCtx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Connections',
-                data: [],
-                borderColor: 'rgb(16, 185, 129)',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Connections'
-                    }
-                }
+    // Connection Usage Gauge
+    (function(){
+        const el = document.getElementById('connectionsUsageChart');
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        let r = 59, g = 130, b = 246;
+        try {
+            const v = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+            const parts = v.split(' ').filter(Boolean);
+            if (parts.length === 3) {
+                r = parseInt(parts[0], 10);
+                g = parseInt(parts[1], 10);
+                b = parseInt(parts[2], 10);
             }
-        }
-    });
+        } catch(e) {}
+        const usedColor = `rgb(${r}, ${g}, ${b})`;
+        const usedBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
+        charts.connUsage = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Used', 'Free'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: [usedColor, 'rgba(148, 163, 184, 0.25)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: { legend: { display: false } }
+            }
+        });
+    })();
 
     // Buffer Pool Chart
     const bufferPoolCtx = document.getElementById('bufferPoolChart').getContext('2d');
@@ -345,6 +425,52 @@ function initializeCharts() {
         }
     });
 
+    // Load vs Query Time (Pie)
+    (function(){
+        const el = document.getElementById('loadVsQueryChart');
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        charts.loadVsQuery = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Queries / Second', 'Avg Query Time (ms)'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['rgba(245, 158, 11, 0.8)', 'rgba(59, 130, 246, 0.8)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    })();
+
+    // Table Open Cache Gauge
+    (function(){
+        const el = document.getElementById('tableOpenCacheChart');
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        charts.toc = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Used', 'Free'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['rgb(124, 58, 237)', 'rgba(148, 163, 184, 0.25)'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: { legend: { display: false } }
+            }
+        });
+    })();
     // Query Types Chart
     const queryTypesCtx = document.getElementById('queryTypesChart').getContext('2d');
     charts.queryTypes = new Chart(queryTypesCtx, {
@@ -410,7 +536,19 @@ function initializeCharts() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Bytes/Second'
+                        text: 'Speed'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            if (value === 0) return '0 B/s';
+                            const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+                            let i = 0;
+                            while (value >= 1024 && i < units.length - 1) {
+                                value /= 1024;
+                                i++;
+                            }
+                            return value.toFixed(1) + ' ' + units[i];
+                        }
                     }
                 }
             }
@@ -430,7 +568,7 @@ function showConcernTab(tabName) {
     // Reset all buttons
     [btnSlow, btnWarn, btnErr].forEach(btn => {
         if (btn) {
-            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.remove('btn-primary');
             btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
         }
     });
@@ -440,11 +578,11 @@ function showConcernTab(tabName) {
     const activeBtn = document.getElementById(activeTabId);
     if (activeBtn) {
         activeBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-        activeBtn.classList.add('bg-blue-600', 'text-white');
+        activeBtn.classList.add('btn-primary');
     }
     
     // Show/hide content
-    const slowEl = document.getElementById('concernSlowQueriesContent');
+    const slowEl = document.getElementById('concernSlowContent');
     const warnEl = document.getElementById('concernWarningsContent');
     const errEl = document.getElementById('concernErrorsContent');
     
@@ -523,7 +661,12 @@ async function loadConcernTabContent(tabName) {
         
         try {
             // Fetch MySQL warnings from dedicated endpoint
-            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-warnings`);
+            const response = await fetch(`/admin/server/${serverId}/mysql-warnings`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
             const data = await response.json();
             
             if (data.ok && Array.isArray(data.warnings)) {
@@ -546,7 +689,12 @@ async function loadConcernTabContent(tabName) {
         
         try {
             // Fetch MySQL errors from dedicated endpoint
-            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-errors`);
+            const response = await fetch(`/admin/server/${serverId}/mysql-errors`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
             const data = await response.json();
             
             if (data.ok && Array.isArray(data.errors)) {
@@ -871,7 +1019,18 @@ function renderSlowQueries(containerEl, slowQueries) {
         if (userHost) {
             const atIndex = userHost.indexOf('@');
             if (atIndex > 0) {
-                username = userHost.substring(0, atIndex).trim();
+                // Get the part before @ (e.g., "livoadmin[livoadmin]" or "root")
+                let userPart = userHost.substring(0, atIndex).trim();
+                
+                // If it contains brackets like "user[user]", just take the first part
+                const bracketIndex = userPart.indexOf('[');
+                if (bracketIndex > 0) {
+                    username = userPart.substring(0, bracketIndex).trim();
+                } else {
+                    username = userPart;
+                }
+                
+                // Get the part after @ (IP address)
                 ipAddress = userHost.substring(atIndex + 1).replace(/[\[\]]/g, '').trim();
             } else {
                 username = userHost;
@@ -924,16 +1083,16 @@ function renderSlowQueries(containerEl, slowQueries) {
                     
                     <div class="border-t border-gray-100 pt-4">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">SQL Query</h4>
-                        <div class="relative">
-                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                                <pre class="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words leading-relaxed max-h-60 overflow-y-auto" 
+                        <div class="relative overflow-hidden border border-gray-200 rounded-lg">
+                            <div class="bg-gray-900 p-4">
+                                <pre class="text-sm text-white font-mono whitespace-pre-wrap break-all leading-relaxed max-h-60 overflow-y-auto" 
                                      id="sqlText-${index}" 
                                      data-full-text="${escapeHtml(sqlText)}" 
                                      data-is-full="false">${escapeHtml(sqlPreview)}</pre>
                                 
                                 ${sqlText.length > 200 ? `
                                 <div class="mt-3">
-                                    <button onclick="toggleFullSql(${index})" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center" id="toggleBtn-${index}">
+                                    <button onclick="toggleFullSql(${index})" class="text-sm text-yellow-400 hover:text-yellow-300 font-medium flex items-center" id="toggleBtn-${index}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
@@ -943,13 +1102,12 @@ function renderSlowQueries(containerEl, slowQueries) {
                                 ` : ''}
                             </div>
                             
-                            <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+                            <div class="p-2 bg-gray-900 flex items-center justify-between text-xs text-white">
                                 <span>Length: ${sqlText.length} characters</span>
-                                <button onclick="copyToClipboard(${index}, \`${escapeHtml(sqlText)}\`)" class="text-blue-600 hover:text-blue-800 flex items-center">
+                                <button onclick="copyToClipboard(${index}, \`${escapeHtml(sqlText)}\`)" class="text-primary-400 hover:text-primary-800 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
-                                    Copy SQL
                                 </button>
                             </div>
                         </div>
@@ -1046,7 +1204,15 @@ function copyToClipboard(index, sqlText) {
 // Fetch MySQL data from API
 async function fetchMySQLData() {
     try {
-        const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-data`);
+        const response = await fetch(`/admin/server/${serverId}/mysql-data`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const data = await response.json();
         if (data.ok) {
             mysqlData = data;
@@ -1056,7 +1222,7 @@ async function fetchMySQLData() {
             
             // Update concern tabs if they're visible
             if (activeConcernTab === 'slow' && data.slowQueries) {
-                const contentEl = document.getElementById('concernSlowQueriesContent');
+                const contentEl = document.getElementById('concernSlowContent');
                 if (contentEl && !contentEl.classList.contains('hidden')) {
                     renderSlowQueries(contentEl, data.slowQueries);
                 }
@@ -1070,15 +1236,38 @@ async function fetchMySQLData() {
     }
 }
 
+// Format network speed
+function formatNetworkSpeed(bytesPerSec) {
+    if (bytesPerSec === undefined || bytesPerSec === null) return '--';
+    if (bytesPerSec === 0) return '0 B/s';
+    
+    const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    let i = 0;
+    while (bytesPerSec >= 1024 && i < units.length - 1) {
+        bytesPerSec /= 1024;
+        i++;
+    }
+    return `${bytesPerSec.toFixed(2)} ${units[i]}`;
+}
+
 // Update dashboard metrics
 function updateDashboard(data) {
     const summary = data.summary || {};
     const chartData = data.chartData || {};
     
     // Update metric cards - using correct field names from API
-    document.getElementById('currentConnections').textContent = summary.current_connections || summary.threads_connected || '--';
-    document.getElementById('connectionsUsage').textContent = summary.connections_percent ? 
-        `${summary.connections_percent.toFixed(1)}%` : '--%';
+    const topCurrentEl = document.getElementById('currentConnections');
+    if (topCurrentEl) topCurrentEl.textContent = summary.current_connections || summary.threads_connected || '--';
+    const bottomCurrentEl = document.getElementById('connCurrent');
+    if (bottomCurrentEl) bottomCurrentEl.textContent = summary.current_connections || summary.threads_connected || '--';
+    const bottomMaxEl = document.getElementById('connMax');
+    if (bottomMaxEl) bottomMaxEl.textContent = summary.max_connections || '--';
+    
+    const usageEl = document.getElementById('connectionsUsage');
+    if (usageEl) {
+        const p = summary.connections_percent;
+        usageEl.textContent = (typeof p === 'number' && !isNaN(p)) ? `${p.toFixed(1)}%` : '--%';
+    }
     
     document.getElementById('queriesPerSecond').textContent = summary.queries_per_second ? 
         summary.queries_per_second.toFixed(2) : '--';
@@ -1092,21 +1281,49 @@ function updateDashboard(data) {
     document.getElementById('threadsRunning').textContent = summary.threads_running || '--';
     document.getElementById('threadsRunningCount').textContent = summary.threads_running || '--';
     
-    // Update latest values
-    document.getElementById('qpsLatest').textContent = `Latest: ${summary.queries_per_second?.toFixed(2) || '--'}`;
-    document.getElementById('connectionStats').textContent = `Max: ${summary.max_connections || summary.connections || '--'}`;
+    // Update latest values (Big numbers below charts)
+    document.getElementById('qpsLatestBig').textContent = summary.queries_per_second ? 
+        summary.queries_per_second.toFixed(2) : '--';
+        
+    const connCenterEl = document.getElementById('connectionsUsageCenter');
+    if (connCenterEl) {
+        connCenterEl.innerHTML = summary.connections_percent ? 
+            `${summary.connections_percent.toFixed(1)}%` : '--% Usage';
+    }
+    if (charts.connUsage) {
+        const p = summary.connections_percent || 0;
+        charts.connUsage.data.datasets[0].data = [p, Math.max(0, 100 - p)];
+        charts.connUsage.update();
+    }
     
     // Update buffer pool metrics
     const hitRate = summary.innodb_buffer_pool_hit || 0;
     document.getElementById('bufferPoolHitRate').textContent = `${hitRate.toFixed(1)}%`;
+    const bufferPoolCenterEl = document.getElementById('bufferPoolCenter');
+    if (bufferPoolCenterEl) bufferPoolCenterEl.textContent = `${hitRate.toFixed(1)}%`;
     document.getElementById('bufferPoolReads').textContent = summary.innodb_buffer_pool_reads || '--';
     document.getElementById('bufferPoolRequests').textContent = summary.innodb_buffer_pool_read_requests || '--';
     
-    // Update network metrics - already in MB from the summary
-    document.getElementById('bytesReceived').textContent = summary.bytes_received ? 
-        `${summary.bytes_received.toFixed(2)} MB` : '-- MB';
-    document.getElementById('bytesSent').textContent = summary.bytes_sent ? 
-        `${summary.bytes_sent.toFixed(2)} MB` : '-- MB';
+    // Table Open Cache metrics
+    const openTables = summary.open_tables ?? 0;
+    const tableOpenCache = summary.table_open_cache ?? 0;
+    const tocPercent = tableOpenCache > 0 ? (openTables / tableOpenCache * 100) : 0;
+    document.getElementById('openTables').textContent = openTables || '--';
+    document.getElementById('tableOpenCache').textContent = tableOpenCache || '--';
+    const tocCenterEl = document.getElementById('tableOpenCacheCenter');
+    if (tocCenterEl) {
+        tocCenterEl.innerHTML = `${tocPercent.toFixed(1)}%`;
+    }
+    if (charts.toc) {
+        charts.toc.data.datasets[0].data = [tocPercent, Math.max(0, 100 - tocPercent)];
+        charts.toc.update();
+    }
+    
+    // Update network metrics - show MB totals
+    const recvMb = (typeof summary.bytes_received === 'number') ? summary.bytes_received.toFixed(2) : '--';
+    const sentMb = (typeof summary.bytes_sent === 'number') ? summary.bytes_sent.toFixed(2) : '--';
+    document.getElementById('bytesReceived').textContent = `${recvMb} MB`;
+    document.getElementById('bytesSent').textContent = `${sentMb} MB`;
     
     // Update last updated time
     document.getElementById('lastUpdated').textContent = 
@@ -1129,12 +1346,7 @@ function updateCharts(data) {
         charts.queries.update();
     }
     
-    // Update connections chart
-    if (chartData.connections) {
-        charts.connections.data.labels = chartData.connections.labels || [];
-        charts.connections.data.datasets[0].data = chartData.connections.data || [];
-        charts.connections.update();
-    }
+    // Connection usage gauge is updated in updateDashboard via summary
     
     // Update buffer pool chart
     const hitRate = data.summary?.innodb_buffer_pool_hit || 0;
@@ -1153,13 +1365,25 @@ function updateCharts(data) {
     charts.queryTypes.update();
     
     // Update network traffic chart
-    if (chartData.buffer_hit) { // Using buffer_hit labels for time
-        charts.network.data.labels = chartData.buffer_hit.labels || [];
-        // Generate sample network data based on queries data
-        const queriesData = chartData.queries?.data || [];
-        charts.network.data.datasets[0].data = queriesData.map(val => val * 1000);
-        charts.network.data.datasets[1].data = queriesData.map(val => val * 500);
+    if (chartData.network) {
+        charts.network.data.labels = chartData.network.labels || [];
+        charts.network.data.datasets[0].data = chartData.network.received || [];
+        charts.network.data.datasets[1].data = chartData.network.sent || [];
         charts.network.update();
+    }
+    
+    // Update Load vs Query Time chart (pie uses latest values)
+    if (charts.loadVsQuery && chartData.queries) {
+        const qpsArr = chartData.queries.data || [];
+        const avgArr = (chartData.avg_query_time_ms && chartData.avg_query_time_ms.data) ? chartData.avg_query_time_ms.data : [];
+        const latestQps = qpsArr.length ? qpsArr[qpsArr.length - 1] : 0;
+        const latestAvg = avgArr.length ? avgArr[avgArr.length - 1] : 0;
+        charts.loadVsQuery.data.datasets[0].data = [latestQps, latestAvg];
+        charts.loadVsQuery.update();
+        const qpsEl = document.getElementById('loadQpsLatest');
+        const avgEl = document.getElementById('loadAvgLatest');
+        if (qpsEl) qpsEl.textContent = typeof latestQps === 'number' ? latestQps.toFixed(2) : '--';
+        if (avgEl) avgEl.textContent = typeof latestAvg === 'number' ? latestAvg.toFixed(2) : '--';
     }
 }
 

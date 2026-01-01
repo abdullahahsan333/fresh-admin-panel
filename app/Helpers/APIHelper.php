@@ -148,26 +148,15 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
         
         $dateStr = $now->format('Y-m-d');
         $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
         
-        $apiUrl12 = API_BASE_URL . "/{$appName}/{$formattedIp}/{$service}/metrics?date={$dateStr}&start={$start12}&end={$end12}";
-        $apiUrl24 = API_BASE_URL . "/{$appName}/{$formattedIp}/{$service}/metrics?date={$dateStr}&start=".$startTime->format('H:i:s')."&end=".$now->format('H:i:s');
+        $apiUrl12 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/{$service}/metrics?date={$dateStr}&start={$start12}&end={$end12}";
+        $apiUrl24 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/{$service}/metrics?date={$dateStr}&start=".$startTime->format('H:i:s')."&end=".$now->format('H:i:s');
         
         $method = strtolower($httpMethod);
-        $debugEnabled = class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled();
         $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
         $t0 = microtime(true);
         $response = $method === 'post' ? $client->post($apiUrl12) : $client->get($apiUrl12);
-        if ($debugEnabled) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => $service,
-                'method' => strtoupper($httpMethod),
-                'url' => $apiUrl12,
-                'format' => '12h',
-                'status' => $response->status(),
-                'ok' => $response->ok(),
-                'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
-            ], 'external_api');
-        }
         logExternalApiRequest([
             'service' => $service,
             'method' => strtoupper($httpMethod),
@@ -181,17 +170,6 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
         if (!$response->ok()) {
             $t1 = microtime(true);
             $response = $method === 'post' ? $client->post($apiUrl24) : $client->get($apiUrl24);
-            if ($debugEnabled) {
-                \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                    'service' => $service,
-                    'method' => strtoupper($httpMethod),
-                    'url' => $apiUrl24,
-                    'format' => '24h',
-                    'status' => $response->status(),
-                    'ok' => $response->ok(),
-                    'duration_ms' => round((microtime(true) - $t1) * 1000, 2),
-                ], 'external_api');
-            }
             logExternalApiRequest([
                 'service' => $service,
                 'method' => strtoupper($httpMethod),
@@ -206,16 +184,6 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
                 $body = $response->body();
                 $snippet = is_string($body) ? mb_substr($body, 0, 500) : '';
                 Log::warning("API fetch failed for {$service} ({$httpMethod}): HTTP {$status} {$snippet}");
-                if ($debugEnabled) {
-                    \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                        'service' => $service,
-                        'method' => strtoupper($httpMethod),
-                        'url' => $apiUrl24,
-                        'status' => $status,
-                        'error' => 'response_not_ok',
-                        'body_snippet' => $snippet,
-                    ], 'external_api_error');
-                }
                 logExternalApiRequest([
                     'service' => $service,
                     'method' => strtoupper($httpMethod),
@@ -224,7 +192,7 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
                     'error' => 'response_not_ok',
                     'body_snippet' => $snippet,
                 ]);
-                return generateDemoData($service, $minutes);
+                return [];
             }
         }
         
@@ -233,35 +201,19 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
             $data = $response->json();
         } catch (ConnectionException $e) {
             Log::error("API connection failed for {$service}: ".$e->getMessage());
-            if ($debugEnabled) {
-                \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                    'service' => $service,
-                    'method' => strtoupper($httpMethod),
-                    'error' => 'connection_exception',
-                    'message' => $e->getMessage(),
-                ], 'external_api_error');
-            }
             logExternalApiRequest([
                 'service' => $service,
                 'method' => strtoupper($httpMethod),
                 'error' => 'connection_exception',
                 'message' => $e->getMessage(),
             ]);
-            return generateDemoData($service, $minutes);
+            return [];
         } catch (\Throwable $e) {
             $fallback = json_decode($response->body(), true);
             if (is_array($fallback)) {
                 $data = $fallback;
             } else {
                 Log::error("API JSON decode failed for {$service}: ".$e->getMessage());
-                if ($debugEnabled) {
-                    \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                        'service' => $service,
-                        'method' => strtoupper($httpMethod),
-                        'error' => 'json_decode_failed',
-                        'message' => $e->getMessage(),
-                    ], 'external_api_error');
-                }
                 logExternalApiRequest([
                     'service' => $service,
                     'method' => strtoupper($httpMethod),
@@ -273,27 +225,19 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
         }
         
         if (empty($data)) {
-            return generateDemoData($service, $minutes);
+            return [];
         }
         
-        return is_array($data) ? $data : generateDemoData($service, $minutes);
+        return is_array($data) ? $data : [];
     } catch (\Exception $e) {
         Log::error("Failed to fetch {$service} data: " . $e->getMessage());
-        if (class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled()) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => $service,
-                'method' => strtoupper($httpMethod),
-                'error' => 'unexpected_exception',
-                'message' => $e->getMessage(),
-            ], 'external_api_error');
-        }
         logExternalApiRequest([
             'service' => $service,
             'method' => strtoupper($httpMethod),
             'error' => 'unexpected_exception',
             'message' => $e->getMessage(),
         ]);
-        return generateDemoData($service, $minutes);
+        return [];
     }
 }
 
@@ -304,21 +248,12 @@ function testAPIConnection($serverIp, $appName = 'livo')
 {
     try {
         $formattedIp = str_replace('.', '_', $serverIp);
-        $testUrl = API_BASE_URL . "/{$appName}/{$formattedIp}/linux/metrics?date=" . date('Y-m-d');
+        $appSlug = strSlug($appName);
         
-        $debugEnabled = class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled();
+        $testUrl = API_BASE_URL . "/{$appSlug}/{$formattedIp}/linux/metrics?date=" . date('Y-m-d');
+        
         $t0 = microtime(true);
         $response = Http::timeout(10)->get($testUrl);
-        if ($debugEnabled) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => 'linux',
-                'method' => 'GET',
-                'url' => $testUrl,
-                'status' => $response->status(),
-                'ok' => $response->ok(),
-                'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
-            ], 'external_api');
-        }
         logExternalApiRequest([
             'service' => 'linux',
             'method' => 'GET',
@@ -330,14 +265,6 @@ function testAPIConnection($serverIp, $appName = 'livo')
         return $response->ok();
         
     } catch (\Exception $e) {
-        if (class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled()) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => 'linux',
-                'method' => 'GET',
-                'error' => 'unexpected_exception',
-                'message' => $e->getMessage(),
-            ], 'external_api_error');
-        }
         logExternalApiRequest([
             'service' => 'linux',
             'method' => 'GET',
@@ -625,25 +552,13 @@ function fetchMySQLSlowQueriesDirect($serverIp, $appName = 'livo', $minutes = 15
         
         $dateStr = $now->format('Y-m-d');
         $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
         
-        $apiUrl12 = API_BASE_URL . "/{$appName}/{$formattedIp}/slowquery/metrics?date={$dateStr}&start={$start12}&end={$end12}";
+        $apiUrl12 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/slow_queries/metrics?date={$dateStr}&start={$start12}&end={$end12}";
         
-        $debugEnabled = class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled();
         $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
         $t0 = microtime(true);
         $response = $client->get($apiUrl12);
-        
-        if ($debugEnabled) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => 'mysql_slow_queries',
-                'method' => 'GET',
-                'url' => $apiUrl12,
-                'format' => '12h',
-                'status' => $response->status(),
-                'ok' => $response->ok(),
-                'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
-            ], 'external_api');
-        }
         
         logExternalApiRequest([
             'service' => 'mysql_slow_queries',
@@ -710,7 +625,6 @@ function fetchMySQLSlowQueriesDirect($serverIp, $appName = 'livo', $minutes = 15
             $timeB = strtotime($b['start_time'] ?? '0');
             return $timeB - $timeA;
         });
-        
         return array_slice($uniqueQueries, 0, 50); // Limit to 50 queries
         
     } catch (\Exception $e) {
@@ -891,6 +805,38 @@ function calculateMySQLSummary($mysqlData)
     $bytesReceived = isset($metrics['bytes_received']) ? $metrics['bytes_received'] / 1024 / 1024 : 0;
     $bytesSent = isset($metrics['bytes_sent']) ? $metrics['bytes_sent'] / 1024 / 1024 : 0;
     
+    // Calculate network speed
+    $networkRecvRate = 0;
+    $networkSentRate = 0;
+    
+    if (count($mysqlData) >= 2) {
+        // Get keys to access last two elements safely
+        $keys = array_keys($mysqlData);
+        $lastKey = end($keys);
+        $prevKey = prev($keys);
+        
+        if ($lastKey !== false && $prevKey !== false) {
+            $latestPoint = $mysqlData[$lastKey];
+            $prevPoint = $mysqlData[$prevKey];
+            
+            $latestTime = strtotime($latestPoint['timestamp']);
+            $prevTime = strtotime($prevPoint['timestamp']);
+            $timeDiff = $latestTime - $prevTime;
+            
+            if ($timeDiff > 0) {
+                $latestMetrics = $latestPoint['metrics'] ?? [];
+                $prevMetrics = $prevPoint['metrics'] ?? [];
+                
+                $recvDiff = ($latestMetrics['bytes_received'] ?? 0) - ($prevMetrics['bytes_received'] ?? 0);
+                $sentDiff = ($latestMetrics['bytes_sent'] ?? 0) - ($prevMetrics['bytes_sent'] ?? 0);
+                
+                // Handle counter reset or positive difference
+                if ($recvDiff >= 0) $networkRecvRate = $recvDiff / $timeDiff;
+                if ($sentDiff >= 0) $networkSentRate = $sentDiff / $timeDiff;
+            }
+        }
+    }
+
     return [
         'connections' => $maxConnections,
         'connections_used' => $currentConnections,
@@ -904,10 +850,14 @@ function calculateMySQLSummary($mysqlData)
         'threads_connected' => $currentConnections,
         'bytes_received' => round($bytesReceived, 2), // MB
         'bytes_sent' => round($bytesSent, 2), // MB
+        'network_recv_rate' => $networkRecvRate, // Bytes/sec
+        'network_sent_rate' => $networkSentRate, // Bytes/sec
         'innodb_buffer_pool_reads' => $innodbBufferPoolReads,
         'innodb_buffer_pool_read_requests' => $innodbBufferPoolReadRequests,
         'max_connections' => $maxConnections,
         'current_connections' => $currentConnections,
+        'open_tables' => $metrics['open_tables'] ?? 0,
+        'table_open_cache' => $metrics['table_open_cache'] ?? 0,
     ];
 }
 
@@ -1077,17 +1027,28 @@ function calculateRedisSummary($redisData)
     $hits = $metrics['keyspace_hits'] ?? 0;
     $misses = $metrics['keyspace_misses'] ?? 0;
     $hitRate = ($hits + $misses) > 0 ? ($hits / ($hits + $misses) * 100) : 0;
+    $totalKeys = $metrics['total_keys'] ?? 0;
+    if (!$totalKeys && isset($metrics['db0'])) {
+        if (preg_match('/keys=(\d+)/', $metrics['db0'], $m)) {
+            $totalKeys = (int)$m[1];
+        }
+    }
     
     return [
         'connected_clients' => $metrics['connected_clients'] ?? 0,
         'used_memory' => round(($metrics['used_memory'] ?? 0) / 1024 / 1024, 2), // MB
         'used_memory_rss' => round(($metrics['used_memory_rss'] ?? 0) / 1024 / 1024, 2), // MB
+        'total_system_memory' => round((($metrics['total_system_memory'] ?? $metrics['total_system_memory_bytes'] ?? 0)) / 1024 / 1024, 2), // MB
+        'used_memory_human' => $metrics['used_memory_human'] ?? '0B',
+        'used_memory_rss_human' => $metrics['used_memory_rss_human'] ?? '0B',
+        'total_system_memory_human' => $metrics['total_system_memory_human'] ?? '0B',
         'memory_fragmentation_ratio' => round($metrics['mem_fragmentation_ratio'] ?? 0, 2),
         'hits_per_second' => round($metrics['instantaneous_ops_per_sec'] ?? 0, 2),
         'misses_per_second' => round($metrics['rejected_connections'] ?? 0, 2),
         'hit_rate' => round($hitRate, 1),
         'keyspace_hits' => $hits,
         'keyspace_misses' => $misses,
+        'total_keys' => $totalKeys,
         'evicted_keys' => $metrics['evicted_keys'] ?? 0,
         'expired_keys' => $metrics['expired_keys'] ?? 0,
         'instantaneous_ops_per_sec' => round($metrics['instantaneous_ops_per_sec'] ?? 0, 2),
@@ -1134,63 +1095,6 @@ function getRedisStatus($redisData)
     }
 }
 
-/**
- * ============================================
- * API LOGS FUNCTIONS (UPDATED TO FIX ERROR)
- * ============================================
- */
-
-/**
- * Generate demo API logs
- */
-function generateDemoApiLogs($minutes = 5)
-{
-    $logs = [];
-    $count = 50;
-    $now = time();
-    $methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-    $endpoints = [
-        '/api/users', '/api/products', '/api/orders', '/api/auth/login', 
-        '/api/auth/register', '/api/settings', '/api/notifications'
-    ];
-    $statuses = [200, 201, 204, 400, 401, 403, 404, 500];
-    
-    for ($i = 0; $i < $count; $i++) {
-        $timestamp = date('Y-m-d H:i:s', $now - rand(0, $minutes * 60));
-        $method = $methods[array_rand($methods)];
-        $url = $endpoints[array_rand($endpoints)];
-        $status = $statuses[array_rand($statuses)];
-        
-        // Weigh success statuses higher
-        if (rand(0, 10) > 2) {
-            $status = 200;
-        }
-        
-        $log = [
-            '_id' => 'demo_' . uniqid(),
-            'method' => $method,
-            'url' => $url,
-            'status' => $status,
-            'response_time_ms' => rand(10, 500) + (rand(0, 99) / 100),
-            'ip' => '192.168.1.' . rand(1, 255),
-            'timestamp' => $timestamp,
-            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'request_headers' => ['Content-Type' => 'application/json', 'Authorization' => 'Bearer token'],
-            'response_headers' => ['Content-Type' => 'application/json'],
-            'request_body' => ['demo' => true, 'id' => rand(1, 1000)],
-            'response_body' => ['success' => $status < 400, 'data' => 'Demo data'],
-        ];
-        
-        $logs['log' . ($i + 1)] = $log;
-    }
-    
-    // Sort by timestamp desc
-    uasort($logs, function($a, $b) {
-        return strtotime($b['timestamp']) - strtotime($a['timestamp']);
-    });
-    
-    return $logs;
-}
 
 /**
  * Fetch API logs
@@ -1207,29 +1111,16 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
         
         $dateStr = $now->format('Y-m-d');
         $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
+
         
-        $apiUrl12 = API_BASE_URL . "/{$appName}/{$formattedIp}/api_log/metrics?date={$dateStr}&start={$start12}&end={$end12}";
-        $apiUrl24 = API_BASE_URL . "/{$appName}/{$formattedIp}/api_log/metrics?date={$dateStr}&start=".$startTime->format('H:i:s')."&end=".$now->format('H:i:s');
-        
-        $method = strtolower($httpMethod);
-        $debugEnabled = class_exists(\Barryvdh\Debugbar\Facades\Debugbar::class) && \Barryvdh\Debugbar\Facades\Debugbar::isEnabled();
+        $apiUrl12 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/api_log/metrics?date={$dateStr}&start={$start12}&end={$end12}";
+
         $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
         $t0 = microtime(true);
-        $response = $method === 'post' ? $client->post($apiUrl12) : $client->get($apiUrl12);
-        if ($debugEnabled) {
-            \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                'service' => 'api_log',
-                'method' => strtoupper($httpMethod),
-                'url' => $apiUrl12,
-                'format' => '12h',
-                'status' => $response->status(),
-                'ok' => $response->ok(),
-                'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
-            ], 'external_api');
-        }
+        $response = $client->get($apiUrl12);
         logExternalApiRequest([
             'service' => 'api_log',
-            'method' => strtoupper($httpMethod),
             'url' => $apiUrl12,
             'format' => '12h',
             'status' => $response->status(),
@@ -1239,22 +1130,9 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
         
         if (!$response->ok()) {
             $t1 = microtime(true);
-            $response = $method === 'post' ? $client->post($apiUrl24) : $client->get($apiUrl24);
-            if ($debugEnabled) {
-                \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                    'service' => 'api_log',
-                    'method' => strtoupper($httpMethod),
-                    'url' => $apiUrl24,
-                    'format' => '24h',
-                    'status' => $response->status(),
-                    'ok' => $response->ok(),
-                    'duration_ms' => round((microtime(true) - $t1) * 1000, 2),
-                ], 'external_api');
-            }
+            $response = $client->get($apiUrl12);
             logExternalApiRequest([
                 'service' => 'api_log',
-                'method' => strtoupper($httpMethod),
-                'url' => $apiUrl24,
                 'format' => '24h',
                 'status' => $response->status(),
                 'ok' => $response->ok(),
@@ -1265,25 +1143,13 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
                 $body = $response->body();
                 $snippet = is_string($body) ? mb_substr($body, 0, 500) : '';
                 Log::warning("API logs fetch failed: HTTP {$status} {$snippet}");
-                if ($debugEnabled) {
-                    \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                        'service' => 'api_log',
-                        'method' => strtoupper($httpMethod),
-                        'url' => $apiUrl24,
-                        'status' => $status,
-                        'error' => 'response_not_ok',
-                        'body_snippet' => $snippet,
-                    ], 'external_api_error');
-                }
                 logExternalApiRequest([
                     'service' => 'api_log',
-                    'method' => strtoupper($httpMethod),
-                    'url' => $apiUrl24,
                     'status' => $status,
                     'error' => 'response_not_ok',
                     'body_snippet' => $snippet,
                 ]);
-                return generateDemoApiLogs($minutes);
+                return [];
             }
         }
         
@@ -1292,35 +1158,19 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
             $data = $response->json();
         } catch (ConnectionException $e) {
             Log::error("API logs connection failed: " . $e->getMessage());
-            if ($debugEnabled) {
-                \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                    'service' => 'api_log',
-                    'method' => strtoupper($httpMethod),
-                    'error' => 'connection_exception',
-                    'message' => $e->getMessage(),
-                ], 'external_api_error');
-            }
             logExternalApiRequest([
                 'service' => 'api_log',
                 'method' => strtoupper($httpMethod),
                 'error' => 'connection_exception',
                 'message' => $e->getMessage(),
             ]);
-            return generateDemoApiLogs($minutes);
+            return [];
         } catch (\Throwable $e) {
             $fallback = json_decode($response->body(), true);
             if (is_array($fallback)) {
                 $data = $fallback;
             } else {
                 Log::error("API logs JSON decode failed: " . $e->getMessage());
-                if ($debugEnabled) {
-                    \Barryvdh\Debugbar\Facades\Debugbar::addMessage([
-                        'service' => 'api_log',
-                        'method' => strtoupper($httpMethod),
-                        'error' => 'json_decode_failed',
-                        'message' => $e->getMessage(),
-                    ], 'external_api_error');
-                }
                 logExternalApiRequest([
                     'service' => 'api_log',
                     'method' => strtoupper($httpMethod),
@@ -1334,7 +1184,7 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
         // Ensure data is an array
         if (!is_array($data) || empty($data)) {
             Log::warning("API logs returned non-array or empty data");
-            return generateDemoApiLogs($minutes);
+            return [];
         }
         
         // Flatten API logs
@@ -1354,14 +1204,14 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
         }
         
         if (empty($logs)) {
-             return generateDemoApiLogs($minutes);
+             return [];
         }
         
         return $logs;
         
     } catch (\Exception $e) {
         Log::error('Failed to fetch API logs: ' . $e->getMessage());
-        return generateDemoApiLogs($minutes);
+        return [];
     }
 }
 
@@ -1532,7 +1382,7 @@ function formatApiTimestamp($timestamp)
     
     try {
         $date = new \DateTime($timestamp);
-        return $date->format('H:i:s');
+        return $date->format('h:i:s A');
     } catch (\Exception $e) {
         return $timestamp;
     }
@@ -1699,6 +1549,59 @@ function processChartData($data, $metricType, $limitPoints = 20)
 function processLatestChartData($data, $metricType, $limitPoints = 5)
 {
     return processChartData($data, $metricType, $limitPoints);
+}
+
+/**
+ * Process network speed data for charts
+ */
+function processNetworkSpeedChartData($data, $limitPoints = 20)
+{
+    if (empty($data) || count($data) < 2) {
+        return [
+            'labels' => [],
+            'received' => [],
+            'sent' => [],
+        ];
+    }
+    
+    // We need one extra point to calculate diff for the first point in the slice
+    $slice = array_slice($data, -min(count($data), $limitPoints + 1));
+    $labels = [];
+    $received = [];
+    $sent = [];
+    
+    for ($i = 1; $i < count($slice); $i++) {
+        $prev = $slice[$i-1];
+        $curr = $slice[$i];
+        
+        $prevMetrics = $prev['metrics'] ?? [];
+        $currMetrics = $curr['metrics'] ?? [];
+        
+        $prevTime = strtotime($prev['timestamp']);
+        $currTime = strtotime($curr['timestamp']);
+        $timeDiff = $currTime - $prevTime;
+        
+        if ($timeDiff <= 0) continue;
+        
+        $recvDiff = ($currMetrics['bytes_received'] ?? 0) - ($prevMetrics['bytes_received'] ?? 0);
+        $sentDiff = ($currMetrics['bytes_sent'] ?? 0) - ($prevMetrics['bytes_sent'] ?? 0);
+        
+        // Handle counter reset or non-cumulative data
+        if ($recvDiff < 0) $recvDiff = 0;
+        if ($sentDiff < 0) $sentDiff = 0;
+        
+        $received[] = round($recvDiff / $timeDiff, 2);
+        $sent[] = round($sentDiff / $timeDiff, 2);
+        
+        $date = new \DateTime($curr['timestamp']);
+        $labels[] = $date->format('H:i');
+    }
+    
+    return [
+        'labels' => $labels,
+        'received' => $received,
+        'sent' => $sent,
+    ];
 }
 
 /**
