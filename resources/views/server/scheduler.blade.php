@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 
@@ -8,6 +8,7 @@
         <h1 class="text-lg font-semibold text-gray-800">Scheduler</h1>
     </div>
     <div class="flex items-center gap-4">
+        <button id="refresh-btn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm">Refresh</button>
         <div class="text-sm text-gray-500" id="last-updated">Last updated: {{ now()->format('M d, H:i') }}</div>
     </div>
 </header>
@@ -20,11 +21,10 @@
                 <tr class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold border-b border-gray-100">
                     <th class="px-6 py-4">Source</th>
                     <th class="px-6 py-4">Job ID</th>
+                    <th class="px-6 py-4">User</th>
                     <th class="px-6 py-4">Command</th>
-                    <th class="px-6 py-4">Last Run</th>
-                    <th class="px-6 py-4">Next Run</th>
-                    <th class="px-6 py-4">Time Left</th>
-                    <th class="px-6 py-4">Time Passed</th>
+                    <th class="px-6 py-4">Timestamp</th>
+                    <th class="px-6 py-4">Time Ago</th>
                     <th class="px-6 py-4">Status</th>
                 </tr>
             </thead>
@@ -35,7 +35,8 @@
 @push('scripts')
 <script>
 document.title = "Scheduler Dashboard";
-const dataUrl = "{{ route('admin.server.scheduler.data', $server->id) }}";
+const panel = "{{ $panel ?? 'admin' }}";
+const dataUrl = "{{ route(($panel ?? 'admin').'.server.scheduler.data', $server->id) }}";
 
 const statusColors = {
   scheduled: "bg-green-100 text-green-700",
@@ -67,7 +68,12 @@ function progressColor(pct) {
 
 async function loadSchedulerLogs() {
   try {
-    const res = await fetch(dataUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+    const res = await fetch(dataUrl, { 
+      headers: { 
+        'X-Requested-With': 'XMLHttpRequest', 
+        'Accept': 'application/json' 
+      } 
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const json = await res.json();
@@ -87,8 +93,9 @@ async function loadSchedulerLogs() {
         ? "ri-settings-3-line text-blue-500"
         : "ri-server-line text-indigo-500";
 
-      const progress = getProgress(log.last_run, log.next_run);
-      const barColor = progressColor(progress);
+      const ts = log.timestamp || null;
+      const timeAgo = ts ? timeSince(ts) : 'n/a';
+      const user = log.user || 'root';
 
       const row = document.createElement("tr");
       row.classList.add("hover:bg-gray-50", "transition");
@@ -98,20 +105,12 @@ async function loadSchedulerLogs() {
           <span class="font-medium">${log.source || 'Unknown'}</span>
         </td>
         <td class="px-6 py-4 text-gray-700">${log.job_id || 'N/A'}</td>
+        <td class="px-6 py-4 text-gray-700">${user}</td>
         <td class="px-6 py-4 text-gray-700 truncate max-w-[250px]" title="${log.command || ''}">
           ${log.command || 'N/A'}
         </td>
-        <td class="px-6 py-4 text-gray-600">${log.last_run || 'Never'}</td>
-        <td class="px-6 py-4 text-gray-600">${log.next_run || 'N/A'}</td>
-        <td class="px-6 py-4">
-          <div class="flex flex-col gap-1">
-            <span class="text-xs text-gray-600">${log.left || 'n/a'}</span>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-              <div class="${barColor} h-2.5 transition-all duration-500" style="width: ${progress}%;"></div>
-            </div>
-          </div>
-        </td>
-        <td class="px-6 py-4">${log.passed || 'n/a'}</td>
+        <td class="px-6 py-4 text-gray-600">${ts || 'N/A'}</td>
+        <td class="px-6 py-4">${timeAgo}</td>
         <td class="px-6 py-4 text-center">${formatStatus(log.status)}</td>
       `;
       tbody.appendChild(row);
@@ -125,10 +124,36 @@ async function loadSchedulerLogs() {
   }
 }
 
-(async function() {
+// Initial fetch handled on DOMContentLoaded
+
+function timeSince(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMs = now - d;
+  if (isNaN(diffMs)) return 'n/a';
+  const mins = Math.floor(diffMs / 60000);
+  const secs = Math.floor((diffMs % 60000) / 1000);
+  if (mins > 0) return `${mins}m ${secs}s ago`;
+  return `${secs}s ago`;
+}
+
+document.addEventListener('DOMContentLoaded', async function(){
+  const btn = document.getElementById('refresh-btn');
+  if (btn) {
+    btn.addEventListener('click', async function(){
+      const originalText = btn.textContent;
+      btn.textContent = 'Refreshing...';
+      btn.disabled = true;
+      try {
+        await loadSchedulerLogs();
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    });
+  }
   await loadSchedulerLogs();
-  setInterval(loadSchedulerLogs, 60000);
-})();
+});
 </script>
 @endpush
 @endsection

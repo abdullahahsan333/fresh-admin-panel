@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 
@@ -219,6 +219,7 @@
 <script>
     const serverId = {{ $server->id }};
     const serverIp = "{{ $server->ip }}";
+    const panel = "{{ $panel ?? 'admin' }}";
     
     // Initialize charts with empty data
     let opsChart, memoryChart, connectionChart, networkChart;
@@ -383,7 +384,7 @@
     // Fetch MongoDB data
     async function fetchMongoDBData() {
         try {
-            const response = await fetch(`/admin/assets/mongodb/${serverId}/data`, {
+            const response = await fetch(`/${panel}/server/${serverId}/mongodb-data`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'

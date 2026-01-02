@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 
@@ -375,6 +375,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Global variables
+    const panel = "{{ $panel ?? 'admin' }}";
     let serverIp = '';
     let serverId = '';
     let autoRefreshInterval = null;
@@ -561,23 +562,23 @@
     }
 
     function showLoading(show) { return; }
+    async function fetchJsonWithRetry(url, options = {}, retries = 2, backoffMs = 800) {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) throw new Error('Invalid content-type');
+                return await res.json();
+            } catch (e) {
+                if (attempt === retries) throw e;
+                await new Promise(r => setTimeout(r, backoffMs * (attempt + 1)));
+            }
+        }
+    }
 
     // Chart initialization
     function initializeCharts() {
-        async function fetchJsonWithRetry(url, options = {}, retries = 2, backoffMs = 800) {
-            for (let attempt = 0; attempt <= retries; attempt++) {
-                try {
-                    const res = await fetch(url, options);
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    const ct = res.headers.get('content-type') || '';
-                    if (!ct.includes('application/json')) throw new Error('Invalid content-type');
-                    return await res.json();
-                } catch (e) {
-                    if (attempt === retries) throw e;
-                    await new Promise(r => setTimeout(r, backoffMs * (attempt + 1)));
-                }
-            }
-        }
         const opsCtx = createChartCanvas('redisOpsPerSecond');
         if (opsCtx) {
             const chart = new Chart(opsCtx, {
@@ -973,7 +974,7 @@
                 throw new Error('Invalid server ID');
             }
 
-            const result = await fetchJsonWithRetry(`/admin/server/${serverId}/redis-data`, {
+            const result = await fetchJsonWithRetry(`/${panel}/server/${serverId}/redis-data`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -998,6 +999,11 @@
             
             // Prepare command statistics
             const commandStats = redisData.commandStats || {};
+            // Populate command stats from flat keys if commandStats is empty or missing specific keys
+            if (redisData.commandstats_get !== undefined) commandStats.GET = redisData.commandstats_get;
+            if (redisData.commandstats_set !== undefined) commandStats.SET = redisData.commandstats_set;
+            if (redisData.commandstats_hget !== undefined) commandStats.HGET = redisData.commandstats_hget;
+            if (redisData.commandstats_hset !== undefined) commandStats.HSET = redisData.commandstats_hset;
             
             // Prepare UI data
             const uiData = {

@@ -242,6 +242,156 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
 }
 
 /**
+ * Fetch data from external API using explicit date and time range
+ */
+function fetchFromAPIRange($serverIp, $service, $appName, $date, $start, $end, $httpMethod = 'GET')
+{
+    try {
+        $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
+        $method = strtolower($httpMethod);
+        $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
+        
+        // Build both 12h and 24h format URLs to maximize compatibility
+        $start12 = convertTo12Hour($start);
+        $end12 = convertTo12Hour($end);
+        $start24 = convertTo24Hour($start);
+        $end24 = convertTo24Hour($end);
+        
+        $url12 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/{$service}/metrics?date={$date}&start={$start12}&end={$end12}";
+        $url24 = API_BASE_URL . "/{$appSlug}/{$formattedIp}/{$service}/metrics?date={$date}&start={$start24}&end={$end24}";
+        
+        // Try 12h first, then 24h
+        $t0 = microtime(true);
+        $response = $method === 'post' ? $client->post($url12) : $client->get($url12);
+        logExternalApiRequest([
+            'service' => $service,
+            'method' => strtoupper($httpMethod),
+            'url' => $url12,
+            'format' => '12h',
+            'status' => $response->status(),
+            'ok' => $response->ok(),
+            'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
+        ]);
+        
+        if (!$response->ok()) {
+            $t1 = microtime(true);
+            $response = $method === 'post' ? $client->post($url24) : $client->get($url24);
+            logExternalApiRequest([
+                'service' => $service,
+                'method' => strtoupper($httpMethod),
+                'url' => $url24,
+                'format' => '24h',
+                'status' => $response->status(),
+                'ok' => $response->ok(),
+                'duration_ms' => round((microtime(true) - $t1) * 1000, 2),
+            ]);
+            if (!$response->ok()) {
+                $status = $response->status();
+                $body = $response->body();
+                $snippet = is_string($body) ? mb_substr($body, 0, 500) : '';
+                Log::warning("API range fetch failed for {$service} ({$httpMethod}): HTTP {$status} {$snippet}");
+                logExternalApiRequest([
+                    'service' => $service,
+                    'method' => strtoupper($httpMethod),
+                    'url' => $url24,
+                    'status' => $status,
+                    'error' => 'response_not_ok',
+                    'body_snippet' => $snippet,
+                ]);
+                return [];
+            }
+        }
+        
+        try {
+            $data = $response->json();
+            return is_array($data) ? $data : [];
+        } catch (\Throwable $e) {
+            $fallback = json_decode($response->body(), true);
+            return is_array($fallback) ? $fallback : [];
+        }
+    } catch (\Exception $e) {
+        Log::error("Failed to fetch {$service} data (range): " . $e->getMessage());
+        logExternalApiRequest([
+            'service' => $service,
+            'method' => strtoupper($httpMethod),
+            'error' => 'unexpected_exception',
+            'message' => $e->getMessage(),
+        ]);
+        return [];
+    }
+}
+
+function convertTo12Hour($time)
+{
+    if (empty($time)) return '';
+    // If already contains AM/PM, assume 12h
+    if (preg_match('/(AM|PM)$/i', $time)) {
+        return strtoupper($time);
+    }
+    // Convert from 24h HH:MM or HH:MM:SS
+    try {
+        $dt = \DateTime::createFromFormat('H:i:s', $time) ?: \DateTime::createFromFormat('H:i', $time);
+        return $dt ? $dt->format('h:i:sA') : $time;
+    } catch (\Throwable $e) {
+        return $time;
+    }
+}
+
+function convertTo24Hour($time)
+{
+    if (empty($time)) return '';
+    // If looks like 24h already
+    if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
+        return strlen($time) === 5 ? ($time . ':00') : $time;
+    }
+    // Convert from 12h h:i:sAM
+    try {
+        $dt = \DateTime::createFromFormat('h:i:sA', strtoupper($time))
+            ?: \DateTime::createFromFormat('h:iA', strtoupper($time));
+        return $dt ? $dt->format('H:i:s') : $time;
+    } catch (\Throwable $e) {
+        return $time;
+    }
+}
+
+function fetchSchedulerDataRange($serverIp, $appName, $date, $start, $end)
+{
+    return fetchFromAPIRange($serverIp, 'scheduler', $appName, $date, $start, $end);
+}
+
+/**
+ * Fetch full archive listing for a service
+ * Example: /api/{app}/{ip}/{service}/full
+ */
+function fetchServiceFullArchive($serverIp, $service, $appName = 'livo')
+{
+    try {
+        $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
+        $url = API_BASE_URL . "/{$appSlug}/{$formattedIp}/{$service}/full";
+        $t0 = microtime(true);
+        $response = Http::timeout(15)->retry(2, 1000)->get($url);
+        logExternalApiRequest([
+            'service' => $service,
+            'method' => 'GET',
+            'url' => $url,
+            'status' => $response->status(),
+            'ok' => $response->ok(),
+            'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
+        ]);
+        if (!$response->ok()) {
+            return [];
+        }
+        $data = $response->json();
+        return is_array($data) ? $data : [];
+    } catch (\Throwable $e) {
+        Log::error("Failed to fetch full archive for {$service}: ".$e->getMessage());
+        return [];
+    }
+}
+
+/**
  * Test API connection
  */
 function testAPIConnection($serverIp, $appName = 'livo')
@@ -1033,6 +1183,11 @@ function calculateRedisSummary($redisData)
             $totalKeys = (int)$m[1];
         }
     }
+
+    $commandStats = [];
+    foreach ($metrics['commandstats_avg_time_per_call'] as $cmd => $val) {
+        $commandStats[strtoupper($cmd)] = (int)$val;
+    }
     
     return [
         'connected_clients' => $metrics['connected_clients'] ?? 0,
@@ -1060,10 +1215,12 @@ function calculateRedisSummary($redisData)
         'db0' => $metrics['db0'] ?? null,
         'network_input' => isset($metrics['total_net_input_bytes']) ? round(($metrics['total_net_input_bytes'] ?? 0) / 1024 / 1024, 2) : 0,
         'network_output' => isset($metrics['total_net_output_bytes']) ? round(($metrics['total_net_output_bytes'] ?? 0) / 1024 / 1024, 2) : 0,
-        'commandstats_get' => $metrics['commandstats_get'] ?? 0,
-        'commandstats_set' => $metrics['commandstats_set'] ?? 0,
-        'commandstats_hget' => $metrics['commandstats_hget'] ?? 0,
-        'commandstats_hset' => $metrics['commandstats_hset'] ?? 0,
+        
+        'commandstats_get' => $commandStats['GET'] ?? 0,
+        'commandstats_set' => $commandStats['SET'] ?? 0,
+        'commandstats_hget' => $commandStats['HGET'] ?? 0,
+        'commandstats_hset' => $commandStats['HSET'] ?? 0,
+
         'instantaneous_input_kbps' => $metrics['instantaneous_input_kbps'] ?? 0,
         'instantaneous_output_kbps' => $metrics['instantaneous_output_kbps'] ?? 0,
         'total_net_input_bytes' => $metrics['total_net_input_bytes'] ?? 0,
@@ -1218,7 +1375,7 @@ function fetchApiLogs($serverIp, $appName = 'livo', $minutes = 5, $httpMethod = 
 /**
  * Calculate API logs summary
  */
-function calculateApiSummary($logs)
+function calculateApiSummary($logs, $minutes = 5)
 {
     if (empty($logs)) {
         return [
@@ -1258,7 +1415,7 @@ function calculateApiSummary($logs)
     }
     
     // Calculate requests per minute
-    $requestsPerMin = $totalRequests / 5;
+    $requestsPerMin = $totalRequests / $minutes;
     
     // Calculate average response time
     $avgResponseTime = $responseTimeCount > 0 ? $totalResponseTime / $responseTimeCount : 0;
@@ -1476,18 +1633,45 @@ function calculateSchedulerSummary($schedulerData)
     
     $latest = end($schedulerData);
     $metrics = $latest['metrics'] ?? [];
-    
-    $totalJobs = $metrics['total_jobs'] ?? 0;
-    $failedJobs = $metrics['failed_jobs'] ?? 0;
+
+    // Prefer explicit summary metrics if present
+    if (isset($metrics['total_jobs'])) {
+        $totalJobs = $metrics['total_jobs'] ?? 0;
+        $failedJobs = $metrics['failed_jobs'] ?? 0;
+        $successRate = $totalJobs > 0 ? (($totalJobs - $failedJobs) / $totalJobs * 100) : 0;
+        return [
+            'total_jobs' => $totalJobs,
+            'active_jobs' => $metrics['active_jobs'] ?? 0,
+            'failed_jobs' => $failedJobs,
+            'success_rate' => round($successRate, 1),
+            'avg_execution_time' => round($metrics['avg_execution_time'] ?? 0, 2),
+            'pending_jobs' => $metrics['pending_jobs'] ?? 0,
+        ];
+    }
+
+    // Otherwise, derive summary from scheduler_logs structure
+    $logs = $metrics['scheduler_logs'] ?? [];
+    $totalJobs = is_array($logs) ? count($logs) : 0;
+    $activeStatuses = ['running'];
+    $pendingStatuses = ['scheduled', 'pending'];
+    $failedStatuses = ['failed', 'error'];
+    $activeJobs = 0;
+    $pendingJobs = 0;
+    $failedJobs = 0;
+    foreach ($logs as $entry) {
+        $status = strtolower($entry['status'] ?? '');
+        if (in_array($status, $activeStatuses, true)) $activeJobs++;
+        if (in_array($status, $pendingStatuses, true)) $pendingJobs++;
+        if (in_array($status, $failedStatuses, true)) $failedJobs++;
+    }
     $successRate = $totalJobs > 0 ? (($totalJobs - $failedJobs) / $totalJobs * 100) : 0;
-    
     return [
         'total_jobs' => $totalJobs,
-        'active_jobs' => $metrics['active_jobs'] ?? 0,
+        'active_jobs' => $activeJobs,
         'failed_jobs' => $failedJobs,
         'success_rate' => round($successRate, 1),
-        'avg_execution_time' => round($metrics['avg_execution_time'] ?? 0, 2),
-        'pending_jobs' => $metrics['pending_jobs'] ?? 0,
+        'avg_execution_time' => 0,
+        'pending_jobs' => $pendingJobs,
     ];
 }
 

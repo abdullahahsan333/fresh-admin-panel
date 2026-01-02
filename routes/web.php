@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 // All local Controller
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ServerController;
 
 // All Admin Panel Controller
 use App\Http\Controllers\Admin\PanelController as AdminPanelController;
@@ -34,15 +35,26 @@ Route::prefix('user')->group(function () {
     Route::get('/assets/server-details', [UserAssetController::class, 'server_details'])->middleware('user')->name('user.assets.server.details');
     Route::post('/assets/server', [UserAssetController::class, 'server_store'])->middleware('user')->name('user.assets.server.store');
     Route::post('/server_store', [UserAssetController::class, 'server_store'])->middleware('user')->name('user.server_store');
-    Route::get('/assets/overview', [UserAssetController::class, 'overview'])->middleware('user')->name('user.assets.overview');
+    Route::get('/assets/overview', [ServerController::class, 'overview'])->middleware('user')->name('user.assets.overview');
+    Route::get('/assets/server-list', [ServerController::class, 'server_list'])->middleware('user');
     
-    Route::get('/server/{id}/linux', [UserAssetController::class, 'linux'])->middleware('user')->name('user.server.linux');
-    Route::get('/server/{id}/mysql', [UserAssetController::class, 'mysql'])->middleware('user')->name('user.server.mysql');
-    Route::get('/server/{id}/mongodb', [UserAssetController::class, 'mongodb'])->middleware('user')->name('user.server.mongodb');
-    Route::get('/server/{id}/redis', [UserAssetController::class, 'redis'])->middleware('user')->name('user.server.redis');
-    Route::get('/server/{id}/api_log', [UserAssetController::class, 'api_log'])->middleware('user')->name('user.server.api_log');
-    Route::get('/server/{id}/scheduler', [UserAssetController::class, 'scheduler'])->middleware('user')->name('user.server.scheduler');
-    Route::get('/server/{id}/ssl', [UserAssetController::class, 'ssl'])->middleware('user')->name('user.server.ssl');
+    Route::get('/server/{id}/linux', [ServerController::class, 'linux'])->middleware('user')->name('user.server.linux');
+    Route::get('/server/{id}/mysql', [ServerController::class, 'mysql'])->middleware('user')->name('user.server.mysql');
+    Route::get('/server/{id}/mongodb', [ServerController::class, 'mongodb'])->middleware('user')->name('user.server.mongodb');
+    Route::get('/server/{id}/redis', [ServerController::class, 'redis'])->middleware('user')->name('user.server.redis');
+    Route::get('/server/{id}/api_log', [ServerController::class, 'api_log'])->middleware('user')->name('user.server.api_log');
+    Route::get('/server/{id}/scheduler', [ServerController::class, 'scheduler'])->middleware('user')->name('user.server.scheduler');
+    Route::get('/server/{id}/ssl', [ServerController::class, 'ssl'])->middleware('user')->name('user.server.ssl');
+    Route::get('/server/{id}/linux-data', [ServerController::class, 'linux_data'])->middleware('user')->name('user.server.linux.data');
+    Route::get('/server/{id}/mysql-data', [ServerController::class, 'mysql_data'])->middleware('user')->name('user.server.mysql.data');
+    Route::get('/server/{id}/mysql-slow-queries', [ServerController::class, 'mysql_slow_queries'])->middleware('user')->name('user.server.mysql.slow_queries');
+    Route::get('/server/{id}/mysql-warnings', [ServerController::class, 'mysql_warnings'])->middleware('user')->name('user.server.mysql_warnings');
+    Route::get('/server/{id}/mysql-errors', [ServerController::class, 'mysql_errors'])->middleware('user')->name('user.server.mysql_errors');
+    Route::get('/server/{id}/mongodb-data', [ServerController::class, 'mongodb_data'])->middleware('user')->name('user.server.mongodb.data');
+    Route::get('/server/{id}/redis-data', [ServerController::class, 'redis_data'])->middleware('user')->name('user.server.redis.data');
+    Route::get('/server/{id}/api-log-data', [ServerController::class, 'api_log_data'])->middleware('user')->name('user.server.api_log.data');
+    Route::get('/server/{id}/scheduler-data', [ServerController::class, 'scheduler_data'])->middleware('user')->name('user.server.scheduler.data');
+    
     Route::post('/import', [UserAssetController::class, 'import'])->middleware('user')->name('user.import');
 });
 
@@ -73,23 +85,26 @@ Route::prefix('admin')->group(function () {
     Route::get('/assets/server-details', [AdminAssetController::class, 'server_details'])->middleware('admin')->name('admin.assets.server.details');
     Route::get('/assets/archive', [AdminAssetController::class, 'archive'])->middleware('admin')->name('admin.assets.archive');
     
-    Route::get('/overview', [AdminAssetController::class, 'overview'])->middleware('admin')->name('admin.overview');
-    Route::get('/server/{id}/linux', [AdminAssetController::class, 'linux'])->middleware('admin')->name('admin.server.linux');
-    Route::get('/server/{id}/linux-data', [AdminAssetController::class, 'linux_data'])->middleware('admin')->name('admin.server.linux.data');
-    Route::get('/server/{id}/mysql', [AdminAssetController::class, 'mysql'])->middleware('admin')->name('admin.server.mysql');
-    Route::get('/server/{id}/mysql-data', [AdminAssetController::class, 'mysql_data'])->middleware('admin')->name('admin.assets.mysql.data');
-    Route::get('/server/{id}/mysql-slow-queries', [AdminAssetController::class, 'mysql_slow_queries'])->middleware('admin')->name('admin.assets.mysql.slow_queries');
-    Route::get('/server/{id}/mysql-warnings', [AdminAssetController::class, 'mysql_warnings'])->middleware('admin')->name('admin.assets.mysql_warnings');
-    Route::get('/server/{id}/mysql-errors', [AdminAssetController::class, 'mysql_errors'])->middleware('admin')->name('admin.assets.mysql_errors');
-    Route::get('/server/{id}/mongodb', [AdminAssetController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
-    Route::get('/server/{id}/mongodb-data', [AdminAssetController::class, 'mongodb_data'])->middleware('admin')->name('admin.assets.mongodb.data');
-    Route::get('/server/{id}/redis', [AdminAssetController::class, 'redis'])->middleware('admin')->name('admin.server.redis');
-    Route::get('/server/{id}/redis-data', [AdminAssetController::class, 'redis_data'])->middleware('admin')->name('admin.assets.redis.data');
-    Route::get('/server/{id}/api-log', [AdminAssetController::class, 'api_log'])->middleware('admin')->name('admin.server.api_log');
-    Route::get('/server/{id}/api-log/data', [AdminAssetController::class, 'api_log_data'])->middleware('admin')->name('admin.server.api_log.data');
-    Route::get('/server/{id}/scheduler', [AdminAssetController::class, 'scheduler'])->middleware('admin')->name('admin.server.scheduler');
-    Route::get('/server/{id}/scheduler/data', [AdminAssetController::class, 'scheduler_data'])->middleware('admin')->name('admin.server.scheduler.data');
-    Route::get('/server/{id}/ssl', [AdminAssetController::class, 'ssl'])->middleware('admin')->name('admin.server.ssl');
+    Route::get('/overview', [ServerController::class, 'overview'])->middleware('admin')->name('admin.overview');
+    Route::get('/assets/server-list', [ServerController::class, 'server_list'])->middleware('admin');
+    Route::get('/server/{id}/linux', [ServerController::class, 'linux'])->middleware('admin')->name('admin.server.linux');
+    Route::get('/server/{id}/linux-data', [ServerController::class, 'linux_data'])->middleware('admin')->name('admin.server.linux.data');
+    Route::get('/server/{id}/mysql', [ServerController::class, 'mysql'])->middleware('admin')->name('admin.server.mysql');
+    Route::get('/server/{id}/mysql-data', [ServerController::class, 'mysql_data'])->middleware('admin')->name('admin.assets.mysql.data');
+    Route::get('/server/{id}/mysql-slow-queries', [ServerController::class, 'mysql_slow_queries'])->middleware('admin')->name('admin.assets.mysql.slow_queries');
+    Route::get('/server/{id}/mysql-warnings', [ServerController::class, 'mysql_warnings'])->middleware('admin')->name('admin.assets.mysql_warnings');
+    Route::get('/server/{id}/mysql-errors', [ServerController::class, 'mysql_errors'])->middleware('admin')->name('admin.assets.mysql_errors');
+    Route::get('/server/{id}/mongodb', [ServerController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
+    Route::get('/server/{id}/mongodb-data', [ServerController::class, 'mongodb_data'])->middleware('admin')->name('admin.assets.mongodb.data');
+    Route::get('/server/{id}/redis', [ServerController::class, 'redis'])->middleware('admin')->name('admin.server.redis');
+    Route::get('/server/{id}/redis-data', [ServerController::class, 'redis_data'])->middleware('admin')->name('admin.assets.redis.data');
+    Route::get('/server/{id}/api-log', [ServerController::class, 'api_log'])->middleware('admin')->name('admin.server.api_log');
+    Route::get('/server/{id}/api-log-data', [ServerController::class, 'api_log_data'])->middleware('admin')->name('admin.server.api_log.data');
+    Route::get('/server/{id}/scheduler', [ServerController::class, 'scheduler'])->middleware('admin')->name('admin.server.scheduler');
+    Route::get('/server/{id}/scheduler-data', [ServerController::class, 'scheduler_data'])->middleware('admin')->name('admin.server.scheduler.data');
+    Route::get('/server/{id}/ssl', [ServerController::class, 'ssl'])->middleware('admin')->name('admin.server.ssl');
+    
+    Route::get('/assets/archive/full', [AdminAssetController::class, 'archive_full'])->middleware('admin')->name('admin.assets.archive.full');
 
     Route::get('/users', [AdminUserController::class, 'index'])->middleware('admin')->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->middleware('admin')->name('admin.users.create');

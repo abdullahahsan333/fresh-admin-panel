@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 <div class="p-6">
@@ -323,6 +323,7 @@ let mysqlData = null;
 let charts = {};
 let activeConcernTab = 'slow';
 const serverId = {{ ($activeServerId ?? ($server->id ?? null)) ?? 'null' }};
+const panel = "{{ $panel ?? 'admin' }}";
 const apiBaseUrl = '';
 
 // Initialize charts
@@ -614,7 +615,7 @@ async function loadConcernTabContent(tabName) {
         `;
         
         try {
-            const response = await fetch(`${apiBaseUrl}/admin/server/${serverId}/mysql-slow-queries?minutes=15`);
+            const response = await fetch(`${apiBaseUrl}/${panel}/server/${serverId}/mysql-slow-queries?minutes=15`);
             const data = await response.json();
             
             if (data.ok && data.slowQueries && Array.isArray(data.slowQueries) && data.slowQueries.length > 0) {
@@ -661,7 +662,7 @@ async function loadConcernTabContent(tabName) {
         
         try {
             // Fetch MySQL warnings from dedicated endpoint
-            const response = await fetch(`/admin/server/${serverId}/mysql-warnings`, {
+            const response = await fetch(`/${panel}/server/${serverId}/mysql-warnings`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -689,7 +690,7 @@ async function loadConcernTabContent(tabName) {
         
         try {
             // Fetch MySQL errors from dedicated endpoint
-            const response = await fetch(`/admin/server/${serverId}/mysql-errors`, {
+            const response = await fetch(`/${panel}/server/${serverId}/mysql-errors`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1204,7 +1205,7 @@ function copyToClipboard(index, sqlText) {
 // Fetch MySQL data from API
 async function fetchMySQLData() {
     try {
-        const response = await fetch(`/admin/server/${serverId}/mysql-data`, {
+        const response = await fetch(`/${panel}/server/${serverId}/mysql-data`, {
             headers: {
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'

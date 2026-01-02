@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 
@@ -295,7 +295,8 @@
 <script>
     const chartData = @json($chartData);
     const serverIp = @json($server->ip);
-    const dataUrl = "{{ route('admin.server.linux.data', $server->id) }}";
+    const panel = "{{ $panel ?? 'admin' }}";
+    const dataUrl = "{{ route(($panel ?? 'admin').'.server.linux.data', $server->id) }}";
     let charts = {};
     let netLabels = [];
     let netInput = [];

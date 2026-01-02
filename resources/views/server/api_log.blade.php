@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 <!-- Header Section -->
@@ -413,7 +413,8 @@
 @push('footer_scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const dataUrl = "{{ route('admin.server.api_log.data', $server->id) }}";
+        const panel = "{{ $panel ?? 'admin' }}";
+        const dataUrl = "{{ route(($panel ?? 'admin').'.server.api_log.data', $server->id) }}";
         // State
         let currentLog = @json($firstLog ?: null);
         let activeTab = 'request';
@@ -550,7 +551,6 @@
                     <button class="method-tab-btn px-4 py-3 font-medium text-sm whitespace-nowrap ${isActive ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                             data-method="${method}">
                         <span class="px-2 py-1 rounded text-xs font-bold ${methodClass}">${method}</span>
-                        <span class="ml-2">${method} Endpoints</span>
                     </button>
                 `;
             });
@@ -610,12 +610,16 @@
                                 data-log-data="${logJson}">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <div class="flex items-center gap-2">
-                                            <i class="ri-time-line text-gray-400"></i>
-                                            <span class="text-sm font-medium text-gray-900">${time}</span>
-                                            <span class="text-gray-300">|</span>
-                                            <span class="text-xs text-gray-600">${ip}</span>
-                                            ${logId ? `<span class="text-gray-300">|</span><span class="text-xs text-gray-500 font-mono">${logId}</span>` : ``}
+                                        <div class="flex items-baseline justify-between gap-2">
+                                            <div class="">
+                                                <i class="ri-time-line text-gray-400"></i>
+                                                <span class="text-sm font-medium text-gray-900">${time}</span>
+                                                <br />
+                                                <span class="text-xs text-gray-600">${ip}</span>
+                                            </div>
+                                            <div class="">
+                                                ${logId ? `<span class="text-gray-300">|</span><span class="text-xs text-gray-500 font-mono">${logId}</span>` : ``}
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -778,7 +782,7 @@
                     
                     // Update current log
                     currentLog = JSON.parse(decodeURIComponent(logItem.dataset.logData));
-                    
+
                     // Update request header
                     updateRequestHeader(currentLog);
                     
@@ -856,11 +860,13 @@
             const time = formatTime(log.date || '');
             const status = log.status || 'N/A';
             const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
+            const endpointCount = (groupedLogs[method] && groupedLogs[method][endpoint]) ? groupedLogs[method][endpoint].length : 0;
 
             header.innerHTML = `
                 <span class="font-medium text-gray-900">${method}</span>
                 <span class="text-gray-400">></span>
                 <span class="font-mono truncate max-w-xs">${endpoint}</span>
+                <span class="text-xs text-gray-500 ml-2">(${endpointCount} requests)</span>
                 <span class="text-gray-400">></span>
                 <span>${time}</span>
                 <span class="text-gray-400 mx-2">•</span>

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout ?? 'layouts.admin')
 
 @section('content')
 <!-- Top bar -->
@@ -38,7 +38,7 @@
                 <div id="servers-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden">
                     <div class="py-1">
                         <a href="javascript:void(0);" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Refresh</a>
-                        <a href="{{ route('admin.assets.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Servers</a>
+                        <a href="{{ route(($panel ?? 'admin') === 'admin' ? 'admin.assets.index' : 'user.assets.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Servers</a>
                     </div>
                 </div>
             </div>
@@ -316,8 +316,15 @@
 @push('scripts')
 <script>
 // Configuration
+const panel = '{{ $panel ?? 'admin' }}';
 const API_BASE_URL = 'http://157.245.207.91:3001/api';
 const APP_NAME = 'livo';
+const SERVICE_ENDPOINTS = {
+    linux: 'linux-data',
+    mysql: 'mysql-data',
+    redis: 'redis-data',
+    mongodb: 'mongodb-data',
+};
 
 // State management
 let activeServerIp = null;
@@ -381,7 +388,7 @@ document.addEventListener('click', function(event) {
 // API Functions
 async function fetchServerList() {
     try {
-        const response = await fetch(`/admin/assets/server-list`);
+        const response = await fetch(`/${panel}/assets/server-list`);
         const data = await response.json();
         
         if (data.ok && data.servers) {
@@ -412,7 +419,8 @@ async function fetchServiceData(service) {
     if (!activeServerIp) return;
     
     try {
-        const response = await fetch(`/admin/assets/${service}_data/${getServerIdByIp(activeServerIp)}`);
+        const endpoint = SERVICE_ENDPOINTS[service] ?? `${service}-data`;
+        const response = await fetch(`/${panel}/server/${getServerIdByIp(activeServerIp)}/${endpoint}`);
         const data = await response.json();
         
         if (data.ok) {
@@ -427,7 +435,7 @@ async function fetchSchedulerData() {
     if (!activeServerIp) return;
     
     try {
-        const response = await fetch(`/admin/assets/scheduler_data/${getServerIdByIp(activeServerIp)}?minutes=15`);
+        const response = await fetch(`/${panel}/server/${getServerIdByIp(activeServerIp)}/scheduler-data?minutes=15`);
         const data = await response.json();
         
         if (data.ok) {
@@ -442,7 +450,7 @@ async function fetchTopProcesses() {
     if (!activeServerIp) return;
     
     try {
-        const response = await fetch(`/admin/assets/linux_data/${getServerIdByIp(activeServerIp)}`);
+        const response = await fetch(`/${panel}/server/${getServerIdByIp(activeServerIp)}/linux-data`);
         const data = await response.json();
         
         if (data.ok && data.topProcesses) {
