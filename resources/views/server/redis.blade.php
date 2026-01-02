@@ -178,56 +178,36 @@
             </button>
         </div>
         
-        <div id="commandProgressBar" class="w-full h-6 rounded-md overflow-hidden bg-gray-100 mb-4 flex"></div>
+        <div id="redisCommandsPieChart" class="h-48 w-full mb-4 flex justify-center"></div>
 
-        <div class="space-y-3">
-            <!-- GET Commands -->
-            <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    GET Commands
-                </span>
-                <span id="getCommands" class="font-medium text-gray-800">0</span>
+        <div class="grid grid-cols-4 gap-2 mb-4 text-center">
+            <!-- GET -->
+            <div class="flex flex-col items-center p-2 rounded hover:bg-gray-50 transition-colors">
+                <span class="text-xs font-bold text-purple-600 mb-1">GET</span>
+                <span id="getCommands" class="text-lg font-bold text-gray-800">0</span>
             </div>
             
-            <!-- SET Commands -->
-            <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    SET Commands
-                </span>
-                <span id="setCommands" class="font-medium text-gray-800">0</span>
+            <!-- SET -->
+            <div class="flex flex-col items-center p-2 rounded hover:bg-gray-50 transition-colors">
+                <span class="text-xs font-bold text-green-600 mb-1">SET</span>
+                <span id="setCommands" class="text-lg font-bold text-gray-800">0</span>
             </div>
             
-            <!-- HGET Commands -->
-            <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    HGET Commands
-                </span>
-                <span id="hgetCommands" class="font-medium text-gray-800">0</span>
+            <!-- HGET -->
+            <div class="flex flex-col items-center p-2 rounded hover:bg-gray-50 transition-colors">
+                <span class="text-xs font-bold text-blue-600 mb-1">HGET</span>
+                <span id="hgetCommands" class="text-lg font-bold text-gray-800">0</span>
             </div>
             
-            <!-- HSET Commands -->
-            <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span class="text-gray-600 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    HSET Commands
-                </span>
-                <span id="hsetCommands" class="font-medium text-gray-800">0</span>
+            <!-- HSET -->
+            <div class="flex flex-col items-center p-2 rounded hover:bg-gray-50 transition-colors">
+                <span class="text-xs font-bold text-yellow-600 mb-1">HSET</span>
+                <span id="hsetCommands" class="text-lg font-bold text-gray-800">0</span>
             </div>
-            
-            <!-- Additional commands - dynamically shown if data exists -->
-            <div id="additionalCommands"></div>
         </div>
+        
+        <!-- Additional commands - dynamically shown if data exists -->
+        <div id="additionalCommands" class="grid grid-cols-4 gap-2 mb-4 text-center empty:hidden"></div>
         
         <div class="mt-4 pt-4 border-t border-gray-100">
             <div class="flex items-center justify-between text-xs text-gray-500">
@@ -480,10 +460,9 @@
         if (netOutputRates.length > 10) netOutputRates = netOutputRates.slice(-10);
     }
 
-    // Function to render command progress bar
+    // Function to render command pie chart
     function renderCommandProgress(stats) {
-        const el = document.getElementById('commandProgressBar');
-        if (!el) return;
+        if (!charts.commandsPie) return;
         
         // Extract command counts
         const get = Number(stats?.GET) || 0;
@@ -491,30 +470,9 @@
         const hget = Number(stats?.HGET) || 0;
         const hset = Number(stats?.HSET) || 0;
         
-        const total = get + set + hget + hset;
-        const toPct = v => total > 0 ? (v / total * 100) : 0;
-        
-        const items = [
-            { label: 'GET', pct: toPct(get), color: 'bg-purple-500', value: get },
-            { label: 'SET', pct: toPct(set), color: 'bg-green-500', value: set },
-            { label: 'HGET', pct: toPct(hget), color: 'bg-blue-500', value: hget },
-            { label: 'HSET', pct: toPct(hset), color: 'bg-yellow-500', value: hset }
-        ];
-        
-        el.innerHTML = '';
-        items.forEach(i => {
-            const seg = document.createElement('div');
-            seg.className = `h-full ${i.color} text-white text-[10px] leading-6 px-2 flex-none overflow-hidden`;
-            seg.style.width = `${i.pct}%`;
-            seg.textContent = `${i.label} ${i.pct.toFixed(1)}%`;
-            seg.title = `${i.label}: ${i.value.toLocaleString()} calls`;
-            el.appendChild(seg);
-        });
-        
-        // If no data, show placeholder
-        if (total === 0) {
-            el.innerHTML = '<div class="h-full w-full bg-gray-200 text-gray-500 text-[10px] leading-6 px-2 flex items-center justify-center">No command data available</div>';
-        }
+        // Update Chart
+        charts.commandsPie.data.datasets[0].data = [get, set, hget, hset];
+        charts.commandsPie.update();
     }
 
     // Add this function to format command counts
@@ -725,6 +683,51 @@
                 setGaugeCenter('redisCacheHitRatio', 0, 'Hit Ratio');
         }
 
+        const pieCtx = createChartCanvas('redisCommandsPieChart');
+        if (pieCtx) {
+            const chart = new Chart(pieCtx, {
+                type: 'pie',
+                devicePixelRatio: 1,
+                data: {
+                    labels: ['GET', 'SET', 'HGET', 'HSET'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgb(168, 85, 247)', // Purple-500
+                            'rgb(34, 197, 94)',  // Green-500
+                            'rgb(59, 130, 246)', // Blue-500
+                            'rgb(234, 179, 8)'   // Yellow-500
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: { boxWidth: 12, usePointStyle: true }
+                        },
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.chart._metasets[context.datasetIndex].total;
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) + '%' : '0%';
+                                    return label + ': ' + value + ' (' + percentage + ')';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            charts.commandsPie = chart;
+        }
+
         const networkCtx = createChartCanvas('redisNetworkTraffic');
         if (networkCtx) {
             const chart = new Chart(networkCtx, {
@@ -902,33 +905,28 @@
         // Sort by value (descending)
         const sortedCommands = Object.entries(additionalCommands)
             .sort((a, b) => b[1] - a[1])
-            .slice(0, 3); // Show top 3 additional commands
-        
-        if (sortedCommands.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
+            .slice(0, 4); // Show top 4 additional commands
         
         let html = '';
-        sortedCommands.forEach(([cmd, value]) => {
-            const iconColor = getCommandColor(cmd);
-            const icon = getCommandIcon(cmd);
-            
-            html += `
-                <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                    <span class="text-gray-600 flex items-center gap-2">
-                        ${icon}
-                        ${cmd} Commands
-                    </span>
-                    <span class="font-medium text-gray-800">${formatNumber(value)}</span>
-                </div>
-            `;
-        });
-        
+        if (sortedCommands.length > 0) {
+            sortedCommands.forEach(([cmd, value]) => {
+                const colorClass = getCommandColor(cmd);
+                
+                html += `
+                    <div class="flex flex-col items-center p-2 rounded hover:bg-gray-50 transition-colors">
+                        <span class="text-xs font-bold ${colorClass} mb-1">${cmd}</span>
+                        <span class="text-lg font-bold text-gray-800">${formatNumber(value)}</span>
+                    </div>
+                `;
+            });
+        }
         container.innerHTML = html;
         
-        // Update total commands
-        const total = Object.values(commandStats).reduce((sum, val) => sum + val, 0);
+        // Update total commands (sum of ALL commands in stats)
+        let total = 0;
+        for (const val of Object.values(commandStats)) {
+            total += Number(val) || 0;
+        }
         setText('totalCommands', formatNumber(total));
         setText('commandsUpdated', new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     }

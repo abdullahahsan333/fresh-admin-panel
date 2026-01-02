@@ -171,71 +171,16 @@ class AssetController extends Controller
         }
         $this->baseViewData = menuActive('projects_assets', 'archive', '');
         $data = $this->baseViewData;
-        
-        $root = storage_path('app/public/archive');
-        $tree = [];
-        if (is_dir($root)) {
-            $ips = array_values(array_filter(scandir($root), function($d){ return $d !== '.' && $d !== '..'; }));
-            foreach ($ips as $ip) {
-                $ipPath = $root . DIRECTORY_SEPARATOR . $ip;
-                if (!is_dir($ipPath)) continue;
-                $services = array_values(array_filter(scandir($ipPath), function($d){ return $d !== '.' && $d !== '..'; }));
-                $svcList = [];
-                foreach ($services as $svc) {
-                    $svcPath = $ipPath . DIRECTORY_SEPARATOR . $svc;
-                    if (!is_dir($svcPath)) continue;
-                    $dates = array_values(array_filter(scandir($svcPath), function($d){ return $d !== '.' && $d !== '..'; }));
-                    $dateList = [];
-                    foreach ($dates as $dt) {
-                        $dtPath = $svcPath . DIRECTORY_SEPARATOR . $dt;
-                        if (!is_dir($dtPath)) continue;
-                        $files = array_values(array_filter(scandir($dtPath), function($f){ return $f !== '.' && $f !== '..'; }));
-                        $fileList = [];
-                        foreach ($files as $f) {
-                            $rel = $ip . '/' . $svc . '/' . $dt . '/' . $f;
-                            $fileList[] = ['name' => $f, 'rel' => $rel];
-                        }
-                        $dateList[] = ['date' => $dt, 'files' => $fileList];
-                    }
-                    $svcList[] = ['name' => $svc, 'dates' => $dateList];
-                }
-                $tree[] = ['ip' => $ip, 'services' => $svcList];
-            }
-        }
-        $projects = Project::where('admin_id', Auth::guard('admin')->id())->get();
-        $projectIds = $projects->pluck('id');
-        $servers = Server::whereIn('project_id', $projectIds)->get();
-        $ipToProject = [];
-        foreach ($servers as $s) {
-            $proj = $projects->firstWhere('id', $s->project_id);
-            $ipToProject[$s->ip] = $proj ? $proj->name : 'Archive';
-        }
-        $grouped = [];
-        foreach ($tree as $srv) {
-            $pname = $ipToProject[$srv['ip']] ?? 'Archive';
-            if (!isset($grouped[$pname])) $grouped[$pname] = ['project' => $pname, 'servers' => []];
-            $grouped[$pname]['servers'][] = $srv;
-        }
-        $tree = array_values($grouped);
-        
-        $selectedRel = $request->query('file');
+
         $selectedContent = null;
         $selectedMeta = null;
-        if ($selectedRel) {
-            $full = $root . DIRECTORY_SEPARATOR . str_replace(['..','\\'], ['','.'], $selectedRel);
-            if (is_file($full) && str_starts_with(realpath($full), realpath($root))) {
-                $content = file_get_contents($full);
-                if (Str::endsWith($full, '.gz')) {
-                    $content = function_exists('gzdecode') ? gzdecode($content) : $content;
-                }
-                $selectedContent = $content;
-                $selectedMeta = [
-                    'file' => $selectedRel,
-                ];
-            }
-        }
         
-        $data['archiveTree'] = $tree;
+        // Only for the current admin
+        $projects = Project::where('admin_id', Auth::guard('admin')->id())
+            ->with(['servers.assets'])
+            ->get();
+
+        $data['projects'] = $projects;
         $data['selectedContent'] = $selectedContent;
         $data['selectedMeta'] = $selectedMeta;
         
