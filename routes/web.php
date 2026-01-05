@@ -16,8 +16,9 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 // All User Panel Controller
 use App\Http\Controllers\User\PanelController as UserPanelController;
 use App\Http\Controllers\User\AssetController as UserAssetController;
+use App\Http\Controllers\User\ProjectController as UserProjectController;
 
-// All User Panel Routes
+// For All User Panel Routes
 Route::get('/', [UserController::class, 'index']);
 Route::post('/login', [UserController::class, 'login'])->name('login');
 Route::get('/register', [UserController::class, 'register'])->name('register');
@@ -28,6 +29,8 @@ Route::prefix('user')->group(function () {
     Route::get('/dashboard', [UserPanelController::class, 'dashboard'])->middleware('user')->name('user.dashboard');
     Route::get('/logout', [UserPanelController::class, 'logout'])->middleware('user')->name('user.logout');
     Route::get('/profile', [UserPanelController::class, 'profile'])->middleware('user')->name('user.profile');
+    Route::get('/projects/create', [UserProjectController::class, 'create'])->middleware('user')->name('user.projects.create');
+    Route::post('/projects', [UserProjectController::class, 'store'])->middleware('user')->name('user.projects.store');
     Route::post('/profile', [UserPanelController::class, 'profileUpdate'])->middleware('user')->name('user.profile.update');
     
     Route::get('/assets', [UserAssetController::class, 'index'])->middleware('user')->name('user.assets.index');
@@ -58,7 +61,7 @@ Route::prefix('user')->group(function () {
     Route::post('/import', [UserAssetController::class, 'import'])->middleware('user')->name('user.import');
 });
 
-// all admin routes
+// admin Panel routes
 Route::redirect('/admin', '/admin/login');
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminController::class, 'loginForm'])->name('admin.login');

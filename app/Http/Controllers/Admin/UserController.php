@@ -80,20 +80,15 @@ class UserController extends Controller
             }
         }
 
-        $user = User::create([
+        User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
             'password' => Hash::make($request->password),
             'avatar' => $avatarPath,
-            'status' => 'active',
+            'status' => 1,
         ]);
-
-        Project::firstOrCreate(
-            ['user_id' => $user->id],
-            ['name' => 'LIVO', 'description' => 'User project']
-        );
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }

@@ -142,11 +142,8 @@
                 <h3 class="text-lg font-semibold text-gray-800">InnoDB Buffer Pool</h3>
                 <div class="text-sm font-semibold" id="bufferPoolHitRate">--%</div>
             </div>
-            <div class="relative h-48 mb-4">
+            <div class="h-48 mb-4">
                 <canvas id="bufferPoolChart"></canvas>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-2xl font-bold text-gray-800" id="bufferPoolCenter">--%</span>
-                </div>
             </div>
             <div class="grid grid-cols-2 gap-4 text-center">
                 <div>
@@ -216,13 +213,8 @@
             <div class="mb-2">
                 <h3 class="text-lg font-semibold text-gray-800">Table Open Cache</h3>
             </div>
-            <div class="flex flex-col items-center">
-                <div class="relative h-28 w-28 my-4">
-                    <canvas id="tableOpenCacheChart"></canvas>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <span class="text-xl font-bold text-gray-800" id="tableOpenCacheCenter">--% Usage</span>
-                    </div>
-                </div>
+            <div class="h-48 mb-4">
+                <canvas id="tableOpenCacheChart"></canvas>
             </div>
             <div class="grid grid-cols-2 gap-4 mt-6 text-center">
                 <div>
@@ -407,21 +399,46 @@ function initializeCharts() {
     // Buffer Pool Chart
     const bufferPoolCtx = document.getElementById('bufferPoolChart').getContext('2d');
     charts.bufferPool = new Chart(bufferPoolCtx, {
-        type: 'doughnut',
+        type: 'line',
         data: {
-            labels: ['Hit Rate', 'Miss Rate'],
-            datasets: [{
-                data: [0, 100],
-                backgroundColor: ['rgb(34, 197, 94)', 'rgb(239, 68, 68)'],
-                borderWidth: 0
-            }]
+            labels: [],
+            datasets: [
+                {
+                    label: 'Hit %',
+                    data: [],
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                    borderWidth: 2,
+                    tension: 0.25,
+                    fill: false,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Miss %',
+                    data: [],
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    borderWidth: 2,
+                    tension: 0.25,
+                    fill: false,
+                    pointRadius: 0
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: { position: 'bottom' }
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(v){ return v + '%'; } },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
             }
         }
     });
@@ -449,28 +466,43 @@ function initializeCharts() {
         });
     })();
 
-    // Table Open Cache Gauge
+    // Table Open Cache Line Chart
     (function(){
         const el = document.getElementById('tableOpenCacheChart');
         if (!el) return;
         const ctx = el.getContext('2d');
-        charts.toc = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Used', 'Free'],
-                datasets: [{
-                    data: [0, 100],
-                    backgroundColor: ['rgb(124, 58, 237)', 'rgba(148, 163, 184, 0.25)'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: { legend: { display: false } }
+    charts.toc = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Usage %',
+                data: [],
+                borderColor: 'rgb(124, 58, 237)',
+                backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                borderWidth: 2,
+                tension: 0.25,
+                fill: false,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(v){ return v + '%'; } },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
             }
-        });
+        }
+    });
     })();
     // Query Types Chart
     const queryTypesCtx = document.getElementById('queryTypesChart').getContext('2d');
@@ -1313,12 +1345,9 @@ function updateDashboard(data) {
     document.getElementById('tableOpenCache').textContent = tableOpenCache || '--';
     const tocCenterEl = document.getElementById('tableOpenCacheCenter');
     if (tocCenterEl) {
-        tocCenterEl.innerHTML = `${tocPercent.toFixed(1)}%`;
+        tocCenterEl.innerHTML = `${tocPercent.toFixed(1)}% Usage`;
     }
-    if (charts.toc) {
-        charts.toc.data.datasets[0].data = [tocPercent, Math.max(0, 100 - tocPercent)];
-        charts.toc.update();
-    }
+    // Chart update for Table Open Cache handled in updateCharts (line chart)
     
     // Update network metrics - show MB totals
     const recvMb = (typeof summary.bytes_received === 'number') ? summary.bytes_received.toFixed(2) : '--';
@@ -1349,10 +1378,35 @@ function updateCharts(data) {
     
     // Connection usage gauge is updated in updateDashboard via summary
     
-    // Update buffer pool chart
+    // Update buffer pool chart (line)
     const hitRate = data.summary?.innodb_buffer_pool_hit || 0;
-    charts.bufferPool.data.datasets[0].data = [hitRate, 100 - hitRate];
-    charts.bufferPool.update();
+    if (charts.bufferPool) {
+        const label = new Date().toLocaleTimeString();
+        charts.bufferPool.data.labels.push(label);
+        charts.bufferPool.data.datasets[0].data.push(hitRate);
+        charts.bufferPool.data.datasets[1].data.push(Math.max(0, 100 - hitRate));
+        if (charts.bufferPool.data.labels.length > 30) {
+            charts.bufferPool.data.labels.shift();
+            charts.bufferPool.data.datasets[0].data.shift();
+            charts.bufferPool.data.datasets[1].data.shift();
+        }
+        charts.bufferPool.update();
+    }
+    
+    // Update Table Open Cache chart (line)
+    if (charts.toc) {
+        const openTables = data.summary?.open_tables ?? 0;
+        const tableOpenCache = data.summary?.table_open_cache ?? 0;
+        const tocPercent = tableOpenCache > 0 ? (openTables / tableOpenCache * 100) : 0;
+        const label = new Date().toLocaleTimeString();
+        charts.toc.data.labels.push(label);
+        charts.toc.data.datasets[0].data.push(tocPercent);
+        if (charts.toc.data.labels.length > 30) {
+            charts.toc.data.labels.shift();
+            charts.toc.data.datasets[0].data.shift();
+        }
+        charts.toc.update();
+    }
     
     // Update query types distribution (example data)
     const queryDistribution = [70, 15, 10, 3, 2]; // Example percentages

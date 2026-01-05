@@ -186,8 +186,8 @@
                             <!-- Request Body -->
                             <div>
                                 <h3 class="text-sm font-semibold text-gray-900 mb-3">Request Body</h3>
-                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 overflow-x-auto">
-                                    <pre class="text-sm font-mono text-gray-800 whitespace-pre-wrap">{{ json_encode($firstLog['body'] ?? [], JSON_PRETTY_PRINT) }}</pre>
+                                <div class="bg-gray-900 rounded-lg p-4 border border-gray-200 overflow-x-auto">
+                                    <pre class="text-sm font-mono text-white whitespace-pre-wrap">{{ json_encode($firstLog['body'] ?? [], JSON_PRETTY_PRINT) }}</pre>
                                 </div>
                             </div>
                         @else
@@ -232,8 +232,8 @@
         </div>
         <div>
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Request Body</h3>
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 overflow-x-auto">
-                <pre class="text-sm font-mono text-gray-800 whitespace-pre-wrap body-content"></pre>
+            <div class="bg-gray-900 rounded-lg p-4 border border-gray-200 overflow-x-auto">
+                <pre class="text-sm font-mono text-white whitespace-pre-wrap body-content"></pre>
             </div>
         </div>
     </div>
@@ -251,8 +251,8 @@
         </div>
         <div>
             <h3 class="text-sm font-semibold text-gray-900 mb-3">Response Body</h3>
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 overflow-x-auto">
-                <pre class="text-sm font-mono text-gray-800 whitespace-pre-wrap response-content"></pre>
+            <div class="bg-gray-900 rounded-lg p-4 border border-gray-200 overflow-x-auto">
+                <pre class="text-sm font-mono text-white whitespace-pre-wrap response-content"></pre>
             </div>
         </div>
     </div>
@@ -548,7 +548,7 @@
                 const isActive = index === 0;
                 const methodClass = getMethodClass(method);
                 tabsHtml += `
-                    <button class="method-tab-btn px-4 py-3 font-medium text-sm whitespace-nowrap ${isActive ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+                    <button class="method-tab-btn px-1 py-2 font-medium text-sm whitespace-nowrap ${isActive ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
                             data-method="${method}">
                         <span class="px-2 py-1 rounded text-xs font-bold ${methodClass}">${method}</span>
                     </button>
@@ -589,46 +589,37 @@
                         <div class="endpoint-header flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-200">
                             <i class="ri-arrow-down-s-line text-gray-400 text-sm toggle-icon"></i>
                             <i class="ri-route-line text-indigo-500"></i>
-                            <span class="text-sm font-medium text-gray-700 truncate">${endpoint}</span>
-                            <span class="ml-auto text-xs text-gray-500">${logs.length} requests</span>
+                            <span class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-mono truncate">${endpoint}</span>
+                            <span class="ml-auto px-2 py-1 rounded bg-gray-50 text-gray-500 text-xs">${logs.length} requests</span>
                         </div>
                         <div class="logs-container ml-4 mt-2 space-y-2 hidden">
                 `;
                 
-                    for (const logData of logs) {
-                        const log = logData.log || {};
-                        const logId = logData.id || '';
-                        const time = formatTime(log.date || '');
-                        const ip = log.ip || 'Unknown';
-                        const status = log.status || 0;
-                        const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
-                        const logJson = encodeURIComponent(JSON.stringify(log));
-                        
-                        html += `
-                            <div class="log-item p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
-                                data-log-id="${logId}"
-                                data-log-data="${logJson}">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-baseline justify-between gap-2">
-                                            <div class="">
-                                                <i class="ri-time-line text-gray-400"></i>
-                                                <span class="text-sm font-medium text-gray-900">${time}</span>
-                                                <br />
-                                                <span class="text-xs text-gray-600">${ip}</span>
-                                            </div>
-                                            <div class="">
-                                                ${logId ? `<span class="text-gray-300">|</span><span class="text-xs text-gray-500 font-mono">${logId}</span>` : ``}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-sm font-bold text-gray-800">${status}</span>
-                                        <p class="text-xs text-gray-500 mt-1">${responseTime}ms</p>
-                                    </div>
+                for (const logData of logs) {
+                    const log = logData.log || {};
+                    const logId = logData.id || '';
+                    const time = formatTime(log.date || '');
+                    const ip = log.ip || 'Unknown';
+                    const status = log.status || 0;
+                    const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
+                    const logJson = encodeURIComponent(JSON.stringify(log));
+                    const methodClass = getMethodClass(log.method || method);
+                    const statusClass = getStatusClass(status);
+                    
+                    html += `
+                        <div class="log-item p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                            data-log-id="${logId}"
+                            data-log-data="${logJson}">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold ${methodClass}">${log.method || method}</span>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium text-gray-900">${time}</span>
+                                    <span class="text-xs text-gray-500">${ip}</span>
                                 </div>
+                                <span class="ml-auto px-2 py-0.5 rounded text-xs font-bold ${statusClass}">${status}</span>
                             </div>
-                    `;
+                        </div>
+                `;
                 }
                 
                 html += `
@@ -861,18 +852,14 @@
             const status = log.status || 'N/A';
             const responseTime = (log.response_time_ms || log.responseTime || 0).toFixed(2);
             const endpointCount = (groupedLogs[method] && groupedLogs[method][endpoint]) ? groupedLogs[method][endpoint].length : 0;
+            const methodClass = getMethodClass(method);
 
             header.innerHTML = `
-                <span class="font-medium text-gray-900">${method}</span>
-                <span class="text-gray-400">></span>
-                <span class="font-mono truncate max-w-xs">${endpoint}</span>
-                <span class="text-xs text-gray-500 ml-2">(${endpointCount} requests)</span>
-                <span class="text-gray-400">></span>
-                <span>${time}</span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="px-2 py-0.5 rounded text-xs font-bold ${getStatusClass(status)}">${status}</span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="text-sm text-gray-600">${responseTime}ms</span>
+                <span class="px-2.5 py-1 rounded ${methodClass} text-xs font-bold">${method}</span>
+                <span class="px-2 py-1 rounded bg-gray-100 text-gray-800 font-mono text-xs truncate max-w-[280px]">${endpoint}</span>
+                <span class="px-2 py-1 rounded bg-gray-50 text-gray-600 text-xs">${time}</span>
+                <span class="px-2 py-1 rounded text-xs font-bold ${getStatusClass(status)}">${status}</span>
+                <span class="px-2 py-1 rounded bg-blue-50 text-blue-700 text-xs">${responseTime}ms</span>
             `;
         }
 
@@ -1252,7 +1239,6 @@
     .method-tab-btn {
         display: inline-flex;
         align-items: center;
-        padding: 0.5rem 1rem;
         font-size: 0.875rem;
         border-bottom: 2px solid transparent;
     }

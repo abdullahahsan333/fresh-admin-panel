@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,17 +18,17 @@ class ProjectController extends Controller
 
     public function create()
     {
-        $data = $this->baseViewData;
-        if (!Auth::guard('admin')->check()) {
-            return redirect()->intended('/admin/login');
+        if (!Auth::guard('web')->check()) {
+            return redirect()->intended(route('login'));
         }
-        return view('admin.projects.create', $data);
+        $data = $this->baseViewData;
+        return view('user.projects.create', $data);
     }
 
     public function store(Request $request)
     {
-        if (!Auth::guard('admin')->check()) {
-            return redirect()->intended('/admin/login');
+        if (!Auth::guard('web')->check()) {
+            return redirect()->intended(route('login'));
         }
 
         $validated = $request->validate([
@@ -36,11 +36,12 @@ class ProjectController extends Controller
         ]);
 
         Project::create([
-            'admin_id' => Auth::guard('admin')->id(),
+            'user_id' => Auth::guard('web')->id(),
             'name' => 'LIVO',
             'description' => $validated['description'] ?? null,
         ]);
-
-        return redirect()->intended(route('admin.assets.index'))->with('success', 'Project created');
+        
+        return redirect()->intended(route('user.assets.index'))->with('success', 'Project created');
     }
 }
+

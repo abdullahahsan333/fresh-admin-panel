@@ -1,6 +1,6 @@
-@extends('layouts.admin')
-
+@extends('layouts.user')
 @section('content')
+
 <div class="max-w-md mx-auto">
     <div class="bg-white shadow rounded-xl px-8 py-3">
         <div class="flex items-center justify-center gap-2 mb-4">
@@ -18,11 +18,11 @@
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M237.721 1.18923L125 70.3075V136.87L250 65.2465V8.06814C250 3.61223 246.389 0 241.935 0C240.448 0 238.99 0.411583 237.721 1.18923Z" fill="white" fill-opacity="0.3"></path>
                 </svg>
             </span>
-            <div class="text-2xl font-semibold">Materio</div>
+            <div class="text-2xl font-semibold">Create Project</div>
         </div>
-        <h1 class="text-2xl font-semibold">Create Your First Project</h1>
-        <p class="text-md text-gray-600 mt-2">Congrats on creating your organization. Please create your first project to continue.</p>
-        <form class="mt-4" method="POST" action="{{ route('admin.projects.store') }}">
+        <h1 class="text-2xl font-semibold">Create Your Project</h1>
+        <p class="text-md text-gray-600 mt-2">Please create your project to continue.</p>
+        <form class="mt-4" method="POST" action="{{ route('user.projects.store') }}">
             @csrf
             <label class="block text-sm mb-1">Project Name</label>
             <input type="text" name="name" class="w-full border rounded px-3 py-2 mb-4 bg-gray-100 text-gray-600" value="LIVO" readonly>
@@ -31,5 +31,4 @@
             <button type="submit" class="w-full btn btn-primary">Create Project</button>
         </form>
     </div>
-</div>
 @endsection

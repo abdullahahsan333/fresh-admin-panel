@@ -60,14 +60,9 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        Project::firstOrCreate(
-            ['user_id' => $user->id],
-            ['name' => 'LIVO', 'description' => 'User project']
-        );
-
         Auth::guard('web')->login($user);
 
-        return redirect()->intended('/user/dashboard')->with('success', 'Account created successfully');
+        return redirect()->intended(route('user.projects.create'))->with('success', 'Account created successfully. Create your project to continue.');
     }
 
 }

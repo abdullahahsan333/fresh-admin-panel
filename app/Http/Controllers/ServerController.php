@@ -40,10 +40,10 @@ class ServerController extends Controller
             if (!Auth::guard('web')->check()) {
                 return redirect()->intended(route('login'));
             }
-            $project = Project::firstOrCreate(
-                ['user_id' => Auth::guard('web')->id()],
-                ['name' => 'LIVO', 'description' => 'User project']
-            );
+            $project = Project::where('user_id', Auth::guard('web')->id())->first();
+            if (!$project) {
+                return redirect()->intended(route('user.projects.create'));
+            }
             $data['servers'] = Server::where('project_id', $project->id)->get();
         }
         return view('server.overview', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
@@ -62,11 +62,12 @@ class ServerController extends Controller
             if (!Auth::guard('web')->check()) {
                 return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
             }
-            $project = Project::firstOrCreate(
-                ['user_id' => Auth::guard('web')->id()],
-                ['name' => 'LIVO', 'description' => 'User project']
-            );
-            $servers = Server::where('project_id', $project->id)->orderBy('ip')->get();
+            $project = Project::where('user_id', Auth::guard('web')->id())->first();
+            if ($project) {
+                $servers = Server::where('project_id', $project->id)->orderBy('ip')->get();
+            } else {
+                $servers = collect();
+            }
         }
         $list = $servers->map(function ($s) {
             return [

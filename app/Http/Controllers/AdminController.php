@@ -61,11 +61,7 @@ protected array $baseViewData = [];
             'password'  => Hash::make($request->password),
         ]);
         Auth::guard('admin')->login($admin);
-        Project::firstOrCreate(
-            ['admin_id' => $admin->id],
-            ['name'     => 'LIVO', 'description' => 'Default project']
-        );
-        return redirect()->intended(route('admin.assets.index'))->with('success', 'Welcome! Your project is ready.');
+        return redirect()->intended(route('admin.projects.create'))->with('success', 'Welcome! Create your project to continue.');
     }
 
     public function dashboard()

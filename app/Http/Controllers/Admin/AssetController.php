@@ -47,10 +47,10 @@ class AssetController extends Controller
                 'hostnames' => 'array',
                 'hostnames.*' => 'string',
             ]);
-            $project = Project::firstOrCreate(
-                ['admin_id' => Auth::guard('admin')->id()],
-                ['name' => Auth::guard('admin')->user()->name . '\'s Project', 'description' => 'Default project']
-            );
+            $project = Project::where('admin_id', Auth::guard('admin')->id())->latest('id')->first();
+            if (!$project) {
+                return redirect()->intended(route('admin.projects.create'))->with('error', 'Please create a project first');
+            }
             $server = null;
             if (!empty($validated['server_id'])) {
                 $server = Server::where('project_id', $project->id)->where('id', $validated['server_id'])->first();
