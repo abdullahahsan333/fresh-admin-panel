@@ -7,6 +7,7 @@ use App\Models\Hostname;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class ServerController extends Controller
 {
@@ -27,42 +28,57 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $this->baseViewData = menuActive('projects_assets', 'overview', '');
         $data = $this->baseViewData;
+
         if ($panel === 'admin') {
+
             if (!Auth::guard('admin')->check()) {
                 return redirect()->intended('/admin/login');
             }
+
             $data['projects'] = Project::where('admin_id', Auth::guard('admin')->id())->get();
             $projectIds = $data['projects']->pluck('id');
             $data['servers'] = Server::whereIn('project_id', $projectIds)->get();
             $data['assets'] = \App\Models\Asset::whereIn('project_id', $projectIds)->get();
             $data['hostnames'] = Hostname::whereIn('project_id', $projectIds)->get();
         } else {
+
             if (!Auth::guard('web')->check()) {
                 return redirect()->intended(route('login'));
             }
+
             $project = Project::where('user_id', Auth::guard('web')->id())->first();
+            
             if (!$project) {
                 return redirect()->intended(route('user.projects.create'));
             }
+
             $data['servers'] = Server::where('project_id', $project->id)->get();
         }
+
         return view('server.overview', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
     public function server_list(Request $request)
     {
         $panel = $this->panel($request);
+
         if ($panel === 'admin') {
+
             if (!Auth::guard('admin')->check()) {
                 return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
             }
+
             $projectIds = Project::where('admin_id', Auth::guard('admin')->id())->pluck('id');
+            
             $servers = Server::whereIn('project_id', $projectIds)->orderBy('ip')->get();
         } else {
+
             if (!Auth::guard('web')->check()) {
                 return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
             }
+
             $project = Project::where('user_id', Auth::guard('web')->id())->first();
+            
             if ($project) {
                 $servers = Server::where('project_id', $project->id)->orderBy('ip')->get();
             } else {
@@ -79,58 +95,79 @@ class ServerController extends Controller
                 'memory_usage' => 0,
             ];
         })->values();
+
         return response()->json(['ok' => true, 'servers' => $list]);
     }
 
     protected function ensureViewAccess(string $panel, Server $server): Project
     {
         if ($panel === 'admin') {
+
             if (!Auth::guard('admin')->check()) {
                 abort(302, '/admin/login');
             }
+
             $project = Project::find($server->project_id);
+
             if (!$project || $project->admin_id !== Auth::guard('admin')->id()) {
                 abort(403);
             }
+
             return $project;
+
         } else {
+
             if (!Auth::guard('web')->check()) {
                 abort(302, route('login'));
             }
+
             $project = Project::firstOrCreate(
                 ['user_id' => Auth::guard('web')->id()],
                 ['name' => 'LIVO', 'description' => 'User project']
             );
+
             if (!$project || $server->project_id !== $project->id) {
                 abort(403);
             }
+
             return $project;
+
         }
     }
 
     protected function ensureDataAccess(string $panel, Server $server)
     {
         if ($panel === 'admin') {
+
             if (!Auth::guard('admin')->check()) {
                 return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
             }
+
             $project = Project::find($server->project_id);
+
             if (!$project || $project->admin_id !== Auth::guard('admin')->id()) {
                 return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
             }
+
             return $project;
+
         } else {
+
             if (!Auth::guard('web')->check()) {
                 return response()->json(['ok' => false, 'message' => 'Unauthorized'], 401);
             }
+
             $project = Project::firstOrCreate(
                 ['user_id' => Auth::guard('web')->id()],
                 ['name' => 'LIVO', 'description' => 'User project']
             );
+
             if (!$project || $server->project_id !== $project->id) {
                 return response()->json(['ok' => false, 'message' => 'Forbidden'], 403);
             }
+
             return $project;
+
         }
     }
 
@@ -139,12 +176,15 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureViewAccess($panel, $server);
+
         $this->baseViewData = menuActive('projects_assets', 'linux', '');
         $data = $this->baseViewData;
+        
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'linux';
         $data['server'] = $server;
+
         return view('server.linux', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -153,7 +193,9 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $linuxData = fetchLinuxData($server->ip, 'livo', 60);
             $summary = calculateLinuxSummary($linuxData);
@@ -180,6 +222,7 @@ class ServerController extends Controller
                     $diskSeries[] = $pct;
                 }
             }
+
             $chartData = [
                 'cpu' => processLatestChartData($linuxData, 'cpu_usage_percent', 6),
                 'memory' => processLatestChartData($linuxData, 'memory_used_percent', 6),
@@ -190,8 +233,10 @@ class ServerController extends Controller
                     'output' => processLatestChartData($linuxData, 'net_output_mb', 6)['data'] ?? []
                 ]
             ];
+
             $topProcesses = getTopProcesses($linuxData);
             $apiStatus = getAPIServerStatus($server->ip);
+
             return response()->json([
                 'ok' => !empty($linuxData) || $apiStatus['connected'],
                 'server_id' => $server->id,
@@ -213,12 +258,15 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureViewAccess($panel, $server);
+
         $this->baseViewData = menuActive('projects_assets', 'mysql', '');
         $data = $this->baseViewData;
+
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'mysql';
         $data['server'] = $server;
+
         return view('server.mysql', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -227,16 +275,20 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $mysqlData = fetchMySQLData($server->ip, $project->name ?? 'livo', 60);
             $summary = calculateMySQLSummary($mysqlData);
+            
             $slowQueries = [];
+
             try {
                 $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name ?? 'livo', 15);
             } catch (\Exception $e) {
                 $slowQueries = [];
             }
+
             $chartData = [
                 'queries' => processLatestChartData($mysqlData, 'queries_per_second', 12),
                 'connections' => processLatestChartData($mysqlData, 'current_connections', 12),
@@ -247,6 +299,7 @@ class ServerController extends Controller
                 'network' => processNetworkSpeedChartData($mysqlData, 12),
                 'avg_query_time_ms' => processLatestChartData($mysqlData, 'avg_query_time_ms', 12),
             ];
+
             if (!empty($mysqlData)) {
                 $bufferHitData = [];
                 foreach ($mysqlData as $dataPoint) {
@@ -257,8 +310,18 @@ class ServerController extends Controller
                     $bufferHitData[] = round($hitRate, 2);
                 }
                 $chartData['buffer_hit']['data'] = array_slice($bufferHitData, -12);
+                $latest = end($mysqlData);
+                $metricsLatest = $latest['metrics'] ?? [];
+                $chartData['avg_query_time_by_type'] = [
+                    'select' => isset($metricsLatest['select_avg_query_time_ms']) ? (float)$metricsLatest['select_avg_query_time_ms'] : (isset($metricsLatest['select_avg_ms']) ? (float)$metricsLatest['select_avg_ms'] : null),
+                    'insert' => isset($metricsLatest['insert_avg_query_time_ms']) ? (float)$metricsLatest['insert_avg_query_time_ms'] : (isset($metricsLatest['create_avg_query_time_ms']) ? (float)$metricsLatest['create_avg_query_time_ms'] : (isset($metricsLatest['insert_avg_ms']) ? (float)$metricsLatest['insert_avg_ms'] : null)),
+                    'update' => isset($metricsLatest['update_avg_query_time_ms']) ? (float)$metricsLatest['update_avg_query_time_ms'] : (isset($metricsLatest['update_avg_ms']) ? (float)$metricsLatest['update_avg_ms'] : null),
+                    'delete' => isset($metricsLatest['delete_avg_query_time_ms']) ? (float)$metricsLatest['delete_avg_query_time_ms'] : (isset($metricsLatest['delete_avg_ms']) ? (float)$metricsLatest['delete_avg_ms'] : null),
+                ];
             }
+
             $apiStatus = getAPIServerStatus($server->ip);
+
             return response()->json([
                 'ok' => !empty($mysqlData) || $apiStatus['connected'],
                 'server_id' => $server->id,
@@ -281,14 +344,17 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $minutes = (int) $request->query('minutes', 15);
             $limit = (int) $request->query('limit', 50);
             $slowQueries = fetchMySQLSlowQueries($server->ip, $project->name ?? 'livo', $minutes);
+            
             if ($limit > 0 && count($slowQueries) > $limit) {
                 $slowQueries = array_slice($slowQueries, 0, $limit);
             }
+
             return response()->json([
                 'ok' => true,
                 'server_id' => $server->id,
@@ -309,10 +375,12 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $mysqlData = fetchMySQLData($server->ip, $project->name ?? 'livo', 15);
             $warnings = detectMySQLWarnings($mysqlData);
+
             return response()->json([
                 'ok' => true,
                 'server_id' => $server->id,
@@ -331,10 +399,12 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $mysqlData = fetchMySQLData($server->ip, $project->name ?? 'livo', 15);
             $errors = detectMySQLErrors($mysqlData);
+
             return response()->json([
                 'ok' => true,
                 'server_id' => $server->id,
@@ -352,13 +422,16 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureViewAccess($panel, $server);
         $this->baseViewData = menuActive('projects_assets', 'mongodb', '');
         $data = $this->baseViewData;
+
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'mongodb';
         $data['server'] = $server;
+
         return view('server.mongodb', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -367,19 +440,40 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $mongodbData = fetchMongoDBData($server->ip, 'livo', 60);
             $summary = calculateMongoDBSummary($mongodbData);
+            $ops = processLatestChartData($mongodbData, 'opcounters_total', 12);
+            $mem = processLatestChartData($mongodbData, 'memory_resident', 12);
+            $netIn = processLatestChartData($mongodbData, 'network_bytes_in', 12);
+            $netOut = processLatestChartData($mongodbData, 'network_bytes_out', 12);
+
+            if (!empty($mem['data'])) {
+                $mem['data'] = array_map(function($v){ return round(($v ?? 0) / 1024, 2); }, $mem['data']);
+            }
+
+            if (!empty($netIn['data'])) {
+                $netIn['data'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $netIn['data']);
+            }
+
+            if (!empty($netOut['data'])) {
+                $netOut['data'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $netOut['data']);
+            }
+
             $chartData = [
-                'operations' => processLatestChartData($mongodbData, 'opcounters_total', 12),
-                'memory' => processLatestChartData($mongodbData, 'memory_resident', 12),
+                'operations' => $ops,
+                'memory' => $mem,
                 'network' => [
-                    'in' => processLatestChartData($mongodbData, 'network_bytes_in', 12),
-                    'out' => processLatestChartData($mongodbData, 'network_bytes_out', 12)
+                    'labels' => $netIn['labels'] ?? [],
+                    'in' => $netIn['data'] ?? [],
+                    'out' => $netOut['data'] ?? []
                 ]
             ];
+
             $apiStatus = getAPIServerStatus($server->ip);
+
             return response()->json([
                 'ok' => !empty($mongodbData) || $apiStatus['connected'],
                 'server_id' => $server->id,
@@ -389,6 +483,7 @@ class ServerController extends Controller
                 'apiStatus' => $apiStatus,
                 'message' => empty($mongodbData) ? 'No data available from API' : null
             ]);
+
         } catch (\Exception $e) {
             Log::error('MongoDB data fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
             return response()->json(['ok' => false, 'message' => 'Failed to fetch MongoDB data', 'error' => $e->getMessage()], 500);
@@ -399,13 +494,16 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureViewAccess($panel, $server);
         $this->baseViewData = menuActive('projects_assets', 'redis', '');
         $data = $this->baseViewData;
+
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'redis';
         $data['server'] = $server;
+
         return view('server.redis', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -414,10 +512,12 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         try {
             $redisData = fetchRedisData($server->ip, 'livo', 60);
             $summary = calculateRedisSummary($redisData);
+
             $chartData = [
                 'ops' => processLatestChartData($redisData, 'instantaneous_ops_per_sec', 10),
                 'memory' => processLatestChartData($redisData, 'used_memory', 10),
@@ -427,10 +527,13 @@ class ServerController extends Controller
                     'output' => processLatestChartData($redisData, 'total_net_output_bytes', 10)['data'] ?? []
                 ]
             ];
+
             if (!empty($chartData['memory']['data'])) {
                 $chartData['memory']['data'] = array_map(function($v){ return round(($v ?? 0) / 1024 / 1024, 2); }, $chartData['memory']['data']);
             }
+
             $apiStatus = getAPIServerStatus($server->ip);
+
             return response()->json([
                 'ok' => !empty($redisData) || $apiStatus['connected'],
                 'server_id' => $server->id,
@@ -450,20 +553,25 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureViewAccess($panel, $server);
         $this->baseViewData = menuActive('projects_assets', 'api_log', '');
         $data = $this->baseViewData;
+
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'api_log';
         $data['server'] = $server;
+
         $apiLogs = fetchApiLogs($server->ip, 'livo', 60);
         $summary = calculateApiSummary($apiLogs, 60);
         $groupedLogs = groupApiLogs($apiLogs);
+
         $data['summary'] = $summary;
         $data['logs'] = $apiLogs;
         $data['groupedLogs'] = $groupedLogs;
         $data['firstLog'] = !empty($apiLogs) ? reset($apiLogs) : null;
+
         return view('server.api_log', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -471,14 +579,17 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         $logs = fetchApiLogs($server->ip, 'livo', 60);
         $summary = calculateApiSummary($logs, 60);
         $grouped = groupApiLogs($logs);
         $firstLog = !empty($logs) ? reset($logs) : null;
         $ok = true;
         $message = null;
+
         if (empty($logs)) {
             $ok = testAPIConnection($server->ip);
             if (!$ok) {
@@ -501,13 +612,16 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureViewAccess($panel, $server);
         $this->baseViewData = menuActive('projects_assets', 'scheduler', '');
         $data = $this->baseViewData;
+
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'scheduler';
         $data['server'] = $server;
+
         return view('server.scheduler', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 
@@ -515,18 +629,23 @@ class ServerController extends Controller
     {
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
+
         $project = $this->ensureDataAccess($panel, $server);
-        if ($project instanceof \Illuminate\Http\JsonResponse) return $project;
+        if ($project instanceof JsonResponse) return $project;
+
         $date = $request->query('date');
         $start = $request->query('start');
         $end = $request->query('end');
+
         if ($date && $start && $end) {
             $data = fetchSchedulerDataRange($server->ip, 'livo', $date, $start, $end);
         } else {
             $minutes = (int) $request->query('minutes', 15);
             $data = fetchSchedulerData($server->ip, 'livo', $minutes);
         }
+
         $summary = calculateSchedulerSummary($data);
+
         $logs = [];
         foreach ($data as $item) {
             if (is_array($item) && isset($item['metrics']['scheduler_logs']) && is_array($item['metrics']['scheduler_logs'])) {
@@ -539,12 +658,15 @@ class ServerController extends Controller
         }
         $ok = !empty($data) || !empty($logs);
         $message = $ok ? null : 'No scheduler data';
+        $apiStatus = getAPIServerStatus($server->ip);
+
         return response()->json([
-            'ok' => $ok,
+            'ok' => $ok || ($apiStatus['connected'] ?? false),
             'server_id' => $server->id,
             'ip' => $server->ip,
             'summary' => $summary,
             'logs' => $logs,
+            'apiStatus' => $apiStatus,
             'message' => $message,
         ]);
     }
@@ -554,14 +676,18 @@ class ServerController extends Controller
         $panel = $this->panel($request);
         $server = Server::findOrFail($id);
         $project = $this->ensureViewAccess($panel, $server);
+
         $this->baseViewData = menuActive('projects_assets', 'ssl', '');
         $data = $this->baseViewData;
+        
         $data['activeProjectId'] = $project->id;
         $data['activeServerId'] = $server->id;
         $data['activeService'] = 'ssl';
         $data['subMenu'] = 'ssl';
-        $data['server'] = $server;
-        $data['hostnames'] = Hostname::where('project_id', $project->id)->get();
+
+        $data['server']         = $server;
+        $data['hostnames']      = Hostname::where('project_id', $project->id)->get();
+
         return view('server.ssl', $data + ['layout' => "layouts.$panel", 'panel' => $panel]);
     }
 }

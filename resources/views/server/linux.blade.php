@@ -196,7 +196,7 @@
 </div>
 
 <!-- Bottom Section -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Top Resource Consumers -->
     <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 lg:col-span-1">
         <div class="flex justify-between items-start mb-4">

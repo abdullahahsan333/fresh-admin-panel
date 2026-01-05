@@ -6,6 +6,9 @@
 <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between z-10 sticky top-0 mb-6">
     <div class="flex items-center gap-4">
         <h1 class="text-lg font-semibold text-gray-800">MongoDB</h1>
+        <div id="apiStatusDot" class="hidden">
+            <span class="inline-block w-2 h-2 rounded-full"></span>
+        </div>
         <div class="flex items-center gap-2 text-sm">
             <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded">Project: {{ $server->project->name ?? 'N/A' }}</span>
             <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded">Server: {{ $server->ip }}</span>
@@ -14,7 +17,9 @@
     <div class="flex items-center gap-4">
         <div class="text-sm text-gray-500">Last updated: <span id="lastUpdated">{{ now()->format('M d, H:i') }}</span></div>
         <button id="refreshBtn" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition">
-            Refresh
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
         </button>
     </div>
 </header>
@@ -235,6 +240,40 @@
         return canvas.getContext('2d');
     }
     
+    function showToast(type, message) {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.style.position = 'fixed';
+            container.style.top = '1rem';
+            container.style.right = '1rem';
+            container.style.zIndex = '9999';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '0.5rem';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `px-3 py-2 rounded-lg shadow-sm border text-sm ${type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+            if (!container.childElementCount) container.remove();
+        }, 3500);
+    }
+    
+    function showApiStatus(type, message) {
+        const dotWrap = document.getElementById('apiStatusDot');
+        if (dotWrap) {
+            const dot = dotWrap.querySelector('span') || dotWrap;
+            dotWrap.classList.remove('hidden');
+            dot.className = `inline-block w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        }
+        showToast(type, type === 'success' ? 'Connected' : (message || 'Connection failed'));
+    }
+    
     function setGaugeCenter(containerId, percent, label) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -348,7 +387,7 @@
                     labels: [],
                     datasets: [
                         {
-                            label: 'Bytes In',
+                            label: 'MB In',
                             data: [],
                             borderColor: 'rgb(59, 130, 246)',
                             backgroundColor: 'rgba(59, 130, 246, 0.15)',
@@ -357,7 +396,7 @@
                             tension: 0.4
                         },
                         {
-                            label: 'Bytes Out',
+                            label: 'MB Out',
                             data: [],
                             borderColor: 'rgb(16, 185, 129)',
                             backgroundColor: 'rgba(16, 185, 129, 0.15)',
@@ -479,12 +518,24 @@
         
         try {
             const data = await fetchMongoDBData();
-            updateDashboard(data);
+            if (data && data.ok) {
+                updateDashboard(data);
+                showApiStatus('success', 'API connected successfully');
+            } else {
+                updateDashboard(data);
+                const msg = data && data.message ? data.message : 'Failed to fetch MongoDB data';
+                showApiStatus('error', msg);
+            }
         } catch (error) {
             console.error('Refresh failed:', error);
+            showApiStatus('error', 'Network error - cannot connect to API');
         } finally {
             refreshBtn.disabled = false;
-            refreshBtn.innerHTML = 'Refresh';
+            refreshBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            `;
         }
     }
     

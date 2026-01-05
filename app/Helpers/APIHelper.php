@@ -53,6 +53,7 @@ function fetchFromAPI($serverIp, $service, $appName = 'livo', $minutes = 60, $ht
         $client = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5]);
         $t0 = microtime(true);
         $response = $method === 'post' ? $client->post($apiUrl12) : $client->get($apiUrl12);
+
         logExternalApiRequest([
             'service' => $service,
             'method' => strtoupper($httpMethod),
@@ -747,7 +748,7 @@ function fetchMySQLSlowQueries($serverIp, $appName = 'livo', $minutes = 15)
 {
     // Try the new direct method first
     $queries = fetchMySQLSlowQueriesDirect($serverIp, $appName, $minutes);
-    
+
     if (!empty($queries)) {
         return $queries;
     }
@@ -831,7 +832,7 @@ function calculateMySQLSummary($mysqlData)
     $maxConnections = $metrics['max_connections'] ?? 0;
     $currentConnections = $metrics['current_connections'] ?? $metrics['threads_connected'] ?? 0;
     $connectionsPercent = $maxConnections > 0 ? ($currentConnections / $maxConnections * 100) : 0;
-    
+
     $queriesPerSecond = $metrics['queries_per_second'] ?? 0;
     $slowQueries = $metrics['slow_queries'] ?? 0;
     $tableLocks = $metrics['table_locks_waited'] ?? 0;
@@ -941,7 +942,7 @@ function getMySQLStatus($mysqlData)
  */
 function fetchMongoDBData($serverIp, $appName = 'livo', $minutes = 60)
 {
-    return fetchFromAPI($serverIp, 'mongodb', $appName, $minutes);
+    return fetchFromAPI($serverIp, 'mongo', $appName, $minutes);
 }
 
 /**

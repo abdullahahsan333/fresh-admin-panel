@@ -93,6 +93,7 @@
             <h3 class="text-lg font-semibold text-gray-800 mb-1" id="threadsRunning">--</h3>
             <p class="text-sm text-gray-600">Threads Running</p>
         </div>
+        
     </div>
 
     <!-- Charts Section -->
@@ -124,10 +125,12 @@
                 <div>
                     <div class="text-sm text-gray-600">Network Input (MB)</div>
                     <div class="text-lg font-semibold" id="bytesReceived">-- MB</div>
+                    <div class="text-xs text-gray-500 mt-1" id="bytesReceivedRate">Latest: --</div>
                 </div>
                 <div>
                     <div class="text-sm text-gray-600">Network Output (MB)</div>
                     <div class="text-lg font-semibold" id="bytesSent">-- MB</div>
+                    <div class="text-xs text-gray-500 mt-1" id="bytesSentRate">Latest: --</div>
                 </div>
             </div>
         </div>
@@ -189,29 +192,30 @@
         </div>
 
         <!-- Load vs Query Time -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="mb-2">
-                    <h3 class="text-lg font-semibold text-gray-800">Load vs Query Time</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="mb-2">
+                <h3 class="text-lg font-semibold text-gray-800">Load vs Query Time</h3>
+            </div>
+            <div class="h-48">
+                <canvas id="loadVsQueryChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4 text-center">
+                <div>
+                    <div class="text-sm text-gray-600">Queries / Second</div>
+                    <div class="text-lg font-semibold" id="loadQpsLatest">--</div>
                 </div>
-                <div class="h-48">
-                    <canvas id="loadVsQueryChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-4 text-center">
-                    <div>
-                        <div class="text-sm text-gray-600">Queries / Second</div>
-                        <div class="text-lg font-semibold" id="loadQpsLatest">--</div>
-                    </div>
-                    <div>
-                        <div class="text-sm text-gray-600">Avg Query Time (ms)</div>
-                        <div class="text-lg font-semibold" id="loadAvgLatest">--</div>
-                    </div>
+                <div>
+                    <div class="text-sm text-gray-600">Avg Query Time (ms)</div>
+                    <div class="text-lg font-semibold" id="loadAvgLatest">--</div>
                 </div>
             </div>
+        </div>
 
         <!-- Table Open Cache -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="mb-2">
+            <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Table Open Cache</h3>
+                <div class="text-sm font-semibold" id="tableOpenCachePercent">--%</div>
             </div>
             <div class="h-48 mb-4">
                 <canvas id="tableOpenCacheChart"></canvas>
@@ -235,38 +239,36 @@
         </div>
 
         <!-- Query Type Distribution -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Query Types</h3>
                 <div class="text-sm text-gray-600">Distribution</div>
             </div>
-            <div class="h-48 mb-4">
-                <canvas id="queryTypesChart"></canvas>
-            </div>
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-blue-500 rounded"></div>
-                        <span class="text-sm">SELECT</span>
-                    </div>
-                    <span class="text-sm font-semibold" id="selectPercent">--%</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="h-64">
+                    <canvas id="queryTypesChart"></canvas>
                 </div>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-green-500 rounded"></div>
-                        <span class="text-sm">INSERT</span>
+                <div class="grid grid-cols-2 gap-4 md:gap-6 text-center">
+                    <div>
+                        <div class="text-xs font-semibold text-blue-600">SELECT</div>
+                        <div class="text-sm font-semibold" id="selectStat">--</div>
                     </div>
-                    <span class="text-sm font-semibold" id="insertPercent">--%</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 bg-yellow-500 rounded"></div>
-                        <span class="text-sm">UPDATE</span>
+                    <div>
+                        <div class="text-xs font-semibold text-green-600">INSERT</div>
+                        <div class="text-sm font-semibold" id="insertStat">--</div>
                     </div>
-                    <span class="text-sm font-semibold" id="updatePercent">--%</span>
+                    <div>
+                        <div class="text-xs font-semibold text-yellow-600">UPDATE</div>
+                        <div class="text-sm font-semibold" id="updateStat">--</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-red-600">DELETE</div>
+                        <div class="text-sm font-semibold" id="deleteStat">--</div>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- Performance Concerns - UPDATED SECTION -->
@@ -304,6 +306,7 @@
             </div>
         </div>
     </div>
+
 </div>
 @endsection
 
@@ -407,20 +410,20 @@ function initializeCharts() {
                     label: 'Hit %',
                     data: [],
                     borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.25)',
                     borderWidth: 2,
                     tension: 0.25,
-                    fill: false,
+                    fill: true,
                     pointRadius: 0
                 },
                 {
                     label: 'Miss %',
                     data: [],
                     borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.25)',
                     borderWidth: 2,
                     tension: 0.25,
-                    fill: false,
+                    fill: true,
                     pointRadius: 0
                 }
             ]
@@ -475,16 +478,16 @@ function initializeCharts() {
         type: 'line',
         data: {
             labels: [],
-            datasets: [{
-                label: 'Usage %',
-                data: [],
-                borderColor: 'rgb(124, 58, 237)',
-                backgroundColor: 'rgba(124, 58, 237, 0.15)',
-                borderWidth: 2,
-                tension: 0.25,
-                fill: false,
-                pointRadius: 0
-            }]
+                datasets: [{
+                    label: 'Usage %',
+                    data: [],
+                    borderColor: 'rgb(124, 58, 237)',
+                    backgroundColor: 'rgba(124, 58, 237, 0.25)',
+                    borderWidth: 2,
+                    tension: 0.25,
+                    fill: true,
+                    pointRadius: 0
+                }]
         },
         options: {
             responsive: true,
@@ -511,7 +514,7 @@ function initializeCharts() {
         data: {
             labels: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'OTHER'],
             datasets: [{
-                data: [0, 0, 0, 0, 100],
+                data: [15, 25, 20, 25, 15],
                 backgroundColor: [
                     'rgb(59, 130, 246)',
                     'rgb(34, 197, 94)',
@@ -647,7 +650,12 @@ async function loadConcernTabContent(tabName) {
         `;
         
         try {
-            const response = await fetch(`${apiBaseUrl}/${panel}/server/${serverId}/mysql-slow-queries?minutes=15`);
+            const response = await fetch(`${apiBaseUrl}/${panel}/server/${serverId}/mysql-slow-queries?minutes=15`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
             const data = await response.json();
             
             if (data.ok && data.slowQueries && Array.isArray(data.slowQueries) && data.slowQueries.length > 0) {
@@ -1343,17 +1351,18 @@ function updateDashboard(data) {
     const tocPercent = tableOpenCache > 0 ? (openTables / tableOpenCache * 100) : 0;
     document.getElementById('openTables').textContent = openTables || '--';
     document.getElementById('tableOpenCache').textContent = tableOpenCache || '--';
-    const tocCenterEl = document.getElementById('tableOpenCacheCenter');
-    if (tocCenterEl) {
-        tocCenterEl.innerHTML = `${tocPercent.toFixed(1)}% Usage`;
-    }
-    // Chart update for Table Open Cache handled in updateCharts (line chart)
+    const tocPercentEl = document.getElementById('tableOpenCachePercent');
+    if (tocPercentEl) tocPercentEl.textContent = `${tocPercent.toFixed(1)}%`;
     
-    // Update network metrics - show MB totals
+    // Update network metrics - show MB totals and latest speed
     const recvMb = (typeof summary.bytes_received === 'number') ? summary.bytes_received.toFixed(2) : '--';
     const sentMb = (typeof summary.bytes_sent === 'number') ? summary.bytes_sent.toFixed(2) : '--';
     document.getElementById('bytesReceived').textContent = `${recvMb} MB`;
     document.getElementById('bytesSent').textContent = `${sentMb} MB`;
+    const recvRateEl = document.getElementById('bytesReceivedRate');
+    const sentRateEl = document.getElementById('bytesSentRate');
+    if (recvRateEl) recvRateEl.textContent = `Latest: ${formatNetworkSpeed(summary.network_recv_rate)}`;
+    if (sentRateEl) sentRateEl.textContent = `Latest: ${formatNetworkSpeed(summary.network_sent_rate)}`;
     
     // Update last updated time
     document.getElementById('lastUpdated').textContent = 
@@ -1375,8 +1384,6 @@ function updateCharts(data) {
         charts.queries.data.datasets[0].data = chartData.queries.data || [];
         charts.queries.update();
     }
-    
-    // Connection usage gauge is updated in updateDashboard via summary
     
     // Update buffer pool chart (line)
     const hitRate = data.summary?.innodb_buffer_pool_hit || 0;
@@ -1408,16 +1415,41 @@ function updateCharts(data) {
         charts.toc.update();
     }
     
-    // Update query types distribution (example data)
-    const queryDistribution = [70, 15, 10, 3, 2]; // Example percentages
-    charts.queryTypes.data.datasets[0].data = queryDistribution;
-    
-    // Update percentages in UI
-    document.getElementById('selectPercent').textContent = `${queryDistribution[0]}%`;
-    document.getElementById('insertPercent').textContent = `${queryDistribution[1]}%`;
-    document.getElementById('updatePercent').textContent = `${queryDistribution[2]}%`;
-    
+    const avgByType = (chartData.avg_query_time_by_type) || null;
+    let dist = [70, 15, 10, 3, 2];
+    if (avgByType) {
+        const vals = [
+            Number(avgByType.select) || 0,
+            Number(avgByType.insert) || 0,
+            Number(avgByType.update) || 0,
+            Number(avgByType.delete) || 0
+        ];
+        const sum = vals.reduce((a, b) => a + b, 0);
+        if (sum > 0) {
+            const p = vals.map(v => Math.round((v / sum) * 100));
+            const other = Math.max(0, 100 - p.reduce((a, b) => a + b, 0));
+            dist = [...p, other];
+        } else {
+            dist = [0, 0, 0, 0, 100];
+        }
+    }
+    charts.queryTypes.data.datasets[0].data = dist;
+    const [selP, insP, updP, delP] = dist;
+    const latestOverallArr = (chartData.avg_query_time_ms && chartData.avg_query_time_ms.data) ? chartData.avg_query_time_ms.data : [];
+    const latestOverall = latestOverallArr.length ? latestOverallArr[latestOverallArr.length - 1] : null;
+    const avgByType2 = (chartData.avg_query_time_by_type) || {};
+    const toMs = (v) => (typeof v === 'number' && !isNaN(v)) ? Number(v).toFixed(2) : (latestOverall !== null ? Number(latestOverall).toFixed(2) : '--');
+    const setStat = (id, ms, pct) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `${toMs(ms)} ms (${(pct || 0)}%)`;
+    };
+    setStat('selectStat', avgByType2.select, selP);
+    setStat('insertStat', avgByType2.insert, insP);
+    setStat('updateStat', avgByType2.update, updP);
+    setStat('deleteStat', avgByType2.delete, delP);
     charts.queryTypes.update();
+    
+    // ms values handled above in inline stat labels
     
     // Update network traffic chart
     if (chartData.network) {
