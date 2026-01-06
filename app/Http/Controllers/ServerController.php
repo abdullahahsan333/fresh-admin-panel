@@ -446,6 +446,13 @@ class ServerController extends Controller
             $mongodbData = fetchMongoDBData($server->ip, 'livo', 60);
             $summary = calculateMongoDBSummary($mongodbData);
             $ops = processLatestChartData($mongodbData, 'opcounters_total', 12);
+            $opsBreakdown = [
+                'query' => processLatestChartData($mongodbData, 'opcounters_query', 12),
+                'insert' => processLatestChartData($mongodbData, 'opcounters_insert', 12),
+                'update' => processLatestChartData($mongodbData, 'opcounters_update', 12),
+                'delete' => processLatestChartData($mongodbData, 'opcounters_delete', 12),
+                'command' => processLatestChartData($mongodbData, 'opcounters_command', 12),
+            ];
             $latest = !empty($mongodbData) ? end($mongodbData) : [];
             $latestMetrics = is_array($latest) ? ($latest['metrics'] ?? []) : [];
             $memKey = isset($latestMetrics['mem_resident_mb']) ? 'mem_resident_mb' : 'memory_resident';
@@ -467,6 +474,7 @@ class ServerController extends Controller
 
             $chartData = [
                 'operations' => $ops,
+                'opsBreakdown' => $opsBreakdown,
                 'memory' => $mem,
                 'network' => [
                     'labels' => $netIn['labels'] ?? [],
@@ -490,6 +498,50 @@ class ServerController extends Controller
         } catch (\Exception $e) {
             Log::error('MongoDB data fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
             return response()->json(['ok' => false, 'message' => 'Failed to fetch MongoDB data', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function mongodb_concerns(Request $request, $id)
+    {
+        $panel = $this->panel($request);
+        $server = Server::findOrFail($id);
+        $project = $this->ensureDataAccess($panel, $server);
+        if ($project instanceof JsonResponse) return $project;
+        
+        try {
+            $date = $request->query('date') ?: date('Y-m-d');
+            $end = $request->query('end');
+            $start = $request->query('start');
+            if (!$start || !$end) {
+                $now = new \DateTime('now', new \DateTimeZone('UTC'));
+                $end = $now->format('H:i:s');
+                $startTime = clone $now;
+                $startTime->modify('-5 minutes');
+                $start = $startTime->format('H:i:s');
+            }
+            
+            $slowQueries = fetchSlowQueriesRange($server->ip, $project->name ?? 'livo', $date, $start, $end);
+            $logs = fetchMongoLogs($server->ip, $project->name ?? 'livo', $date, $start, $end);
+            
+            return response()->json([
+                'ok' => true,
+                'server_id' => $server->id,
+                'ip' => $server->ip,
+                'slowQueries' => $slowQueries,
+                'warnings' => $logs['warns'] ?? [],
+                'errors' => $logs['errors'] ?? [],
+                'counts' => [
+                    'slow' => count($slowQueries),
+                    'warns' => is_array($logs['warns'] ?? null) ? count($logs['warns']) : 0,
+                    'errors' => is_array($logs['errors'] ?? null) ? count($logs['errors']) : 0,
+                ],
+                'date' => $date,
+                'start' => $start,
+                'end' => $end,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('MongoDB concerns fetch failed', ['error' => $e->getMessage(), 'server' => $server->ip]);
+            return response()->json(['ok' => false, 'message' => 'Failed to fetch performance concerns', 'error' => $e->getMessage()], 500);
         }
     }
 

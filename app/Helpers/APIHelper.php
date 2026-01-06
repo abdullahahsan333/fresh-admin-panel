@@ -945,6 +945,72 @@ function fetchMongoDBData($serverIp, $appName = 'livo', $minutes = 60)
     return fetchFromAPI($serverIp, 'mongo', $appName, $minutes);
 }
 
+function fetchSlowQueriesRange($serverIp, $appName, $date, $start, $end)
+{
+    $data = fetchFromAPIRange($serverIp, 'slow_queries', $appName, $date, $start, $end);
+    $slowQueries = [];
+    foreach ($data as $item) {
+        if (!is_array($item)) continue;
+        $metrics = $item['metrics'] ?? [];
+        $list = $metrics['mysql_slow_queries'] ?? $metrics['slow_queries'] ?? [];
+        if (is_array($list)) {
+            foreach ($list as $q) {
+                if (!is_array($q)) continue;
+                $slowQueries[] = [
+                    'start_time' => $q['start_time'] ?? null,
+                    'user_host' => $q['user_host'] ?? null,
+                    'query_time' => $q['query_time'] ?? null,
+                    'sql_text' => $q['sql_text'] ?? null,
+                ];
+            }
+        }
+    }
+    $unique = [];
+    $seen = [];
+    foreach ($slowQueries as $q) {
+        $key = md5(($q['sql_text'] ?? '') . ($q['start_time'] ?? ''));
+        if (!isset($seen[$key])) {
+            $unique[] = $q;
+            $seen[$key] = true;
+        }
+    }
+    usort($unique, function($a, $b) {
+        $timeA = strtotime($a['start_time'] ?? '0');
+        $timeB = strtotime($b['start_time'] ?? '0');
+        return $timeB - $timeA;
+    });
+    return $unique;
+}
+
+function fetchMongoLogs($serverIp, $appName, $date, $start, $end)
+{
+    try {
+        $formattedIp = str_replace('.', '_', $serverIp);
+        $appSlug = strSlug($appName);
+        $start12 = convertTo12Hour($start);
+        $end12 = convertTo12Hour($end);
+        $url = API_BASE_URL . "/{$appSlug}/{$formattedIp}/mongo/logs?date={$date}&start={$start12}&end={$end12}";
+        $t0 = microtime(true);
+        $response = Http::timeout(15)->retry(2, 1000)->withOptions(['connect_timeout' => 5])->get($url);
+        logExternalApiRequest([
+            'service' => 'mongo_logs',
+            'method' => 'GET',
+            'url' => $url,
+            'status' => $response->status(),
+            'ok' => $response->ok(),
+            'duration_ms' => round((microtime(true) - $t0) * 1000, 2),
+        ]);
+        if (!$response->ok()) {
+            return ['warns' => [], 'errors' => []];
+        }
+        $data = $response->json();
+        return is_array($data) ? $data : ['warns' => [], 'errors' => []];
+    } catch (\Throwable $e) {
+        Log::error('fetchMongoLogs failed: '.$e->getMessage());
+        return ['warns' => [], 'errors' => []];
+    }
+}
+
 /**
  * Calculate MongoDB summary statistics
  */
@@ -999,6 +1065,7 @@ function calculateMongoDBSummary($mongoData)
         'inserts_per_second' => round($metrics['opcounters_insert'] ?? 0, 2),
         'updates_per_second' => round($metrics['opcounters_update'] ?? 0, 2),
         'deletes_per_second' => round($metrics['opcounters_delete'] ?? 0, 2),
+        'getmore_per_second' => round($metrics['opcounters_getmore'] ?? 0, 2),
         'commands_per_second' => round($metrics['opcounters_command'] ?? 0, 2),
         'network_in' => round(($metrics['network_bytes_in'] ?? 0) / 1024 / 1024, 2), // MB
         'network_out' => round(($metrics['network_bytes_out'] ?? 0) / 1024 / 1024, 2), // MB

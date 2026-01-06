@@ -54,6 +54,7 @@ Route::prefix('user')->group(function () {
     Route::get('/server/{id}/mysql-warnings', [ServerController::class, 'mysql_warnings'])->middleware('user')->name('user.server.mysql_warnings');
     Route::get('/server/{id}/mysql-errors', [ServerController::class, 'mysql_errors'])->middleware('user')->name('user.server.mysql_errors');
     Route::get('/server/{id}/mongodb-data', [ServerController::class, 'mongodb_data'])->middleware('user')->name('user.server.mongodb.data');
+    Route::get('/server/{id}/mongodb-concerns', [ServerController::class, 'mongodb_concerns'])->middleware('user')->name('user.server.mongodb.concerns');
     Route::get('/server/{id}/redis-data', [ServerController::class, 'redis_data'])->middleware('user')->name('user.server.redis.data');
     Route::get('/server/{id}/api-log-data', [ServerController::class, 'api_log_data'])->middleware('user')->name('user.server.api_log.data');
     Route::get('/server/{id}/scheduler-data', [ServerController::class, 'scheduler_data'])->middleware('user')->name('user.server.scheduler.data');
@@ -99,6 +100,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/server/{id}/mysql-errors', [ServerController::class, 'mysql_errors'])->middleware('admin')->name('admin.assets.mysql_errors');
     Route::get('/server/{id}/mongodb', [ServerController::class, 'mongodb'])->middleware('admin')->name('admin.server.mongodb');
     Route::get('/server/{id}/mongodb-data', [ServerController::class, 'mongodb_data'])->middleware('admin')->name('admin.assets.mongodb.data');
+    Route::get('/server/{id}/mongodb-concerns', [ServerController::class, 'mongodb_concerns'])->middleware('admin')->name('admin.assets.mongodb.concerns');
     Route::get('/server/{id}/redis', [ServerController::class, 'redis'])->middleware('admin')->name('admin.server.redis');
     Route::get('/server/{id}/redis-data', [ServerController::class, 'redis_data'])->middleware('admin')->name('admin.assets.redis.data');
     Route::get('/server/{id}/api-log', [ServerController::class, 'api_log'])->middleware('admin')->name('admin.server.api_log');
