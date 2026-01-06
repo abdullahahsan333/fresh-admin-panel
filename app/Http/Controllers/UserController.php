@@ -15,8 +15,7 @@ class UserController extends Controller
         if(Auth::guard('web')->check()){
             return redirect()->intended('/user/dashboard');
         }
-
-        return view('login');
+        return view('user.login');
     }
 
     public function login(Request $request)
@@ -40,8 +39,7 @@ class UserController extends Controller
         if(Auth::guard('web')->check()){
             return redirect()->intended('/user/dashboard');
         }
-
-        return view('register');
+        return view('user.register');
     }
 
     public function store(Request $request)

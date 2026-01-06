@@ -121,6 +121,60 @@
         </div>
         <div id="mongoMemoryUsage" class="h-64"></div>
     </div>
+    
+    <!-- Global Lock Status -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-gray-700 font-medium">Global Lock Status</h3>
+            <div class="text-xs text-gray-500">Current Queue</div>
+        </div>
+        <div id="mongoGlobalLockStatus" class="h-48"></div>
+        <div class="mt-6">
+            <div class="text-sm font-medium text-gray-700 mb-2">Lock Status</div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600">R</span>
+                    <div>
+                        <div class="text-xs text-gray-500">Active Readers</div>
+                        <div class="text-base font-semibold text-gray-800" id="globalActiveReaders">0</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600">W</span>
+                    <div>
+                        <div class="text-xs text-gray-500">Active Writers</div>
+                        <div class="text-base font-semibold text-gray-800" id="globalActiveWriters">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Network Traffic -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start mb-6">
+            <h3 class="text-gray-700 font-medium">Network Traffic</h3>
+            <div class="text-xs text-gray-500 mt-1" id="networkTrafficTime">Last 60 minutes</div>
+        </div>
+        
+        <div class="mt-6">
+            <div id="networkTrafficChart" class="h-48"></div>
+        </div>
+
+                <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-4 rounded">
+                <div class="text-sm text-gray-600 mb-1">Bytes In</div>
+                <div class="text-lg font-bold text-gray-800" id="bytesIn">0 MB</div>
+                <div class="text-xs text-gray-500">Total received</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+                <div class="text-sm text-gray-600 mb-1">Bytes Out</div>
+                <div class="text-lg font-bold text-gray-800" id="bytesOut">0 MB</div>
+                <div class="text-xs text-gray-500">Total sent</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Third Row -->
@@ -178,32 +232,7 @@
         </div>
     </div>
 
-    <!-- Network Traffic -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h3 class="text-gray-700 font-medium">Network Traffic</h3>
-                <div class="text-xs text-gray-500 mt-1" id="networkTrafficTime">Last 60 minutes</div>
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-4 rounded">
-                <div class="text-sm text-gray-600 mb-1">Bytes In</div>
-                <div class="text-2xl font-bold text-gray-800" id="bytesIn">0 MB</div>
-                <div class="text-xs text-gray-500">Total received</div>
-            </div>
-            <div class="bg-gray-50 p-4 rounded">
-                <div class="text-sm text-gray-600 mb-1">Bytes Out</div>
-                <div class="text-2xl font-bold text-gray-800" id="bytesOut">0 MB</div>
-                <div class="text-xs text-gray-500">Total sent</div>
-            </div>
-        </div>
-        
-        <div class="mt-6">
-            <div id="networkTrafficChart" class="h-80"></div>
-        </div>
-    </div>
+
 </div>
 
 <!-- API Status -->
@@ -228,6 +257,7 @@
     
     // Initialize charts with empty data
     let opsChart, memoryChart, connectionChart, networkChart;
+    let globalLockChart;
     
     function createChartCanvas(selectorId) {
         const container = document.querySelector(`#${selectorId}`);
@@ -418,6 +448,32 @@
                 }
             });
         }
+        
+        const glCtx = createChartCanvas('mongoGlobalLockStatus');
+        if (glCtx) {
+            globalLockChart = new Chart(glCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Readers', 'Writers'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#8b5cf6', '#f59e0b'],
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+                    }
+                }
+            });
+        }
     }
     
     // Fetch MongoDB data
@@ -505,6 +561,15 @@
                 networkChart.update();
             }
         }
+        
+        if (globalLockChart) {
+            const readers = metrics.global_lock_readers || 0;
+            const writers = metrics.global_lock_writers || 0;
+            globalLockChart.data.datasets[0].data = [readers, writers];
+            globalLockChart.update();
+        }
+        document.getElementById('globalActiveReaders').textContent = metrics.global_lock_active_readers || '0';
+        document.getElementById('globalActiveWriters').textContent = metrics.global_lock_active_writers || '0';
         
         // Update timestamp
         document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();

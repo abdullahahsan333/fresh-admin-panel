@@ -446,11 +446,14 @@ class ServerController extends Controller
             $mongodbData = fetchMongoDBData($server->ip, 'livo', 60);
             $summary = calculateMongoDBSummary($mongodbData);
             $ops = processLatestChartData($mongodbData, 'opcounters_total', 12);
-            $mem = processLatestChartData($mongodbData, 'memory_resident', 12);
+            $latest = !empty($mongodbData) ? end($mongodbData) : [];
+            $latestMetrics = is_array($latest) ? ($latest['metrics'] ?? []) : [];
+            $memKey = isset($latestMetrics['mem_resident_mb']) ? 'mem_resident_mb' : 'memory_resident';
+            $mem = processLatestChartData($mongodbData, $memKey, 12);
             $netIn = processLatestChartData($mongodbData, 'network_bytes_in', 12);
             $netOut = processLatestChartData($mongodbData, 'network_bytes_out', 12);
 
-            if (!empty($mem['data'])) {
+            if ($memKey === 'memory_resident' && !empty($mem['data'])) {
                 $mem['data'] = array_map(function($v){ return round(($v ?? 0) / 1024, 2); }, $mem['data']);
             }
 
@@ -647,11 +650,37 @@ class ServerController extends Controller
         $summary = calculateSchedulerSummary($data);
 
         $logs = [];
-        foreach ($data as $item) {
-            if (is_array($item) && isset($item['metrics']['scheduler_logs']) && is_array($item['metrics']['scheduler_logs'])) {
-                foreach ($item['metrics']['scheduler_logs'] as $log) {
-                    if (is_array($log)) {
-                        $logs[] = $log;
+        $meta = [
+            'app' => null,
+            'ip' => $server->ip,
+            'purpose' => null,
+            'timestamp' => null,
+        ];
+
+        // Handle both single-payload and list-of-payloads responses
+        if (is_array($data) && isset($data['metrics'])) {
+            // Single payload object
+            $meta['app'] = $data['app'] ?? $meta['app'];
+            $meta['ip'] = $data['ip'] ?? $meta['ip'];
+            $meta['purpose'] = $data['purpose'] ?? $meta['purpose'];
+            $meta['timestamp'] = $data['timestamp'] ?? $meta['timestamp'];
+            if (isset($data['metrics']['scheduler_logs']) && is_array($data['metrics']['scheduler_logs'])) {
+                foreach ($data['metrics']['scheduler_logs'] as $log) {
+                    if (is_array($log)) $logs[] = $log;
+                }
+            }
+        } elseif (is_array($data) && array_is_list($data)) {
+            // Array of payload items
+            if (!empty($data) && is_array($data[0])) {
+                $meta['app'] = $data[0]['app'] ?? $meta['app'];
+                $meta['ip'] = $data[0]['ip'] ?? $meta['ip'];
+                $meta['purpose'] = $data[0]['purpose'] ?? $meta['purpose'];
+                $meta['timestamp'] = $data[0]['timestamp'] ?? $meta['timestamp'];
+            }
+            foreach ($data as $item) {
+                if (is_array($item) && isset($item['metrics']['scheduler_logs']) && is_array($item['metrics']['scheduler_logs'])) {
+                    foreach ($item['metrics']['scheduler_logs'] as $log) {
+                        if (is_array($log)) $logs[] = $log;
                     }
                 }
             }
@@ -664,6 +693,7 @@ class ServerController extends Controller
             'ok' => $ok || ($apiStatus['connected'] ?? false),
             'server_id' => $server->id,
             'ip' => $server->ip,
+            'meta' => $meta,
             'summary' => $summary,
             'logs' => $logs,
             'apiStatus' => $apiStatus,

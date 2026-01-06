@@ -959,6 +959,7 @@ function calculateMongoDBSummary($mongoData)
             'inserts_per_second' => 0,
             'updates_per_second' => 0,
             'deletes_per_second' => 0,
+            'commands_per_second' => 0,
             'network_in' => 0,
             'network_out' => 0,
             'memory_resident' => 0,
@@ -975,6 +976,20 @@ function calculateMongoDBSummary($mongoData)
     $connectionsAvailable = $metrics['connections_available'] ?? 0;
     $connectionsPercent = $connectionsAvailable > 0 ? ($connectionsCurrent / $connectionsAvailable * 100) : 0;
     
+    $memoryResidentMb = $metrics['mem_resident_mb'] ?? null;
+    $memoryVirtualMb = $metrics['mem_virtual_mb'] ?? null;
+    if ($memoryResidentMb === null) {
+        $memoryResidentMb = round(($metrics['memory_resident'] ?? 0) / 1024, 1);
+    }
+    if ($memoryVirtualMb === null) {
+        $memoryVirtualMb = round(($metrics['memory_virtual'] ?? 0) / 1024, 1);
+    }
+    
+    $glReaders = $metrics['global_lock_current_readers'] ?? $metrics['global_lock_readers'] ?? $metrics['globalLock_currentQueue_readers'] ?? 0;
+    $glWriters = $metrics['global_lock_current_writers'] ?? $metrics['global_lock_writers'] ?? $metrics['globalLock_currentQueue_writers'] ?? 0;
+    $glActiveReaders = $metrics['global_lock_active_readers'] ?? $metrics['globalLock_activeClients_readers'] ?? $metrics['locks_global_active_readers'] ?? 0;
+    $glActiveWriters = $metrics['global_lock_active_writers'] ?? $metrics['globalLock_activeClients_writers'] ?? $metrics['locks_global_active_writers'] ?? 0;
+    
     return [
         'connections_current' => $connectionsCurrent,
         'connections_available' => $connectionsAvailable,
@@ -984,12 +999,17 @@ function calculateMongoDBSummary($mongoData)
         'inserts_per_second' => round($metrics['opcounters_insert'] ?? 0, 2),
         'updates_per_second' => round($metrics['opcounters_update'] ?? 0, 2),
         'deletes_per_second' => round($metrics['opcounters_delete'] ?? 0, 2),
+        'commands_per_second' => round($metrics['opcounters_command'] ?? 0, 2),
         'network_in' => round(($metrics['network_bytes_in'] ?? 0) / 1024 / 1024, 2), // MB
         'network_out' => round(($metrics['network_bytes_out'] ?? 0) / 1024 / 1024, 2), // MB
-        'memory_resident' => round(($metrics['memory_resident'] ?? 0) / 1024, 1), // MB
-        'memory_virtual' => round(($metrics['memory_virtual'] ?? 0) / 1024, 1), // MB
+        'memory_resident' => $memoryResidentMb, // MB
+        'memory_virtual' => $memoryVirtualMb, // MB
         'index_hit_percent' => round($metrics['index_hit_percent'] ?? 0, 1),
         'page_faults' => $metrics['page_faults'] ?? 0,
+        'global_lock_readers' => (int)$glReaders,
+        'global_lock_writers' => (int)$glWriters,
+        'global_lock_active_readers' => (int)$glActiveReaders,
+        'global_lock_active_writers' => (int)$glActiveWriters,
     ];
 }
 

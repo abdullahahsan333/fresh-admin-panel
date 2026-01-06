@@ -20,6 +20,29 @@
     </div>
 </header>
 
+<!-- Meta Info -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-4">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <div class="text-gray-500">App</div>
+      <div class="font-medium text-gray-800" id="meta-app">--</div>
+    </div>
+    <div>
+      <div class="text-gray-500">IP</div>
+      <div class="font-medium text-gray-800" id="meta-ip">--</div>
+    </div>
+    <div>
+      <div class="text-gray-500">Purpose</div>
+      <div class="font-medium text-gray-800" id="meta-purpose">--</div>
+    </div>
+    <div>
+      <div class="text-gray-500">Timestamp</div>
+      <div class="font-medium text-gray-800" id="meta-timestamp">--</div>
+    </div>
+  </div>
+  <div class="mt-2 text-xs text-gray-500" id="meta-count"></div>
+</div>
+
 <!-- Scheduler Table -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
@@ -130,10 +153,16 @@ async function loadSchedulerLogs() {
     } else {
       showApiStatus('error', json && json.message ? json.message : 'No scheduler data');
     }
+    const meta = json.meta || {};
+    document.getElementById('meta-app').textContent = meta.app || 'livo';
+    document.getElementById('meta-ip').textContent = meta.ip || (json.ip || '--');
+    document.getElementById('meta-purpose').textContent = meta.purpose || 'LIVO API';
+    document.getElementById('meta-timestamp').textContent = meta.timestamp || '--';
     const logs = Array.isArray(json.logs) ? json.logs : [];
     const tbody = document.getElementById("scheduler-tbody");
     const updatedAt = document.getElementById("last-updated");
     tbody.innerHTML = "";
+    document.getElementById("meta-count").textContent = `${logs.length} scheduler logs`;
 
     if (logs.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500 py-6">No scheduler logs found.</td></tr>`;
